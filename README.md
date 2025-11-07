@@ -1,2 +1,3 @@
 # SG-Turnus
 Repository for SG-Turnus - IBE160 Programmering med KI.
+klar for å lage studieveileder
