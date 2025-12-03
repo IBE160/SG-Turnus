@@ -1,4 +1,4 @@
-## Case Title
+3## Case Title
 THE AI HELPING TOOL
 
 ## Background
