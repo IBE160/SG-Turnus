@@ -15,12 +15,16 @@
     - [] File: brainstorming-session-results-2025-12-02.md
   - [x] /run-agent-task analyst *brainstorm "User Flow and journeys"
     - [x] File: brainstorming-session-results-thursday,-4-december-2025.md
-- [] Research
-  - [] /run-agent-task analyst *research "?"
-    - [] File: research-domain-2025-12-03.md
-- [] Product Brief
-  - [] /run-agent-task analyst product breif "Read both the brainstorming sessions and the research session, and the @proposal.md file and create a product brief for the project"
-    - [] File: product-brief.md
+- [x] Research
+  - [x] Researched Decision Model for "Single Most Helpful Next Step"
+    - [x] File: research-decision-model.md
+  - [x] Researched First Interaction Patterns for Zero-Friction Learning
+    - [x] File: research-first-interaction-patterns.md
+  - [x] Researched Technical Constraints and Capabilities
+    - [x] File: research-technical-constraints.md
+- [x] Product Brief
+  - [x] Created consolidated product brief from brainstorming, research, and proposal.
+    - [x] File: product-brief.md
 
 ## Fase 1
 
