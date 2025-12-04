@@ -23,8 +23,8 @@ field_type: "greenfield"
 workflow_path: "/Users/alexanderlindlokken/SG-Turnus/.bmad/bmm/workflows/workflow-status/paths/method-greenfield.yaml"
 workflow_status:
   brainstorm-project: /Users/alexanderlindlokken/SG-Turnus/docs/brainstorming-session-results-2025-12-04.md
-  research: optional
-  product-brief: optional
+  research: docs/research-domain-2025-12-03.md
+  product-brief: docs/product-brief-The AI Helping Tool-2025-12-04.md
   prd: required
   validate-prd: optional
   create-design: conditional

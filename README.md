@@ -16,7 +16,4 @@ Data ut: Sammendrag, flashcards, quiz‑spørsmål/svar, nøkkelbegreper, refera
 sider.
 Beslutningspunkter: Valg av LLM og konfidensnivå, granularitet på sammendrag, håndtering av
 tabeller/figurer, lokal behandling vs. sky
-hallo hallo 
-hei p9s hejhejhe
-cdv
-test 
+
