@@ -16,7 +16,7 @@
 #   - skipped: Optional/conditional workflow that was skipped
 
 generated: "2025-12-04"
-project: "{{project_name}}"
+project: "The AI Helping Tool"
 project_type: "{{project_type}}"
 selected_track: "{{selected_track}}"
 field_type: "{{field_type}}"

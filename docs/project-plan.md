@@ -16,7 +16,7 @@
   - [] /run-agent-task analyst *brainstorm "User Flow and journeys"
     - [] File: brainstorming-session-results-2025-12-04.md
 - [] Research
-  - [] /run-agent-task analyst *research "What takes the most time: reading, understanding, memorizing, structuring, or revising?"
+  - [] /run-agent-task analyst *research "?"
     - [] File: research-domain-2025-12-03.md
 - [] Product Brief
   - [] /run-agent-task analyst product breif "Read both the brainstorming sessions and the research session, and the @proposal.md file and create a product brief for the project"
