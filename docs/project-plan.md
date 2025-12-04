@@ -13,8 +13,8 @@
 - [x] Brainstorming
   - [] /run-agent-task analyst *brainstorm "Root Cause Analysis and Solution Design for Player Inactivity"
     - [] File: brainstorming-session-results-2025-12-02.md
-  - [] /run-agent-task analyst *brainstorm "User Flow and journeys"
-    - [] File: brainstorming-session-results-2025-12-04.md
+  - [x] /run-agent-task analyst *brainstorm "User Flow and journeys"
+    - [x] File: brainstorming-session-results-thursday,-4-december-2025.md
 - [] Research
   - [] /run-agent-task analyst *research "?"
     - [] File: research-domain-2025-12-03.md
