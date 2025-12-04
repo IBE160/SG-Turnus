@@ -11,11 +11,11 @@
 - [x] /run-agent-task analyst *workflow-init
   - [x] File: bmm-workflow-status.yaml
 - [x] Brainstorming
-  - [x] /run-agent-task analyst *brainstorm "Root Cause Analysis and Solution Design for Player Inactivity"
-    - [x] File: brainstorming-session-results-2025-12-02.md
-  - [x] /run-agent-task analyst *brainstorm "User Flow and journeys"
-    - [x] File: brainstorming-session-results-2025-12-04.md
-- [x] Research
+  - [] /run-agent-task analyst *brainstorm "Root Cause Analysis and Solution Design for Player Inactivity"
+    - [] File: brainstorming-session-results-2025-12-02.md
+  - [] /run-agent-task analyst *brainstorm "User Flow and journeys"
+    - [] File: brainstorming-session-results-2025-12-04.md
+- [] Research
   - [] /run-agent-task analyst *research "What takes the most time: reading, understanding, memorizing, structuring, or revising?"
     - [] File: research-domain-2025-12-03.md
 - [] Product Brief
