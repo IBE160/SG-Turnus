@@ -192,3 +192,56 @@ Prompt: What worked well in this session?
 
 Summary:
 The process excelled because of structured expansion followed by synthesis. User Journey Mapping grounded the work, “What If” scenarios expanded imagination, SCAMPER structured innovation, and convergence refined priority. The balance of empathy, creativity, and strategy produced a coherent, inspired product vision.
+
+26. SCAMPER - Core Features Brainstorming Prompts
+
+    Prompt: Brainstorming prompts for core functionality using SCAMPER.
+
+    Summary:
+
+    **Substitute:**
+    - Replace static text-based processing with multimodal understanding (diagrams, handwritten notes, audio lectures, annotated slides).
+    - Substitute conventional keyword-based summarization with understanding driven by concept graphs, producing explanations or flashcards from underlying structure.
+    - Replace traditional flashcard format with conversational recall prompts (mini-dialogues mimicking oral exams).
+    - Substitute manual quiz formats with adaptive difficulty engines that adjust questions based on previous performance.
+    - Substitute typical reference extraction with context-aware source linking (tying summary points back to specific source locations).
+
+    **Combine:**
+    - Fuse summarization and flashcard generation into a single process: summary acts as blueprint for a structured learning path, automatically producing flashcards, explanations, and quiz items.
+    - Blend user-generated notes (annotations, highlights, handwritten additions) directly with AI-processed material for a hybrid knowledge base.
+    - Combine the study schedule with quiz creation: AI distributes quizzes strategically for spaced repetition, adjusting difficulty/frequency based on performance and deadlines.
+    - Combine explanations with performance analytics: AI spots patterns in mistakes and generates targeted mini-summaries or focused flashcards for weak areas.
+
+    **Adapt:**
+    - Adapt skill trees from video games: transform summaries/concepts into a branching progression map, unlocking nodes by demonstrating understanding.
+    - Borrow achievement system from games: unlock badges/milestones for consistent improvement, influencing AI recommendations.
+    - Adapt social media content-feed model: present summaries, flashcards, review prompts as a personalized, dynamic sequence, combining fresh material with spaced-repetition reminders.
+    - Adapt Kanban approach from project management: represent materials, summaries, flashcards, quizzes as "cards" in columns (To Review, In Progress, Mastered).
+    - Adapt successful patterns from other learning apps: integrate spaced repetition algorithms, adaptive difficulty, and micro-assessments directly into the processing engine.
+
+    **Modify (Magnify/Minify):**
+    - **Magnify Explanation Engine**: Produce deeply layered explanations that unfold level by level (simple description, example, application, conceptual breakdown).
+    - **Magnify Quizzes**: Elevate quizzes into a central, game-like challenge with dynamic difficulty and visual progress tracking.
+    - **Minify "Survival Guide"**: One-click generation of smallest viable information needed to pass an exam (e.g., 5 core concepts, 3 formulas).
+    - **Minify Time-Bounded Output**: Compress long chapters into "5-minute summaries" for quick absorption.
+    - **Minify Streamlined Flashcard Pipeline**: Instant, minimal-configuration flashcard generation upon document upload.
+
+    **Put to Other Uses:**
+    - **For Educators**: Use summaries, concept graphs, quizzes for lesson plans, lecture outlines, formative assessments.
+    - **For Corporate Trainers**: Convert dense manuals/guidelines into structured summaries for onboarding and compliance checks.
+    - **For Content Creators**: Use as editorial tools to extract themes, identify inconsistencies, generate idea prompts.
+    - **For Business/Legal**: Apply to business reports (risks, trends, action items) or legal documents (obligations, definitions).
+    - **For Personal Productivity**: Turn meeting notes, journal entries into distilled summaries, actionable next steps, recurring reminders.
+
+    **Eliminate:**
+    - **Configuration**: Replace setup phase with intelligent "Process My Document" action, making configs optional/advanced.
+    - **Mandatory Account Creation**: Offer a guest mode for instant basic summaries/flashcards.
+    - **Quizzes (if necessary)**: Focus on comprehension and recall, sharpening focus on minimal effective study.
+    - **Text-First Assumptions**: Allow for purely visual outputs (diagrams, concept maps), and skip generating irrelevant outputs.
+
+    **Rearrange/Reverse:**
+    - **Quiz-First Approach (Test -> Tailor -> Teach)**: Diagnostic quiz based on material structure determines type of summary.
+    - **Flashcards Generate Summary**: Smallest set of atomic concepts becomes flashcards, then stitched into narrative summary.
+    - **User Actions Train AI**: Student edits/rewrites actively shape AI's understanding and future outputs.
+    - **Student Explanations as Training Data**: User's successful explanations refine AI's summaries.
+    - **Focus on Learning Gaps**: System identifies uncertainty areas, generating targeted materials for recovery.
