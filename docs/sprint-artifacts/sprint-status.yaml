@@ -37,10 +37,10 @@ story_location: docs/sprint-artifacts
 
 development_status:
   epic-1: contexted
-  1-1-initialize-frontend-application: drafted
-  1-2-initialize-backend-service: backlog
+  1-1-initialize-frontend-application: ready-for-dev
+  1-2-initialize-backend-service: ready-for-dev
   epic-1-retrospective: optional
-  epic-2: backlog
+  epic-2: contexted
   2-1-text-input: backlog
   2-2-submit-query-receive-feedback: backlog
   2-3-display-clarity-response: backlog
