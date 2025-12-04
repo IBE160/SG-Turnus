@@ -1,0 +1,139 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1</storyId>
+    <title>Initialize Frontend Application</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-04</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>C:\Users\mrmag\Desktop\SKOLE\IBE160\TURNUSPARTIET\docs\sprint-artifacts/1-1-initialize-frontend-application.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>set up a new Flutter project with the standard folder structure</iWant>
+    <soThat>we have a clean, consistent foundation for building the UI and client-side logic</soThat>
+    <tasks>
+- [ ] **Task 1: Initialize Flutter Project and Define Structure** (AC: #1, #2)
+  - [ ] Run `flutter create` to generate the project scaffolding.
+  - [ ] Add the new project files to version control.
+  - [ ] Verify the generated project adheres to standard Flutter conventions for folder structure.
+  - [ ] **Testing:** Manually inspect the created directory structure to ensure it matches community best practices.
+
+- [ ] **Task 2: Implement Design System Foundation** (AC: #3)
+  - [ ] Create a `theme.dart` file to house the application's theme data.
+  - [ ] Implement the "Growth" color palette (`primary: #198754`, `secondary: #e8f5e9`, etc.) as defined in the UX spec.
+  - [ ] Configure the typography settings (font family, type scale, line height) in the theme.
+  - [ ] Apply the theme in `MaterialApp`.
+  - [ ] **Testing:** Visually confirm the "Growth" theme and typography are correctly applied in the running application.
+
+- [ ] **Task 3: Verify Build Targets** (AC: #4)
+  - [ ] Configure a build runner for an Android emulator.
+  - [ ] Configure a build runner for an iOS simulator.
+  - [ ] **Testing:** Compile and launch the boilerplate app on the Android emulator and the iOS simulator, ensuring it runs without crashing.</tasks>
+  </story>
+
+  <acceptanceCriteria>
+1. A new Flutter project is created in the repository.
+2. The project follows the standard Flutter folder structure.
+3. The "Growth" color theme and typography from the UX spec are configured.
+4. The app compiles and runs on both an Android emulator and an iOS simulator.</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <artifact>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Project Classification</section>
+        <snippet>Based on the mobile-first approach and the focus on student learning, this project is classified as a mobile_app in the edtech domain.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>Mobile App Specific Requirements</section>
+        <snippet>The application will be developed using a cross-platform framework (e.g., React Native, Flutter) to ensure simultaneous release on both iOS and Android and to facilitate a fast-follow web application.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/prd.md</path>
+        <title>Product Requirements Document</title>
+        <section>User Experience Principles</section>
+        <snippet>The user experience must be a direct reflection of the core value proposition: reducing cognitive load. The UI should feel calm, clear, and instantly usable.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>Architecture Specification: The AI Helping Tool</title>
+        <section>Technology Stack</section>
+        <snippet>Frontend: Flutter. Rationale: Cross-Platform: Single codebase for iOS, Android, and Web ensures consistency and development speed. Performance: Compiles to native code for high performance. UI: Excellent integration with the chosen Material Design system.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/ux-design-specification.md</path>
+        <title>The AI Helping Tool UX Design Specification</title>
+        <section>Design System Foundation</section>
+        <snippet>Material Design was selected to ensure faster development, leverage great default components, and achieve robust cross-platform consistency across mobile (Android, iOS adaptations) and web applications.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/ux-design-specification.md</path>
+        <title>The AI Helping Tool UX Design Specification</title>
+        <section>Color System</section>
+        <snippet>Chosen Theme: Theme 2: "Growth". Strategy: Soft, natural greens paired with warm neutrals create an approachable, positive, and motivating environment. This theme evokes growth and harmony, aligning with the emotional goal of efficiency and productivity. Core Palette: Primary: #198754, Secondary: #e8f5e9, Background: #f9f9f9, Surface: #ffffff, Text: #212529, Text Secondary: #5f6368, Success: #198754, Error: #d93025, Border: #e0e0e0.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/ux-design-specification.md</path>
+        <title>The AI Helping Tool UX Design Specification</title>
+        <section>Typography</section>
+        <snippet>Leveraging our Material Design foundation, we will adopt a typography system optimized for readability and clarity. Font Family: A clean, modern sans-serif typeface (e.g., Roboto or similar) for both headings and body text, ensuring consistency and legibility across all platforms. Type Scale: Material Design's responsive type scale will be used. A base font size of 16px (1rem) is recommended for body text. Line Height: 1.5 for body text, 1.2 for headings. Font Weights: Used purposefully to differentiate information hierarchy.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/ux-design-specification.md</path>
+        <title>The AI Helping Tool UX Design Specification</title>
+        <section>Responsive Design & Accessibility</section>
+        <snippet>The application will implement a comprehensive responsive design strategy based on specific breakpoints and layout grid to ensure an optimal and adaptable user experience across all target platforms. Compliance Target: WCAG 2.1 Level AA compliance across all platforms (mobile and web).</snippet>
+      </artifact>
+    </docs>
+    <code></code>
+    <dependencies>
+      <ecosystem name="Flutter">
+        <framework>Flutter SDK</framework>
+        <note>Specific version will be defined upon project initialization (e.g., in pubspec.yaml)</note>
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>
+      <type>Framework</type>
+      <description>Use Flutter for the frontend application.</description>
+    </constraint>
+    <constraint>
+      <type>Design System</type>
+      <description>The UI must adhere to Material Design. The specific theme is "Growth".</description>
+    </constraint>
+    <constraint>
+      <type>Typography</type>
+      <description>Use a clean sans-serif font (e.g., Roboto) with a base size of 16px and a line height of 1.5 for body text.</description>
+    </constraint>
+    <constraint>
+      <type>Project Structure</type>
+      <description>Adhere to standard Flutter conventions.</description>
+    </constraint>
+    <constraint>
+      <type>Target Platforms</type>
+      <description>The app must compile and run on both Android and iOS emulators/simulators.</description>
+    </constraint>
+  </constraints>
+  <interfaces></interfaces>
+  <tests>
+    <standards>Testing for this story will primarily involve manual verification of project setup, visual confirmation of implemented design elements, and successful compilation and execution on target emulators/simulators. Adherence to Flutter's standard testing practices will be followed as the project evolves.</standards>
+    <locations>
+      <location>test/</location>
+      <location>Visual Inspection (UI)</location>
+      <location>Emulator/Simulator Environment</location>
+    </locations>
+    <ideas>
+      <idea acId="1,2">Manually inspect the created Flutter project directory structure for adherence to standard conventions.</idea>
+      <idea acId="3">Visually confirm the "Growth" color theme and specified typography are correctly applied in the running application on both Android and iOS.</idea>
+      <idea acId="4">Compile and launch the boilerplate Flutter application on an Android emulator to ensure it runs without errors.</idea>
+      <idea acId="4">Compile and launch the boilerplate Flutter application on an iOS simulator to ensure it runs without errors.</idea>
+    </ideas>
+  </tests>
+</story-context>

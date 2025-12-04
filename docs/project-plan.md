@@ -1,13 +1,12 @@
-# Project Plan: The AI Helping Tool
+# Project Plan
 
-**Date:** 2025-12-04
-**Author:** Mary, Business Analyst
+## Instruksjoner
 
-This document outlines the project plan for "The AI Helping Tool." It covers implementation readiness and sprint planning.
+1. Der hvor det står {prompt / user-input-file}, kan dere legge inn en egen prompt eller filnavn for å gi ekstra instruksjoner. Hvis dere ikke ønsker å legge til ekstra instruksjoner, kan dere bare fjerne denne delen.
+2. Hvis jeg har skrevet noe der allerede, f.eks. "Root Cause Analysis and Solution Design for Player Inactivity", så kan dere bytte ut min prompt med deres egen.
 
-## 1. Implementation Readiness
 
-The project is now ready for implementation. The following documents have been created and reviewed:
+## Fase 0
 
 - [x] /run-agent-task analyst *workflow-init
   - [x] File: bmm-workflow-status.yaml
@@ -23,7 +22,7 @@ The project is now ready for implementation. The following documents have been c
   - [x] /run-agent-task analyst product breif "Read both the brainstorming sessions and the research session, and the @proposal.md file and create a product brief for the project"
     - [x] File: product-brief.md
 
-The next step is to create a more detailed technical design and to set up the development environment.
+## Fase 1
 
 - [x] Planning
   - [x] /run-agent-task pm *prd
@@ -34,41 +33,46 @@ The next step is to create a more detailed technical design and to set up the de
     - [x] File: ux-design-specification.md
     - [x] File: ux-color-themes.html
     - [x] File: ux-design-directions.html
-  - [ ] /run-agent-task ux-designer *validate-ux-design {prompt / user-input-file}
-*v
+  - [x] /run-agent-task ux-designer *validate-ux-design {prompt / user-input-file}
+
 ## Fase 2
 
-**Sprint 1 Goals:**
+- [x] Solutioning
+  - [x] /run-agent-task architect *create-architecture {prompt / user-input-file}
+    - [x] File: architecture.md
+  - [x] /run-agent-task pm *create-epics-and-stories {prompt / user-input-file}
+    - [x] File: epics.md
+  - [x] /run-agent-task tea *test-design {prompt / user-input-file}
+  - [x] /run-agent-task architect *solutioning-gate-check {prompt / user-input-file}
 
-*   Set up the development environment, including the mobile application, backend, and AI service.
-*   Implement a basic user interface for the mobile application.
-*   Implement a basic backend that can receive text input from the mobile application and send it to the AI service.
-*   Integrate with a third-party AI service to provide a single, actionable next step from text input.
+## Fase 3
 
-**Sprint 1 Stories:**
+- [x] Implementation
+  - [x] /run-agent-task sm *sprint-planning {prompt / user-input-file}
+    - [x] File: sprint-artifacts/sprint-status.yaml
+  - foreach epic in sprint planning:
+    - [x] /run-agent-task sm create-epic-tech-context {prompt / user-input-file}
+      - [x] File: sprint-artifacts/tech-spec-epic-{{epic_id}}.md
+    - [x] /run-agent-task sm validate-epic-tech-context {prompt / user-input-file}
+    - foreach story in epic:
+      - [x] /run-agent-task sm *create-story {prompt / user-input-file}
+        - [x] File: sprint-artifacts/{{story_key}}.md
+      - [x] /run-agent-task sm *validate-create-story {prompt / user-input-file}
+      - [x] /run-agent-task sm *create-story-context {prompt / user-input-file}
+        - [x] File: sprint-artifacts/{{story_key}}.context.xml5
+      - [ ] /run-agent-task sm *validate-story-context {prompt / user-input-file}
+      - [ ] /run-agent-task sm *story-ready-for-dev {prompt / user-input-file}
+      while code-review != approved:
+        - [ ] /run-agent-task dev *develop-story {prompt / user-input-file}
+        - [ ] /run-agent-task dev *code-review {prompt / user-input-file}
+      - [ ] /run-agent-task dev *story-done {prompt / user-input-file}
+      - [ ] /run-agent-task sm *test-review {prompt / user-input-file}
+    - [ ] /run-agent-task sm *epic-retrospective {prompt / user-input-file}
 
-*   As a user, I want to be able to enter text into the tool so that I can get an actionable next step.
-*   As a user, I want to receive a single, concise next step so that I can quickly understand what to do next.
 
-## 3. Future Sprints
 
-Future sprints will focus on implementing the remaining user stories, including the camera and voice input, as well as the mobile application and backend infrastructure.
 
-**Sprint 2 Goals:**
 
-*   Implement camera input.
-*   Implement voice input.
+## BMAD workflow
 
-**Sprint 3 Goals:**
-
-*   Build out the mobile application user interface.
-*   Build out the backend infrastructure.
-
-## 4. Timeline
-
-The following is a high-level timeline for the project:
-
-*   **Sprint 1 (1 week):** Development environment setup and basic text input.
-*   **Sprint 2 (2 weeks):** Camera and voice input.
-*   **Sprint 3 (2 weeks):** Mobile application and backend infrastructure.
-*   **MVP Release (5 weeks):** Release the MVP to the App Store and Google Play Store.
+<img src="images/bmad-workflow.svg" alt="BMAD workflow">

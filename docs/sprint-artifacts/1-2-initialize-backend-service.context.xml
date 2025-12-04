@@ -1,0 +1,153 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>2</storyId>
+    <title>Initialize Backend Service</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-04</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/1-2-initialize-backend-service.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>As a developer,</asA>
+    <iWant>I want to configure a serverless application with a "Hello World" Lambda function and an API Gateway endpoint,</iWant>
+    <soThat>so that the frontend has a live endpoint to connect to for initial development and testing.</soThat>
+    <tasks>- [ ] **Task 1: Define Infrastructure as Code (IaC)** (AC: #4)
+  - [ ] Subtask 1.1: Choose and initialize an IaC tool (e.g., AWS SAM).
+  - [ ] Subtask 1.2: Write the SAM template (`template.yaml`) to define the API Gateway and Lambda resources.
+- [ ] **Task 2: Implement "Hello World" Lambda Function** (AC: #2)
+  - [ ] Subtask 2.1: Create a Python 3.x file for the Lambda handler.
+  - [ ] Subtask 2.2: Implement the handler to return a JSON object `{"message": "Hello World"}` with a 200 status code.
+- [ ] **Task 3: Configure and Deploy** (AC: #1, #2)
+  - [ ] Subtask 3.1: Configure the SAM template to connect the API Gateway `POST /api/v1/clarity` endpoint to the Lambda function.
+  - [ ] Subtask 3.2: Deploy the stack using the SAM CLI.
+- [ ] **Task 4: Manual Verification** (AC: #3)
+  - [ ] Subtask 4.1: Once deployed, get the API Gateway endpoint URL.
+  - [ ] Subtask 4.2: Use Postman or `curl` to send a POST request to the endpoint.
+  - [ ] Subtask 4.3: Verify the response is `200 OK` and the body is `{"message": "Hello World"}`.</tasks>
+  </story>
+
+  <acceptanceCriteria>1. An AWS API Gateway endpoint is created.
+2. A Python-based Lambda function is created and connected to the gateway.
+3. Invoking the endpoint via a tool like Postman returns a `200 OK` with a `{ "message": "Hello World" }` body.
+4. All infrastructure is defined as code (e.g., using AWS SAM or Terraform).</acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <artifact>
+        <path>docs/prd.md</path>
+        <title>The AI Helping Tool - Product Requirements Document</title>
+        <section>Executive Summary</section>
+        <snippet>The "AI Helping Tool" is an AI-powered study partner designed to dramatically improve learning efficiency for high school, university, and adult learners. Its primary purpose is to provide instant clarity and momentum by transforming overwhelming study materials into manageable, actionable steps. The core strategy is to actively reduce the cognitive load on students, positioning the tool as an intelligent partner that makes learning frictionless and builds momentum through a "Zero-Friction Instant Clarity Engine."</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/prd.md</path>
+        <title>The AI Helping Tool - Product Requirements Document</title>
+        <section>Project Classification</section>
+        <snippet>Based on the mobile-first approach and the focus on student learning, this project is classified as a mobile_app in the edtech domain. The complexity is medium due to the need for AI integration and a robust, scalable backend, balanced by a intentionally simple user-facing feature set.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/prd.md</path>
+        <title>The AI Helping Tool - Product Requirements Document</title>
+        <section>Non-Functional Requirements</section>
+        <snippet>The backend infrastructure must be able to handle the anticipated load of the first 10,000 users in the first week post-launch without performance degradation. All data transmitted between the client application and backend services must be encrypted using TLS 1.2 or higher. Any user-generated content (images, notes) stored on the server must be encrypted at rest.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>Architecture Specification: The AI Helping Tool</title>
+        <section>System Architecture: C4 Model</section>
+        <snippet>The proposed architecture is a client-server model utilizing a serverless backend to orchestrate multiple specialized AI services. This provides maximum scalability and performance while minimizing operational overhead.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>Architecture Specification: The AI Helping Tool</title>
+        <section>Technology Stack</section>
+        <snippet>Backend: AWS Lambda (Python). API Layer: AWS API Gateway. OCR/Transcription (AWS Textract/Transcribe). LLM (Abstracted e.g., Gemini API).</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>Architecture Specification: The AI Helping Tool</title>
+        <section>API Design (MVP)</section>
+        <snippet>The core of the system is a single, well-defined API endpoint: POST /api/v1/clarity. It receives a user query, processes it through the necessary AI services, and returns an actionable result.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/ux-design-specification.md</path>
+        <title>The AI Helping Tool UX Design Specification</title>
+        <section>Core User Experience</section>
+        <snippet>The design must make this future value tangible in the present moment. Therefore, the core experience we will design is one of "Visible Momentum."</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/ux-design-specification.md</path>
+        <title>The AI Helping Tool UX Design Specification</title>
+        <section>User Journey: Get Instant Clarity (Momentum Layer)</section>
+        <snippet>Tapping the button when the input field has text triggers the API call to POST /api/v1/clarity.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/epics.md</path>
+        <title>Product Backlog: Epics and User Stories</title>
+        <section>EPIC 1: Foundational Setup (MVP)</section>
+        <snippet>This epic covers the essential, non-user-facing technical setup required to build, deploy, and run the application. It's the groundwork upon which all features are built.</snippet>
+      </artifact>
+    </docs>
+    <code>
+      <!-- No existing code artifacts found for this initialization story -->
+    </code>
+    <dependencies>
+      <ecosystem type="Python">
+        <package>Python 3.x runtime (for AWS Lambda)</package>
+      </ecosystem>
+      <ecosystem type="IaC">
+        <package>AWS SAM (Serverless Application Model)</package>
+        <package>Terraform (alternative IaC option)</package>
+      </ecosystem>
+      <ecosystem type="Cloud">
+        <package>AWS Lambda</package>
+        <package>AWS API Gateway</package>
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>
+      <type>Architectural Mandate</type>
+      <description>The backend service must use AWS Lambda with a Python runtime and AWS API Gateway.</description>
+      <source>docs/architecture.md#3-Technology-Stack</source>
+    </constraint>
+    <constraint>
+      <type>Infrastructure as Code</type>
+      <description>All AWS resources (API Gateway, Lambda) must be defined using an IaC framework like AWS SAM or Terraform.</description>
+      <source>docs/epics.md#Story-1.2</source>
+    </constraint>
+    <constraint>
+      <type>Project Structure</type>
+      <description>A new top-level directory, such as `backend/`, should be created to house the Lambda function code and the IaC template (`template.yaml`).</description>
+      <source>docs/sprint-artifacts/1-2-initialize-backend-service.md</source>
+    </constraint>
+    <constraint>
+      <type>Testing</type>
+      <description>Initial verification will be performed manually by deploying the stack and using a tool like Postman or `curl` to invoke the live endpoint.</description>
+      <source>docs/sprint-artifacts/1-2-initialize-backend-service.md</source>
+    </constraint>
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>Clarity API Endpoint</name>
+      <kind>REST endpoint</kind>
+      <signature>POST /api/v1/clarity</signature>
+      <path>Will be implemented in this story</path>
+      <description>Receives a user query, processes it through the necessary AI services, and returns an actionable result.</description>
+      <source>docs/architecture.md#4-API-Design-MVP</source>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>Initial verification will be manual, involving deployment of the serverless stack and direct invocation of the API Gateway endpoint.</standards>
+    <locations>Manual testing via Postman or curl against deployed endpoint.</locations>
+    <ideas>
+      <test-idea ac-id="1">Verify API Gateway endpoint creation and accessibility.</test-idea>
+      <test-idea ac-id="2">Verify Lambda function deployment and integration with API Gateway.</test-idea>
+      <test-idea ac-id="3">Send POST request to /api/v1/clarity endpoint and assert 200 OK with {"message": "Hello World"} body.</test-idea>
+      <test-idea ac-id="4">Confirm infrastructure is defined as code (e.g., by reviewing SAM template).</test-idea>
+    </ideas>
+  </tests>
+</story-context>
