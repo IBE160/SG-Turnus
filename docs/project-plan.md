@@ -17,12 +17,12 @@
     - [x] File: brainstorming-session-results-date.md
   - [x] /run-agent-task analyst *brainstorm "Brainstorm what it means to have a paid user"
     - [x] File: brainstorming-session-results-date.md
-- [ ] Research
-  - [] /run-agent-task analyst *research "What takes the most time: reading, understanding, memorizing, structuring, or revising?"
-    - [] File: research-domain-2025-12-03.md
-- [] Product Brief
-  - [] /run-agent-task analyst *product-brief "Read the two brainstorming sessions the research session and the @proposal.md file, and create a product brief for the project."
-    - [] File: product-brief.md
+- [x] Research
+  - [x] /run-agent-task analyst *research "What takes the most time: reading, understanding, memorizing, structuring, or revising?"
+    - [x] File: research-domain-2025-12-03.md
+- [x] Product Brief
+  - [x] /run-agent-task analyst product breif "Read both the brainstorming sessions and the research session, and the @proposal.md file and create a product brief for the project"
+    - [x] File: product-brief.md
 
 ## Fase 1
 
