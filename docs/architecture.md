@@ -1,66 +1,151 @@
-# Architecture: The AI Helping Tool
+# Architecture Specification: The AI Helping Tool
 
+**Version:** 1.0
+**Author:** BMM Architect
 **Date:** 2025-12-04
-**Author:** Mary, Business Analyst
 
-## 1. Overview
+## 1. Architectural Drivers
 
-This document outlines the proposed architecture for "The AI Helping Tool," an AI-powered study partner. The architecture is designed to be mobile-first, with a cloud-backed backend, and to support the MVP features of camera and voice input. The primary goal is to create a scalable and secure system that can be extended in the future.
+This architecture is designed to meet the primary business and technical requirements outlined in the PRD and UX Design Specification. The key drivers are:
 
-## 2. High-Level Architecture
+- **Performance:** The core "Instant Clarity" loop must complete in **under 2 seconds**. This dictates a low-latency, high-performance design.
+- **Scalability:** The system must handle **10,000 users** at launch and scale efficiently.
+- **Cross-Platform:** The user experience must be consistent across **iOS, Android, and Web**.
+- **Multi-Modal Input:** The system must process **text, image, and audio** inputs seamlessly.
+- **Rapid Development:** The MVP must be delivered efficiently, prioritizing the core value proposition.
+- **Frictionless UX:** The design must support the "Calm & Focused" and "Effortless Entry" principles defined in the UX specification.
 
-The system will be composed of three main components:
+## 2. System Architecture: C4 Model
 
-1.  **Mobile Application (Client):** A native mobile application for iOS and Android that provides the user interface for the tool.
-2.  **Backend (Server):** A cloud-based backend that handles the business logic, AI processing, and data storage.
-3.  **AI Service:** A third-party AI service that provides the text, image, and audio processing capabilities.
+The proposed architecture is a **client-server model** utilizing a serverless backend to orchestrate multiple specialized AI services. This provides maximum scalability and performance while minimizing operational overhead.
 
-![High-Level Architecture](images/high-level-architecture.png)
+### 2.1 Level 1: System Context Diagram
 
-## 3. Mobile Application (Client)
+This diagram shows how "The AI Helping Tool" fits into its environment and who interacts with it.
 
-The mobile application will be built using a cross-platform framework such as React Native or Flutter to ensure that the same codebase can be used for both iOS and Android. The application will be responsible for:
+```mermaid
+graph TD
+    subgraph "The World"
+        A[Student (User)]
+    end
 
-*   Providing a simple and intuitive user interface for the tool.
-*   Capturing text, image, and audio input from the user.
-*   Sending the user input to the backend for processing.
-*   Displaying the results from the backend to the user.
+    subgraph "AI Services"
+        LLM[LLM Service (e.g., Gemini)]
+        OCR[OCR Service (e.g., AWS Textract)]
+        STT[Speech-to-Text Service (e.g., AWS Transcribe)]
+    end
 
-## 4. Backend (Server)
+    subgraph "Our System"
+        B(AI Helping Tool)
+    end
 
-The backend will be built using a modern and scalable technology stack such as Node.js with Express or Python with Flask. The backend will be responsible for:
+    A -- "Submits query (text, photo, voice)" --> B
+    B -- "Receives actionable clarity" --> A
+    
+    B -- "Sends text for analysis" --> LLM
+    B -- "Sends image for text extraction" --> OCR
+    B -- "Sends audio for transcription" --> STT
 
-*   Providing a RESTful API for the mobile application to communicate with.
-*   Handling user authentication and authorization (post-MVP).
-*   Storing and retrieving user data from a database.
-*   Integrating with the AI service to process the user input.
+    style B fill:#198754,stroke:#333,stroke-width:2px,color:#fff
+```
 
-## 5. AI Service
+### 2.2 Level 2: Container Diagram
 
-The AI service will be a third-party service such as Google Cloud AI or OpenAI. The service will be responsible for:
+This diagram decomposes the "AI Helping Tool" system into its major deployable components (containers).
 
-*   Transcribing audio input to text.
-*   Extracting text from image input.
-*   Analyzing the text input to provide an actionable next step.
+```mermaid
+graph TD
+    A[Student (User)]
 
-## 6. Data Storage
+    subgraph "Our System Boundary"
+        direction LR
+        
+        subgraph "Client Tier"
+            C[Mobile & Web App]
+        end
 
-The user data will be stored in a NoSQL database such as MongoDB or a relational database such as PostgreSQL. The database will be used to store user accounts (post-MVP), user input, and the results from the AI service.
+        subgraph "Backend Tier (Serverless on AWS)"
+            D{API Gateway}
+            E[Clarity Function (Lambda)]
+        end
 
-## 7. Security
+        C -- "1. Sends query via HTTPS" --> D
+        D -- "2. Routes to Lambda" --> E
+        E -- "3a. Orchestrates AI calls" --> F((AI Services))
+        F -- "3b. Returns results" --> E
+        E -- "4. Returns response" --> D
+        D -- "5. Relays response" --> C
+    end
 
-All communication between the mobile application and the backend will be encrypted using TLS. All user data will be encrypted at rest.
+    subgraph "External AI Services Boundary"
+        F
+    end
+    
+    A -- "Interacts with" --> C
 
-## 8. MVP Scope
+    style C fill:#e8f5e9,stroke:#198754
+    style D fill:#f9f9f9,stroke:#333
+    style E fill:#f9f9f9,stroke:#333
+```
 
-The MVP will focus on the core functionality of the tool. The following features will be included in the MVP:
+**Container Descriptions:**
 
-*   Text, image, and audio input.
-*   A single, actionable next step as output.
-*   A simple and intuitive user interface.
+- **Mobile & Web App:** The user-facing application built on a cross-platform framework. Responsible for all UI, device interactions (camera, mic), and communication with the backend.
+- **API Gateway:** The single entry point for all client requests. It handles routing, authentication (post-MVP), and throttling.
+- **Clarity Function (Lambda):** A serverless function that contains the core business logic. It receives the user's query, orchestrates the necessary calls to the downstream AI services, and formats the final response.
+- **AI Services:** A logical grouping of external, third-party services providing the core intelligence:
+    - **LLM Service:** Generates the "actionable clarity" step.
+    - **OCR Service:** Extracts text from images.
+    - **Speech-to-Text Service:** Transcribes audio recordings.
 
-The following features will be out of scope for the MVP:
+## 3. Technology Stack
 
-*   User accounts and profiles.
-*   Complex configuration or settings.
-*   Long-form content generation.
+The technology stack is chosen to align with the architectural drivers.
+
+| Layer | Technology | Rationale |
+| :--- | :--- | :--- |
+| **Frontend** | **Flutter** | **Cross-Platform:** Single codebase for iOS, Android, and Web ensures consistency and development speed. **Performance:** Compiles to native code for high performance. **UI:** Excellent integration with the chosen Material Design system. |
+| **Backend** | **AWS Lambda (Python)** | **Scalability:** Inherently scalable to meet user demand without server management. **Cost-Effective:** Pay-per-use model is ideal for a new product. **Ecosystem:** Native integration with other proposed AWS services. Python is excellent for data handling and AI tasks. |
+| **API Layer**| **AWS API Gateway**| **Managed & Scalable:** Provides a robust, secure, and scalable entry point for the backend. **Integration:** Seamlessly connects to AWS Lambda. |
+| **AI Services** | | |
+| ↳ **OCR** | **AWS Textract** | **Accuracy & Scalability:** A powerful, managed OCR service that integrates easily with Lambda. |
+| ↳ **Transcription** | **AWS Transcribe**| **Managed Service:** High-quality speech-to-text without managing infrastructure. Integrates easily with Lambda. |
+| ↳ **LLM** | **(Abstracted) e.g., Gemini API** | An interface will be created to abstract the specific LLM provider, allowing for flexibility to change models based on cost, performance, or quality. |
+| **Database (Post-MVP)** | **Amazon DynamoDB** | **Scalability & Performance:** A fully managed NoSQL database that offers low-latency performance at any scale, perfect for user session history and accounts. |
+
+
+## 4. API Design (MVP)
+
+The core of the system is a single, well-defined API endpoint.
+
+### `POST /api/v1/clarity`
+
+- **Description:** Receives a user query, processes it through the necessary AI services, and returns an actionable result.
+- **Request Body:**
+  ```json
+  {
+    "inputType": "text" | "image" | "audio",
+    "content": "<string>"
+  }
+  ```
+  - `inputType`: Specifies the type of content being sent.
+  - `content`: Base64-encoded string for `image` and `audio`; plain string for `text`.
+
+- **Success Response (200 OK):**
+  ```json
+  {
+    "clarity": "The single, concise, actionable next step to unblock the user."
+  }
+  ```
+
+- **Error Responses:**
+  - `400 Bad Request` (`IMAGE_UNREADABLE`): If image is unreadable.
+  - `400 Bad Request` (`AUDIO_UNCLEAR`): If audio is unintelligible.
+  - `504 Gateway Timeout` (`AI_TIMEOUT`): If the AI processing takes too long.
+
+## 5. Next Steps
+
+This architecture provides the blueprint for the Solutioning and Implementation phases. The next steps are:
+1.  **Refinement & Review:** Share with PM and TEA for feedback.
+2.  **Epic & Story Creation:** Decompose the work required to build these components.
+3.  **Proof of Concept:** A technical spike may be required to validate the end-to-end performance of the "clarity loop" through the proposed stack.
