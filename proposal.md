@@ -4,7 +4,7 @@ THE AI HELPING TOOL
 ## Background
 Students often struggle to study efficiently due to the large amount of curriculum, numerous assignments, and limited time. Many find it difficult to stay organized, manage deadlines, and understand complex topics on their own.Traditional study methods, such as manual summarizing and note-taking, can be time-consuming and inconsistent. With advances in AI technology, there is now an opportunity to make studying more structured and interactive through automated tools.
 ## Purpose
-helping students plan their curriculum , summarize difficult material, and offer instant feedback or explanations when needed. With an AI assistant available 24/7, students can learn at their own pace, improve productivity, and reduce stress related to academic pressure. The goal of this app is to support students in processing and understanding their course material by automatically creating summaries, flashcards, and quiz questions from uploaded notes. The application offers an effective learning aid while introducing students to practical uses of AI in text analysis
+helping students plan their curriculum , summarize difficult material, and offer instant feedback or explanations when needed. With an AI assistant available 24/7, students can learn at their own pace, improve productivity, and reduce stress related to academic pressure. The goal of this web is to support students in processing and understanding their course material by automatically creating summaries, flashcards, and quiz questions from uploaded notes. The application offers an effective learning aid while introducing students to practical uses of AI in text analysis. The AI Helping Tool will be delivered as a web application (browser-based), not as a native mobile app. The web app will use a responsive design so it also works well on mobile phones and tablets
 
 ## Target Users
 University and college students who want to improve study efficiency and learning outcomes. 
@@ -56,15 +56,16 @@ Purpose: Store processed output for user review, editing, saving, and optional s
 3. As a student, I want to share flashcards or study guides with classmates, so that we can collaborate and reuse materials efficiently.
 
 ## Technical Constraints
-- Must work on mobile phone so the user easy can learn on the go.
+- The web app will use a responsive design so it also works well on mobile phones and tablets
 - Must be able to share the produced material
 - All flashcard, ect must be possible to download to learn when offline.
 - Must support user authentication and secure login to protect personal study materials.
 - Must be able to process uploaded documents in formats like PDF, text, or slides.
 - Must ensure data privacy and secure storage, both locally and in the cloud.
-- Must provide a responsive interface that works on desktop and mobile devices
+- Must provide a responsive interface that works on desktop.
 - Must be able to generate summaries, flashcards, and quizzes reliably using AI, even with large documents.
 - Optional: Offline access to saved study materials (for reviewing without internet).
+- The AI Helping Tool will be delivered as a web application (browser-based), not as a native mobile app.
 
 ## Success Criteria
 - Criterion 1: Users can upload study materials (PDF, slides, text) and receive automatically generated summaries, flashcards, and quiz questions.

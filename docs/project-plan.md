@@ -13,55 +13,55 @@
 - [x] Brainstorming
   - [x] /run-agent-task analyst *brainstorm "Root Cause Analysis and Solution Design for Player Inactivity"
     - [x] File: brainstorming-session-results-2025-12-02.md
-  - [x] /run-agent-task analyst *brainstorm "User Flow Deviations & Edge Cases"
+  - [x] /run-agent-task analyst *brainstorm "User Flow and journeys"
     - [x] File: brainstorming-session-results-2025-12-04.md
 - [x] Research
-  - [x] /run-agent-task analyst *research "What takes the most time: reading, understanding, memorizing, structuring, or revising?"
-    - [x] File: research-domain-2025-12-03.md
-- [x] Product Brief
-  - [x] /run-agent-task analyst product breif "Read both the brainstorming sessions and the research session, and the @proposal.md file and create a product brief for the project"
-    - [x] File: product-brief.md
+  - [] /run-agent-task analyst *research "What takes the most time: reading, understanding, memorizing, structuring, or revising?"
+    - [] File: research-domain-2025-12-03.md
+- [] Product Brief
+  - [] /run-agent-task analyst product breif "Read both the brainstorming sessions and the research session, and the @proposal.md file and create a product brief for the project"
+    - [] File: product-brief.md
 
 ## Fase 1
 
-- [x] Planning
-  - [x] /run-agent-task pm *prd
-    - [x] File: PRD.md
-  - [x] /run-agent-task pm *validate-prd
-    - [x] File: validation-report-2025-12-04-rerun.md
-  - [x] /run-agent-task ux-designer *create-ux-design {docs/maode/ux-design-prompt}
-    - [x] File: ux-design-specification.md
-    - [x] File: ux-color-themes.html
-    - [x] File: ux-design-directions.html
-  - [x] /run-agent-task ux-designer *validate-ux-design {prompt / user-input-file}
+- [] Planning
+  - [] /run-agent-task pm *prd
+    - [] File: PRD.md
+  - [] /run-agent-task pm *validate-prd
+    - [] File: validation-report-2025-12-04-rerun.md
+  - [] /run-agent-task ux-designer *create-ux-design {docs/maode/ux-design-prompt}
+    - [] File: ux-design-specification.md
+    - [] File: ux-color-themes.html
+    - [] File: ux-design-directions.html
+  - [] /run-agent-task ux-designer *validate-ux-design {prompt / user-input-file}
 
 ## Fase 2
 
-- [x] Solutioning
-  - [x] /run-agent-task architect *create-architecture {prompt / user-input-file}
-    - [x] File: architecture.md
-  - [x] /run-agent-task pm *create-epics-and-stories {prompt / user-input-file}
-    - [x] File: epics.md
-  - [x] /run-agent-task tea *test-design {prompt / user-input-file}
-  - [x] /run-agent-task architect *solutioning-gate-check {prompt / user-input-file}
+- [] Solutioning
+  - [] /run-agent-task architect *create-architecture {prompt / user-input-file}
+    - [] File: architecture.md
+  - [] /run-agent-task pm *create-epics-and-stories {prompt / user-input-file}
+    - [] File: epics.md
+  - [] /run-agent-task tea *test-design {prompt / user-input-file}
+  - [] /run-agent-task architect *solutioning-gate-check {prompt / user-input-file}
 
 ## Fase 3
 
-- [x] Implementation
-  - [x] /run-agent-task sm *sprint-planning {prompt / user-input-file}
-    - [x] File: sprint-artifacts/sprint-status.yaml
-  - foreach epic in sprint planning:
-    - [x] /run-agent-task sm create-epic-tech-context {prompt / user-input-file}
-      - [x] File: sprint-artifacts/tech-spec-epic-{{epic_id}}.md
-    - [x] /run-agent-task sm validate-epic-tech-context {prompt / user-input-file}
-    - foreach story in epic:
-      - [x] /run-agent-task sm *create-story {prompt / user-input-file}
-        - [x] File: sprint-artifacts/{{story_key}}.md
-      - [x] /run-agent-task sm *validate-create-story {prompt / user-input-file}
-      - [x] /run-agent-task sm *create-story-context {prompt / user-input-file}
-        - [x] File: sprint-artifacts/{{story_key}}.context.xml5
-      - [ ] /run-agent-task sm *validate-story-context {prompt / user-input-file}
-      - [ ] /run-agent-task sm *story-ready-for-dev {prompt / user-input-file}
+- [] Implementation
+  - [] /run-agent-task sm *sprint-planning {prompt / user-input-file}
+    - [] File: sprint-artifacts/sprint-status.yaml
+  - for each epic in sprint planning:
+    - [] /run-agent-task sm create-epic-tech-context {prompt / user-input-file}
+      - [] File: sprint-artifacts/tech-spec-epic-{{epic_id}}.md
+    - [] /run-agent-task sm validate-epic-tech-context {prompt / user-input-file}
+    - for each story in epic:
+      - [] /run-agent-task sm *create-story {prompt / user-input-file}
+        - [] File: sprint-artifacts/{{story_key}}.md
+      - [] /run-agent-task sm *validate-create-story {prompt / user-input-file}
+      - [] /run-agent-task sm *create-story-context {prompt / user-input-file}
+        - [] File: sprint-artifacts/{{story_key}}.context.xml5
+      - [] /run-agent-task sm *validate-story-context {prompt / user-input-file}
+      - [] /run-agent-task sm *story-ready-for-dev {prompt / user-input-file}
       while code-review != approved:
         - [ ] /run-agent-task dev *develop-story {prompt / user-input-file}
         - [ ] /run-agent-task dev *code-review {prompt / user-input-file}
