@@ -1,0 +1,55 @@
+Brainstorm Prompt 1 — First Principles Thinking
+
+Prompt (high-level form):
+“Using First Principles Thinking, identify the fundamental truths about a Zero-Friction Instant Clarity Engine and the user’s need for a single most helpful next step.”
+
+Condensed Response Summary:
+The engine must assume the user arrives overwhelmed, time-limited, and unable to self-diagnose what they need. The first interaction must reduce cognitive burden while activating engagement. Learning requires structured, active processing, but friction must be minimized. Trust, emotional safety, speed, and interpretive accuracy are foundational. Uncertainty is unavoidable; the system must handle ambiguity gracefully through robust inference and small, corrective steps.
+
+Brainstorm Prompt 2 — Six Thinking Hats: White Hat (Facts)
+
+Prompt (high-level with intent):
+“Identify objective facts and verifiable information about the first interaction and next-step decision logic.”
+
+Condensed Response Summary:
+Cognitive load theory and choice overload research show users abandon tools quickly if overloaded. LLMs can classify tasks but cannot perfectly infer intent. Active recall improves learning; passive input decreases retention. Response latency is critical. Multimodal input is feasible but has distinct constraints. User trust is fragile, and initial interactions shape long-term engagement. Unstructured inputs are common; the system must tolerate noise. The first response has disproportionate behavioural influence.
+
+Brainstorm Prompt 3 — Six Thinking Hats: Red Hat (Feelings & Intuition)
+
+Prompt:
+“Describe emotional reactions a user might experience during the first interaction, both ideal and problematic.”
+
+Condensed Response Summary:
+The ideal emotional state is immediate relief, clarity, and a sense of being supported. The user should feel understood without needing to explain themselves, and lightly energized by a manageable, actionable step. Undesired emotions include frustration, overwhelm, confusion, judgment, or boredom. The tone must be gentle, competent, and confidence-inspiring.
+
+Brainstorm Prompt 4 — Six Thinking Hats: Black Hat (Risks & Caution)
+
+Prompt:
+“Identify the risks, pitfalls, and potential failure points in the first interaction and next-step logic.”
+
+Condensed Response Summary:
+Key risks include misinterpreting user intent, overconfident outputs, or producing steps that are too demanding or too trivial. Latency may break the perception of zero friction. Unclear or incomplete input can lead to misleading next steps. Emotional risks include reinforcing insecurity or frustration. Technical risks include task misclassification and failure to handle ambiguity. The first step may set expectations the system cannot maintain.
+
+Brainstorm Prompt 5 — Six Thinking Hats: Yellow Hat (Benefits)
+
+Prompt:
+“Identify the opportunities, advantages, and positive outcomes of a well-designed first interaction.”
+
+Condensed Response Summary:
+A strong first step reduces cognitive load, builds momentum, strengthens trust, and creates immediate clarity. It forms positive learning habits, enhances retention through active involvement, and supports emotional reassurance. It differentiates the product in the EdTech market and can transform learning from a source of anxiety into a manageable and rewarding process.
+
+Brainstorm Prompt 6 — Six Thinking Hats: Green Hat (Creativity)
+
+Prompt:
+“Generate novel, unconventional, or boundary-pushing ideas for how the system could interpret input or produce next steps.”
+
+Condensed Response Summary:
+Ideas included zero-input interpretation, context reconstruction for incomplete content, reverse-inference tutoring, internal intent sampling, micro-simulation of learning paths, gesture-based input on images, confidence-calibrated next steps, multi-sensory responses, adaptive friction, time-aware step sizing, one-second micro quizzes, parallelized inference engines, and future-step previews. These concepts challenge assumptions and offer new directions for intuitive clarity delivery.
+
+Brainstorm Prompt 7 — Six Thinking Hats: Blue Hat (Synthesis & Process Control)
+
+Prompt:
+“Summarize insights and define concrete next steps for design and research.”
+
+Condensed Response Summary:
+The first interaction must combine zero decision friction with an active, minimal step that immediately produces clarity. The system must handle ambiguity through calibration and present suggestions with subtle confidence. Promising directions include parallelized interpretation, micro-calibration, dynamic friction, and structured pattern families for first responses. Next steps include: defining the decision model, designing first-interaction patterns, and running example-based evaluations before entering PRD and UX phases.

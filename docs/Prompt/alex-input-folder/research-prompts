@@ -1,0 +1,23 @@
+Research Prompt 1 — Decision Model Exploration
+
+Prompt (high-level):
+“Investigate how an AI system can infer the single most helpful next step. Define task categories, signals, uncertainty strategies, and decision flows.”
+
+Condensed Response Summary:
+The model classifies tasks into clarification, summarization, active recall, problem solving, concept linking, and misconception correction. Inputs are analyzed for lexical, structural, and semantic signals. A probabilistic user-state estimate guides step type. Uncertainty triggers calibration mechanisms rather than confident assertions. Decision flows illustrate how varied inputs lead to tailored next steps while maintaining minimal cognitive load and immediate feedback.
+
+Research Prompt 2 — First Interaction UX Patterns
+
+Prompt:
+“Identify best-practice interaction patterns for the first user response—covering simplicity, emotional safety, engagement, and clarity.”
+
+Condensed Response Summary:
+Five patterns were defined: Anchor Question, Micro-Explanation + Quick Check, One-Second Calibration Question, Problem Decomposition, and Concept Snapshot. Each pattern has conditions for use, structure, strengths, and behavioural implications. Together, these patterns form a toolkit that supports reliable, consistent first interactions across different input types and uncertainty levels.
+
+Research Prompt 3 — Technical Constraints and Opportunities
+
+Prompt:
+“Identify technical constraints and architectural inputs relevant to multimodal processing, latency, safety, and robustness.”
+
+Condensed Response Summary:
+Multimodal constraints include OCR limitations, transcription noise, and text-structure inference requirements. Latency must stay below ~1 second for perceived zero friction. Architecture options include single pipeline, parallelized inference, or hybrid systems. Privacy and safety considerations must govern data handling. Known failure modes include misclassification, overconfidence, or long processing times. Opportunities include uncertainty scoring, real-time embeddings, micro-questions, and reconstruction of fragmented inputs.
