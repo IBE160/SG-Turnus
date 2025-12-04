@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UX Design Directions - The AI Helping Tool</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #34495e; margin: 0; padding: 20px; background-color: #f8f9fa; }
+        h1, h2, h3, h4 { color: #2c3e50; }
+        .showcase-header { text-align: center; margin-bottom: 40px; }
+        .showcase-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 40px; }
+        .design-direction-card { background-color: #ffffff; border-radius: 12px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1); overflow: hidden; display: flex; flex-direction: column; }
+        .mockup-header { padding: 20px; text-align: center; border-bottom: 1px solid #eceff1; }
+        .mockup-header h3 { margin-top: 0; margin-bottom: 5px; color: #345995; }
+        .mockup-header p { font-size: 0.85em; color: #7f8c8d; }
+        .mockup-image { width: 100%; height: 250px; background-color: #e9ecef; display: flex; justify-content: center; align-items: center; font-size: 0.9em; color: #555; border-bottom: 1px solid #eceff1; overflow: hidden; position: relative; }
+        .mockup-content { padding: 20px; font-size: 0.9em; color: #555; }
+        .mockup-content ul { list-style: none; padding: 0; margin: 10px 0; }
+        .mockup-content li { margin-bottom: 5px; }
+        .mockup-content li strong { color: #34495e; }
+
+        /* General UI components for mockups */
+        .app-frame { border: 1px solid #ccc; border-radius: 8px; width: 90%; height: 90%; background-color: #fff; overflow: hidden; position: relative; }
+        .top-bar { display: flex; justify-content: space-between; align-items: center; padding: 10px 15px; background-color: #f0f4f7; border-bottom: 1px solid #e0e6eb; color: #345995; font-weight: 500; font-size: 0.9em; }
+        .side-bar { width: 60px; background-color: #345995; color: white; display: flex; flex-direction: column; align-items: center; padding-top: 20px; }
+        .side-bar-item { padding: 10px; margin-bottom: 10px; opacity: 0.7; }
+        .side-bar-item.active { opacity: 1; background-color: rgba(255,255,255,0.1); border-radius: 4px; }
+        .main-content { padding: 20px; flex-grow: 1; }
+        .input-area { background-color: #e9f0f7; border: 1px solid #ced4da; border-radius: 8px; padding: 15px; margin-bottom: 20px; display: flex; flex-direction: column; align-items: center; }
+        .input-area textarea { width: 80%; height: 80px; border: 1px solid #bdc3c7; border-radius: 5px; padding: 10px; font-size: 0.9em; resize: none; }
+        .button-primary { background-color: #345995; color: white; padding: 8px 15px; border-radius: 5px; border: none; cursor: pointer; font-size: 0.85em; margin-top: 10px; }
+        .card { background-color: #fdfdfd; border: 1px solid #e0e6eb; border-radius: 8px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .card h5 { margin-top: 0; margin-bottom: 10px; color: #345995; font-size: 1em; }
+        .card p { font-size: 0.8em; line-height: 1.4; color: #555; }
+        .chat-bubble.user { background-color: #e9f0f7; border-radius: 12px 12px 2px 12px; padding: 8px 12px; margin-bottom: 10px; align-self: flex-end; max-width: 70%; }
+        .chat-bubble.ai { background-color: #fdfdfd; border-radius: 12px 12px 12px 2px; padding: 8px 12px; margin-bottom: 10px; align-self: flex-start; max-width: 70%; border: 1px solid #e0e6eb; }
+        .split-pane { display: flex; height: 100%; }
+        .pane-left, .pane-right { flex: 1; padding: 15px; overflow-y: auto; }
+        .pane-left { border-right: 1px solid #e0e6eb; background-color: #fdfdfd; }
+        .pane-right { background-color: #ffffff; }
+        .next-step-card { background-color: #f0f4f7; border: 1px solid #345995; border-radius: 12px; padding: 20px; text-align: center; margin-top: 30px; }
+        .next-step-card h4 { color: #345995; margin-bottom: 10px; }
+        .next-step-card p { font-size: 1em; color: #2c3e50; }
+        .progress-bar { height: 5px; background-color: #55828b; width: 80%; border-radius: 3px; margin: 10px auto 0; }
+    </style>
+</head>
+<body>
+    <div class="showcase-header">
+        <h1>UX Design Directions for The AI Helping Tool</h1>
+        <p>Explore different visual and interaction approaches for key screens of your application. These mockups use the 'Focused Clarity' theme and Material UI principles.</p>
+    </div>
+
+    <div class="showcase-grid">
+
+        <!-- Direction 1: Focused Input (Dashboard/Home) -->
+        <div class="design-direction-card">
+            <div class="mockup-header">
+                <h3>Direction 1: Focused Input (Dashboard)</h3>
+                <p>Personality: Direct & Efficient. Best for users who prioritize quick input.</p>
+            </div>
+            <div class="mockup-image">
+                <div class="app-frame" style="display: flex;">
+                    <div class="side-bar">
+                        <span class="side-bar-item active">🏠</span>
+                        <span class="side-bar-item">📚</span>
+                        <span class="side-bar-item">⚙️</span>
+                    </div>
+                    <div class="main-content" style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                        <div class="input-area">
+                            <textarea placeholder="Paste text, upload file, or describe your confusion..."></textarea>
+                            <button class="button-primary">Get Clarity</button>
+                        </div>
+                        <div style="width: 80%; text-align: left; margin-top: 20px; font-size: 0.85em; color: #555;">
+                            <h4>Recent Activity</h4>
+                            <div class="card"><p>Summary of 'Quantum Physics Basics'</p></div>
+                            <div class="card"><p>Flashcards for 'Calculus II'</p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mockup-content">
+                <ul>
+                    <li><strong>Layout:</strong> Central, prominent input area; recent activity below.</li>
+                    <li><strong>Density:</strong> Spacious.</li>
+                    <li><strong>Navigation:</strong> Left sidebar for main navigation.</li>
+                    <li><strong>Primary Action Prominence:</strong> High (prominent 'Get Clarity' button).</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Direction 2: Activity Hub (Dashboard/Home) -->
+        <div class="design-direction-card">
+            <div class="mockup-header">
+                <h3>Direction 2: Activity Hub (Dashboard)</h3>
+                <p>Personality: Organized & Engaging. Best for users who manage many materials.</p>
+            </div>
+            <div class="mockup-image">
+                <div class="app-frame" style="display: flex; flex-direction: column;">
+                    <div class="top-bar">
+                        <span>The AI Helping Tool</span>
+                        <span>📚 ⚙️ 🧑‍💻</span>
+                    </div>
+                    <div class="main-content">
+                        <div class="input-area" style="padding: 10px; margin-bottom: 10px;">
+                            <textarea style="height: 50px; width: 90%;" placeholder="Paste text for clarity..."></textarea>
+                            <button class="button-primary" style="margin-top: 5px;">Analyze</button>
+                        </div>
+                        <h4 style="margin-top: 15px; color: #345995;">Your Study Space</h4>
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                            <div class="card"><h5>Recent PRD</h5><p>PRD for the AI Helping Tool...</p></div>
+                            <div class="card"><h5>Brainstorm Session</h5><p>Zero-Friction Engine ideas...</p></div>
+                            <div class="card"><h5>FR Inventory</h5><p>27 functional requirements...</p></div>
+                            <div class="card"><h5>Epics List</h5><p>Upcoming work breakdown...</p></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mockup-content">
+                <ul>
+                    <li><strong>Layout:</strong> Card-based grid for recent materials; smaller input area.</li>
+                    <li><strong>Density:</strong> Balanced.</li>
+                    <li><strong>Navigation:</strong> Top navigation with icons.</li>
+                    <li><strong>Primary Action Prominence:</strong> Medium (input integrated).</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Direction 3: Minimalist Prompt (Dashboard/Home) -->
+        <div class="design-direction-card">
+            <div class="mockup-header">
+                <h3>Direction 3: Minimalist Prompt (Dashboard)</h3>
+                <p>Personality: Calm & Unobtrusive. Best for users who want zero distractions.</p>
+            </div>
+            <div class="mockup-image">
+                <div class="app-frame" style="display: flex; flex-direction: column; justify-content: center; align-items: center; background-color: #f8f9fa;">
+                    <div class="top-bar" style="position: absolute; top: 0; width: 100%; background-color: transparent; border-bottom: none; color: #2c3e50;">
+                        <span>The AI Helping Tool</span>
+                        <span>☰</span>
+                    </div>
+                    <div class="input-area" style="width: 80%; background-color: #ffffff; box-shadow: 0 4px 10px rgba(0,0,0,0.08); border: none; border-radius: 12px; padding: 25px;">
+                        <textarea style="width: 90%; height: 100px; border: none; font-size: 1.1em; text-align: center;" placeholder="What do you need clarity on?"></textarea>
+                        <button class="button-primary" style="width: 50%; padding: 12px;">Get Instant Clarity</button>
+                    </div>
+                </div>
+            </div>
+            <div class="mockup-content">
+                <ul>
+                    <li><strong>Layout:</strong> Very clean, large central prompt for input; minimal surrounding elements.</li>
+                    <li><strong>Density:</strong> Very spacious.</li>
+                    <li><strong>Navigation:</strong> Hidden (e.g., hamburger menu).</li>
+                    <li><strong>Primary Action Prominence:</strong> Very high (large central button).</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Direction 4: Conversational Flow (AI Interaction Screen) -->
+        <div class="design-direction-card">
+            <div class="mockup-header">
+                <h3>Direction 4: Conversational Flow (AI Interaction)</h3>
+                <p>Personality: Interactive & Guided. Best for users familiar with AI chats.</p>
+            </div>
+            <div class="mockup-image">
+                <div class="app-frame" style="display: flex; flex-direction: column;">
+                    <div class="top-bar"><span>Clarify 'Quantum Physics'</span><span style="font-size: 1.2em;">…</span></div>
+                    <div class="main-content" style="display: flex; flex-direction: column; justify-content: flex-end; padding: 10px; flex-grow: 1;">
+                        <div class="chat-bubble user">"Explain the uncertainty principle."</div>
+                        <div class="chat-bubble ai">"The uncertainty principle states that..." <br> <em>Next Step: What aspect do you find most confusing?</em></div>
+                        <div class="input-area" style="margin-top: 15px; padding: 10px;">
+                            <textarea style="height: 40px; width: 90%;" placeholder="Ask a follow-up or provide more text..."></textarea>
+                            <button class="button-primary" style="margin-top: 5px;">Send</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mockup-content">
+                <ul>
+                    <li><strong>Layout:</strong> Chat-like interface; user input at bottom; AI responses in bubbles.</li>
+                    <li><strong>Density:</strong> Balanced.</li>
+                    <li><strong>Interaction:</strong> Linear flow; easy to follow history.</li>
+                    <li><strong>Primary Action Prominence:</strong> High (send button).</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Direction 5: Contextual Split (AI Interaction Screen) -->
+        <div class="design-direction-card">
+            <div class="mockup-header">
+                <h3>Direction 5: Contextual Split (AI Interaction)</h3>
+                <p>Personality: Analytical & Focused. Best for users dissecting complex texts.</p>
+            </div>
+            <div class="mockup-image">
+                <div class="app-frame" style="display: flex;">
+                    <div class="top-bar" style="position: absolute; width: 100%; z-index: 1;"><span>The AI Helping Tool</span></div>
+                    <div class="split-pane" style="margin-top: 40px;">
+                        <div class="pane-left">
+                            <h4 style="color: #345995;">Original Text</h4>
+                            <p style="font-size: 0.8em;"><em>"Quantum entanglement is a physical phenomenon that occurs when a pair or group of particles are generated, interact, or share spatial proximity in a way such that the quantum state of each particle cannot be described independently of the others, even when the particles are separated by a large distance."</em></p>
+                        </div>
+                        <div class="pane-right">
+                            <h4 style="color: #345995;">Next Step from AI</h4>
+                            <div class="card" style="background-color: #f0f4f7; border: 1px solid #55828b;">
+                                <h5>What part of "quantum entanglement" do you want to clarify first?</h5>
+                                <button class="button-primary" style="background-color: #55828b;">Define "Quantum State"</button>
+                                <button class="button-primary" style="background-color: #55828b;">Explain "Separated by Distance"</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mockup-content">
+                <ul>
+                    <li><strong>Layout:</strong> Split screen; original material on left; AI next step on right.</li>
+                    <li><strong>Density:</strong> Dense (information-rich).</li>
+                    <li><strong>Interaction:</strong> Direct selection of choices.</li>
+                    <li><strong>Primary Action Prominence:</strong> High (action buttons within AI response).</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Direction 6: Action-Oriented Card (AI Interaction Screen) -->
+        <div class="design-direction-card">
+            <div class="mockup-header">
+                <h3>Direction 6: Action-Oriented Card (AI Interaction)</h3>
+                <p>Personality: Direct & Effortless. Best for users who want minimal decision-making.</p>
+            </div>
+            <div class="mockup-image">
+                <div class="app-frame" style="display: flex; flex-direction: column; justify-content: center; align-items: center;">
+                    <div class="top-bar" style="position: absolute; top: 0; width: 100%;"><span>The AI Helping Tool</span></div>
+                    <div class="next-step-card">
+                        <h4>You just provided text about 'Cognitive Load'.</h4>
+                        <p>Your most helpful next step is:</p>
+                        <h2>Explain 'Working Memory'</h2>
+                        <div class="progress-bar"></div>
+                        <p style="font-size: 0.8em; margin-top: 15px; color: #555;">(Click to get a concise explanation)</p>
+                    </div>
+                </div>
+            </div>
+            <div class="mockup-content">
+                <ul>
+                    <li><strong>Layout:</strong> Prominent "next step" presented as a single actionable card.</li>
+                    <li><strong>Density:</strong> Spacious.</li>
+                    <li><strong>Interaction:</strong> Focus entirely on the suggested action (single click).</li>
+                    <li><strong>Primary Action Prominence:</strong> Very high (large central action).</li>
+                </ul>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

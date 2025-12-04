@@ -11,8 +11,8 @@
 - [x] /run-agent-task analyst *workflow-init
   - [x] File: bmm-workflow-status.yaml
 - [x] Brainstorming
-  - [] /run-agent-task analyst *brainstorm "Root Cause Analysis and Solution Design for Player Inactivity"
-    - [] File: brainstorming-session-results-2025-12-02.md
+  - [x] /run-agent-task analyst *brainstorm "Root Cause Analysis and Solution Design for Player Inactivity"
+    - [x] File: brainstorming-session-results-2025-12-02.md
   - [x] /run-agent-task analyst *brainstorm "User Flow and journeys"
     - [x] File: brainstorming-session-results-thursday,-4-december-2025.md
 - [x] Research
@@ -28,16 +28,16 @@
 
 ## Fase 1
 
-- [] Planning
-  - [] /run-agent-task pm *prd
-    - [] File: PRD.md
+- [x] Planning
+  - [x] /run-agent-task pm *prd
+    - [x] File: PRD.md
   - [] /run-agent-task pm *validate-prd
     - [] File: validation-report-2025-12-04-rerun.md
-  - [] /run-agent-task ux-designer *create-ux-design {docs/maode/ux-design-prompt}
-    - [] File: ux-design-specification.md
-    - [] File: ux-color-themes.html
-    - [] File: ux-design-directions.html
-  - [] /run-agent-task ux-designer *validate-ux-design {prompt / user-input-file}
+  - [x] /run-agent-task ux-designer *create-ux-design {docs/maode/ux-design-prompt}
+    - [x] File: ux-design-specification.md
+    - [x] File: ux-color-themes.html
+    - [x] File: ux-design-directions.html
+  - [x] /run-agent-task ux-designer *validate-ux-design {prompt / user-input-file}
 
 ## Fase 2
 

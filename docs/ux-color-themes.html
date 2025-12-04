@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UX Color Theme Visualizer - The AI Helping Tool</title>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; line-height: 1.6; color: #333; margin: 0; padding: 20px; background-color: #f4f7f6; }
+        h1, h2, h3, h4 { color: #2c3e50; }
+        .container { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; }
+        .theme-card { background-color: #ffffff; border-radius: 8px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08); overflow: hidden; display: flex; flex-direction: column; }
+        .theme-header { padding: 20px; text-align: center; }
+        .theme-header h3 { margin-top: 0; margin-bottom: 5px; color: #2c3e50; }
+        .theme-header p { font-size: 0.9em; color: #7f8c8d; }
+        .palette { display: flex; flex-wrap: wrap; justify-content: center; padding: 15px 0; border-top: 1px solid #ecf0f1; border-bottom: 1px solid #ecf0f1; }
+        .swatch { width: 60px; height: 60px; margin: 5px; border-radius: 50%; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 0.7em; color: white; text-shadow: 0 0 3px rgba(0,0,0,0.5); position: relative;}
+        .swatch span { position: absolute; bottom: 5px; }
+        .swatch.light-text { color: #333; text-shadow: none; }
+        .components { padding: 20px; background-color: var(--background-light); }
+        .button { padding: 10px 15px; border-radius: 5px; border: none; cursor: pointer; font-size: 0.9em; margin: 5px; transition: all 0.2s ease-in-out; }
+        .button.primary { background-color: var(--primary-color); color: var(--primary-text-color); }
+        .button.primary:hover { opacity: 0.9; }
+        .button.secondary { background-color: var(--secondary-color); color: var(--secondary-text-color); border: 1px solid var(--secondary-color); }
+        .button.secondary:hover { background-color: var(--secondary-hover-color); }
+        .button.outline { background-color: transparent; color: var(--primary-color); border: 1px solid var(--primary-color); }
+        .button.outline:hover { background-color: var(--primary-color); color: var(--primary-text-color); }
+        .button.disabled { opacity: 0.6; cursor: not-allowed; }
+        .input-group { margin-bottom: 15px; }
+        .input-group label { display: block; margin-bottom: 5px; color: var(--text-color); font-size: 0.9em; }
+        .input-group input { width: calc(100% - 20px); padding: 10px; border: 1px solid var(--border-color); border-radius: 5px; font-size: 0.9em; color: var(--text-color); background-color: var(--input-bg); }
+        .input-group input:focus { border-color: var(--primary-color); outline: none; }
+        .input-group.error input { border-color: var(--error-color); }
+        .input-group.error .error-message { color: var(--error-color); font-size: 0.8em; margin-top: 5px; }
+        .alert { padding: 10px 15px; border-radius: 5px; margin-bottom: 10px; font-size: 0.9em; }
+        .alert.success { background-color: var(--success-bg); color: var(--success-color); border: 1px solid var(--success-color); }
+        .alert.error { background-color: var(--error-bg); color: var(--error-color); border: 1px solid var(--error-color); }
+        .text-example { margin-top: 20px; padding: 10px; border-top: 1px solid var(--border-color); }
+        .text-example h4 { color: var(--heading-color); }
+        .text-example p { color: var(--text-color); }
+        .text-example a { color: var(--primary-color); text-decoration: none; }
+
+        /* Theme Variables */
+        :root {
+            /* Default/Fallback values */
+            --primary-color: #3498db; --primary-text-color: #ffffff;
+            --secondary-color: #2ecc71; --secondary-text-color: #ffffff; --secondary-hover-color: #27ae60;
+            --success-color: #27ae60; --success-bg: #e6ffee;
+            --error-color: #e74c3c; --error-bg: #ffe6e6;
+            --warning-color: #f39c12; --warning-bg: #fff8e6;
+            --info-color: #3498db; --info-bg: #e6f7ff;
+            --text-color: #34495e; --heading-color: #2c3e50;
+            --background-light: #f4f7f6; --background-dark: #ecf0f1;
+            --border-color: #bdc3c7; --input-bg: #ffffff;
+        }
+
+        /* Focused Clarity Theme */
+        .theme-focused-clarity {
+            --primary-color: #345995; --primary-text-color: #ffffff;
+            --secondary-color: #55828b; --secondary-text-color: #ffffff; --secondary-hover-color: #4a717a;
+            --success-color: #28a745; --success-bg: #e9f8ed;
+            --error-color: #dc3545; --error-bg: #f8e9eb;
+            --warning-color: #ffc107; --warning-bg: #fff9e6;
+            --info-color: #17a2b8; --info-bg: #e8f9fb;
+            --text-color: #34495e; --heading-color: #2c3e50;
+            --background-light: #f8f9fa; --background-dark: #e9ecef;
+            --border-color: #ced4da; --input-bg: #ffffff;
+        }
+
+        /* Empowering Growth Theme */
+        .theme-empowering-growth {
+            --primary-color: #6a00ff; --primary-text-color: #ffffff;
+            --secondary-color: #00cc66; --secondary-text-color: #ffffff; --secondary-hover-color: #00b35a;
+            --success-color: #30cb00; --success-bg: #edffe6;
+            --error-color: #e91e63; --error-bg: #ffe8ee;
+            --warning-color: #ff8f00; --warning-bg: #fff5e6;
+            --info-color: #2196f3; --info-bg: #e8f5ff;
+            --text-color: #212121; --heading-color: #424242;
+            --background-light: #fcfcfc; --background-dark: #f0f0f0;
+            --border-color: #e0e0e0; --input-bg: #ffffff;
+        }
+
+        /* Vibrant Engagement Theme */
+        .theme-vibrant-engagement {
+            --primary-color: #007bff; --primary-text-color: #ffffff;
+            --secondary-color: #fd7e14; --secondary-text-color: #ffffff; --secondary-hover-color: #e66a00;
+            --success-color: #28a745; --success-bg: #d4edda;
+            --error-color: #dc3545; --error-bg: #f8d7da;
+            --warning-color: #ffc107; --warning-bg: #fff3cd;
+            --info-color: #17a2b8; --info-bg: #d1ecf1;
+            --text-color: #212529; --heading-color: #343a40;
+            --background-light: #f8f9fa; --background-dark: #e9ecef;
+            --border-color: #dee2e6; --input-bg: #ffffff;
+        }
+
+        /* Color-specific text contrast adjustments */
+        .swatch.gray, .swatch.neutral-light { color: #333; text-shadow: none; }
+    </style>
+</head>
+<body>
+    <h1>UX Color Theme Visualizer - The AI Helping Tool</h1>
+    <p>Explore different color palettes and their application to common UI components. This will help us choose a visual foundation that resonates with the project's personality and desired emotional response.</p>
+
+    <div class="container">
+
+        <!-- Theme 1: Focused Clarity -->
+        <div class="theme-card theme-focused-clarity" style="--primary-color: #345995; --primary-text-color: #ffffff; --secondary-color: #55828b; --secondary-text-color: #ffffff; --secondary-hover-color: #4a717a; --success-color: #28a745; --success-bg: #e9f8ed; --error-color: #dc3545; --error-bg: #f8e9eb; --warning-color: #ffc107; --warning-bg: #fff9e6; --info-color: #17a2b8; --info-bg: #e8f9fb; --text-color: #34495e; --heading-color: #2c3e50; --background-light: #f8f9fa; --background-dark: #e9ecef; --border-color: #ced4da; --input-bg: #ffffff;">
+            <div class="theme-header">
+                <h3>Focused Clarity</h3>
+                <p>(Professional, Minimal)</p>
+            </div>
+            <div class="palette">
+                <div class="swatch" style="background-color: #345995;"><span>Primary</span></div>
+                <div class="swatch" style="background-color: #55828b;"><span>Secondary</span></div>
+                <div class="swatch" style="background-color: #28a745;"><span>Success</span></div>
+                <div class="swatch" style="background-color: #dc3545;"><span>Error</span></div>
+                <div class="swatch" style="background-color: #ffc107; color: #333;"><span>Warning</span></div>
+                <div class="swatch" style="background-color: #17a2b8;"><span>Info</span></div>
+                <div class="swatch light-text" style="background-color: #f8f9fa;"><span>BG Light</span></div>
+                <div class="swatch light-text" style="background-color: #e9ecef;"><span>BG Dark</span></div>
+                <div class="swatch" style="background-color: #34495e;"><span>Text</span></div>
+            </div>
+            <div class="components" style="background-color: var(--background-light);">
+                <button class="button primary">Primary Button</button>
+                <button class="button secondary">Secondary</button>
+                <button class="button outline">Outline</button>
+                <button class="button primary disabled">Disabled</button>
+                <div class="input-group">
+                    <label>Label</label>
+                    <input type="text" placeholder="Placeholder Text">
+                </div>
+                <div class="input-group error">
+                    <label>Email</label>
+                    <input type="email" value="invalid@example.com">
+                    <div class="error-message">Invalid email address.</div>
+                </div>
+                <div class="alert success">Success! Your changes have been saved.</div>
+                <div class="alert error">Error: Something went wrong.</div>
+                <div class="text-example">
+                    <h4>Heading Example</h4>
+                    <p>This is some body text. <a href="#">Link example</a>.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Theme 2: Empowering Growth -->
+        <div class="theme-card theme-empowering-growth" style="--primary-color: #6a00ff; --primary-text-color: #ffffff; --secondary-color: #00cc66; --secondary-text-color: #ffffff; --secondary-hover-color: #00b35a; --success-color: #30cb00; --success-bg: #edffe6; --error-color: #e91e63; --error-bg: #ffe8ee; --warning-color: #ff8f00; --warning-bg: #fff5e6; --info-color: #2196f3; --info-bg: #e8f5ff; --text-color: #212121; --heading-color: #424242; --background-light: #fcfcfc; --background-dark: #f0f0f0; --border-color: #e0e0e0; --input-bg: #ffffff;">
+            <div class="theme-header">
+                <h3>Empowering Growth</h3>
+                <p>(Modern, Approachable)</p>
+            </div>
+            <div class="palette">
+                <div class="swatch" style="background-color: #6a00ff;"><span>Primary</span></div>
+                <div class="swatch" style="background-color: #00cc66;"><span>Secondary</span></div>
+                <div class="swatch" style="background-color: #30cb00;"><span>Success</span></div>
+                <div class="swatch" style="background-color: #e91e63;"><span>Error</span></div>
+                <div class="swatch" style="background-color: #ff8f00; color: #333;"><span>Warning</span></div>
+                <div class="swatch" style="background-color: #2196f3;"><span>Info</span></div>
+                <div class="swatch light-text" style="background-color: #fcfcfc;"><span>BG Light</span></div>
+                <div class="swatch light-text" style="background-color: #f0f0f0;"><span>BG Dark</span></div>
+                <div class="swatch" style="background-color: #212121;"><span>Text</span></div>
+            </div>
+            <div class="components" style="background-color: var(--background-light);">
+                <button class="button primary">Primary Button</button>
+                <button class="button secondary">Secondary</button>
+                <button class="button outline">Outline</button>
+                <button class="button primary disabled">Disabled</button>
+                <div class="input-group">
+                    <label>Label</label>
+                    <input type="text" placeholder="Placeholder Text">
+                </div>
+                <div class="input-group error">
+                    <label>Email</label>
+                    <input type="email" value="invalid@example.com">
+                    <div class="error-message">Invalid email address.</div>
+                </div>
+                <div class="alert success">Success! Your changes have been saved.</div>
+                <div class="alert error">Error: Something went wrong.</div>
+                <div class="text-example">
+                    <h4>Heading Example</h4>
+                    <p>This is some body text. <a href="#">Link example</a>.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Theme 3: Vibrant Engagement -->
+        <div class="theme-card theme-vibrant-engagement" style="--primary-color: #007bff; --primary-text-color: #ffffff; --secondary-color: #fd7e14; --secondary-text-color: #ffffff; --secondary-hover-color: #e66a00; --success-color: #28a745; --success-bg: #d4edda; --error-color: #dc3545; --error-bg: #f8d7da; --warning-color: #ffc107; --warning-bg: #fff3cd; --info-color: #17a2b8; --info-bg: #d1ecf1; --text-color: #212529; --heading-color: #343a40; --background-light: #f8f9fa; --background-dark: #e9ecef; --border-color: #dee2e6; --input-bg: #ffffff;">
+            <div class="theme-header">
+                <h3>Vibrant Engagement</h3>
+                <p>(Energetic, Dynamic)</p>
+            </div>
+            <div class="palette">
+                <div class="swatch" style="background-color: #007bff;"><span>Primary</span></div>
+                <div class="swatch" style="background-color: #fd7e14;"><span>Secondary</span></div>
+                <div class="swatch" style="background-color: #28a745;"><span>Success</span></div>
+                <div class="swatch" style="background-color: #dc3545;"><span>Error</span></div>
+                <div class="swatch" style="background-color: #ffc107; color: #333;"><span>Warning</span></div>
+                <div class="swatch" style="background-color: #17a2b8;"><span>Info</span></div>
+                <div class="swatch light-text" style="background-color: #f8f9fa;"><span>BG Light</span></div>
+                <div class="swatch light-text" style="background-color: #e9ecef;"><span>BG Dark</span></div>
+                <div class="swatch" style="background-color: #212529;"><span>Text</span></div>
+            </div>
+            <div class="components" style="background-color: var(--background-light);">
+                <button class="button primary">Primary Button</button>
+                <button class="button secondary">Secondary</button>
+                <button class="button outline">Outline</button>
+                <button class="button primary disabled">Disabled</button>
+                <div class="input-group">
+                    <label>Label</label>
+                    <input type="text" placeholder="Placeholder Text">
+                </div>
+                <div class="input-group error">
+                    <label>Email</label>
+                    <input type="email" value="invalid@example.com">
+                    <div class="error-message">Invalid email address.</div>
+                </div>
+                <div class="alert success">Success! Your changes have been saved.</div>
+                <div class="alert error">Error: Something went wrong.</div>
+                <div class="text-example">
+                    <h4>Heading Example</h4>
+                    <p>This is some body text. <a href="#">Link example</a>.</p>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

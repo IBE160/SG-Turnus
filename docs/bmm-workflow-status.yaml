@@ -9,7 +9,8 @@ workflow_status:
   proposal: "completed"
   analysis: "completed" # Reflects the start of your research phase (technical solutions and UX)
   planning: "in_progress"
-  prd: "/Users/alexanderlindlokken/SG-Turnus/docs/prd.md"
+  prd: "C:\\Users\\mrmag\\Desktop\\SKOLE\\IBE160\\TURNUSPARTIET\\docs/prd.md"
+  create-design: "C:\\Users\\mrmag\\Desktop\\SKOLE\\IBE160\\TURNUSPARTIET\\docs/ux-design-specification.md"
   solutioning: "pending"
   implementation: "pending"
   research_scope:
