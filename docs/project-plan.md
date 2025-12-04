@@ -12,11 +12,9 @@
   - [x] File: bmm-workflow-status.yaml
 - [x] Brainstorming
   - [x] /run-agent-task analyst *brainstorm "Root Cause Analysis and Solution Design for Player Inactivity"
-    - [x] File: brainstorming-session-results-date.md
+    - [x] File: brainstorming-session-results-2025-12-02.md
   - [x] /run-agent-task analyst *brainstorm "User Flow Deviations & Edge Cases"
-    - [x] File: brainstorming-session-results-date.md
-  - [x] /run-agent-task analyst *brainstorm "Brainstorm what it means to have a paid user"
-    - [x] File: brainstorming-session-results-date.md
+    - [x] File: brainstorming-session-results-2025-12-04.md
 - [x] Research
   - [x] /run-agent-task analyst *research "What takes the most time: reading, understanding, memorizing, structuring, or revising?"
     - [x] File: research-domain-2025-12-03.md
@@ -26,17 +24,17 @@
 
 ## Fase 1
 
-- [ ] Planning
-  - [] /run-agent-task pm *prd
-    - [] File: PRD.md
-  - [] /run-agent-task pm *validate-prd
-    - [] File: validation-report-date.md
-  - [ ] /run-agent-task ux-designer *create-ux-design {prompt / user-input-file}
-    - [ ] File: ux-design-specification.md
-    - [ ] File: ux-color-themes.html
-    - [ ] File: ux-design-directions.html
+- [x] Planning
+  - [x] /run-agent-task pm *prd
+    - [x] File: PRD.md
+  - [x] /run-agent-task pm *validate-prd
+    - [x] File: validation-report-2025-12-04-rerun.md
+  - [x] /run-agent-task ux-designer *create-ux-design {docs/maode/ux-design-prompt}
+    - [x] File: ux-design-specification.md
+    - [x] File: ux-color-themes.html
+    - [x] File: ux-design-directions.html
   - [ ] /run-agent-task ux-designer *validate-ux-design {prompt / user-input-file}
-
+*v
 ## Fase 2
 
 - [ ] Solutioning
