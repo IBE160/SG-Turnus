@@ -22,8 +22,8 @@ selected_track: "BMad Method"
 field_type: "greenfield"
 workflow_path: "/Users/alexanderlindlokken/SG-Turnus/.bmad/bmm/workflows/workflow-status/paths/method-greenfield.yaml"
 workflow_status:
-  brainstorm-project: optional
-  research: docs/research-domain-2025-12-03.md
+  brainstorm-project: /Users/alexanderlindlokken/SG-Turnus/docs/brainstorming-session-results-2025-12-04.md
+  research: optional
   product-brief: optional
   prd: required
   validate-prd: optional
