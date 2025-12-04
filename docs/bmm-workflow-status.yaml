@@ -25,12 +25,12 @@ workflow_status:
   brainstorm-project: /Users/alexanderlindlokken/SG-Turnus/docs/brainstorming-session-results-2025-12-04.md
   research: docs/research-domain-2025-12-03.md
   product-brief: docs/product-brief-The AI Helping Tool-2025-12-04.md
-  prd: skipped
-  validate-prd: skipped
-  create-design: skipped
-  create-architecture: docs/architecture.md
-  create-epics-and-stories: docs/epics-and-stories.md
-  test-design: skipped
-  validate-architecture: skipped
-  implementation-readiness: docs/project-plan.md
-  sprint-planning: docs/project-plan.md
+  prd: docs/prd.md
+  validate-prd: optional
+  create-design: docs/ux-design-specification.md
+  create-architecture: required
+  create-epics-and-stories: required
+  test-design: recommended
+  validate-architecture: optional
+  implementation-readiness: required
+  sprint-planning: required

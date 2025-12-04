@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UX Design Directions - The AI Helping Tool</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* Global Styles & Material Design Baseline */
+        :root {
+            --primary: #198754; /* Growth Theme Green */
+            --secondary: #e8f5e9; /* Light Green */
+            --background: #f9f9f9;
+            --surface: #ffffff;
+            --text-primary: #212529;
+            --text-secondary: #5f6368;
+            --border: #e0e0e0;
+            --success: #198754;
+            --error: #d93025;
+            --shadow-light: 0 1px 3px rgba(0,0,0,0.12), 0 1px 2px rgba(0,0,0,0.24);
+            --shadow-medium: 0 3px 6px rgba(0,0,0,0.16), 0 3px 6px rgba(0,0,0,0.23);
+        }
+
+        body {
+            font-family: 'Roboto', sans-serif;
+            margin: 0;
+            padding: 2rem;
+            background-color: var(--background);
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-top: 1.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        h1 { font-size: 2.2rem; }
+        h2 { font-size: 1.8rem; }
+        h3 { font-size: 1.5rem; }
+        h4 { font-size: 1.2rem; }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header h1 {
+            font-size: 2.8rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+            color: var(--primary);
+        }
+
+        .header p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+
+        .design-directions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+            gap: 2.5rem;
+            margin-top: 2rem;
+        }
+
+        .direction-card {
+            background-color: var(--surface);
+            border-radius: 12px;
+            box-shadow: var(--shadow-light);
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .direction-header {
+            background-color: var(--secondary);
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .direction-header h3 {
+            margin: 0;
+            color: var(--primary);
+            font-size: 1.3rem;
+        }
+
+        .direction-header p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 0.25rem;
+        }
+
+        .mockup-preview {
+            flex-grow: 1;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        /* --- Components --- */
+        .mockup-phone {
+            width: 320px; /* Standard mobile width */
+            height: 600px;
+            border: 10px solid #333;
+            border-radius: 30px;
+            margin: 1rem auto;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            position: relative;
+            overflow: hidden;
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .mockup-phone .screen {
+            flex-grow: 1;
+            background-color: #fff;
+            display: flex;
+            flex-direction: column;
+            overflow: auto;
+        }
+
+        .app-bar {
+            background-color: var(--primary);
+            color: white;
+            padding: 0.75rem 1rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            font-size: 1.1rem;
+            font-weight: 500;
+            box-shadow: var(--shadow-light);
+            flex-shrink: 0;
+        }
+        .app-bar .icon { font-size: 1.2rem; cursor: pointer; }
+
+        .input-card {
+            background-color: var(--surface);
+            border-radius: 8px;
+            box-shadow: var(--shadow-light);
+            margin: 1rem;
+            padding: 1.5rem;
+            text-align: center;
+        }
+
+        .input-field {
+            width: calc(100% - 2.5rem); /* Adjust for padding and border */
+            padding: 1rem;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+            background-color: var(--background);
+        }
+
+        .input-field::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .input-icons {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        .input-icon {
+            background-color: var(--secondary);
+            color: var(--primary);
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            cursor: pointer;
+            box-shadow: var(--shadow-light);
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            width: calc(100% - 2rem);
+            margin: 0 auto;
+            display: block;
+            margin-top: 1.5rem;
+        }
+        .btn-primary:hover {
+            background-color: #156d41; /* Slightly darker green */
+        }
+        
+        .output-card {
+            background-color: var(--surface);
+            border-radius: 8px;
+            box-shadow: var(--shadow-light);
+            margin: 1rem;
+            padding: 1.5rem;
+        }
+
+        .tabs {
+            display: flex;
+            background-color: var(--secondary);
+            border-radius: 8px;
+            margin: 1rem;
+            overflow: hidden;
+        }
+        .tab-item {
+            flex: 1;
+            padding: 0.8rem 0.5rem;
+            text-align: center;
+            font-size: 0.9rem;
+            color: var(--primary);
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+        .tab-item.active {
+            background-color: var(--primary);
+            color: white;
+            font-weight: 500;
+        }
+        .tab-item:hover:not(.active) {
+            background-color: #d1e7dd; /* Lighter secondary */
+        }
+        
+        .content-section {
+            padding: 1rem;
+            font-size: 0.95rem;
+        }
+        .content-section p { margin-top: 0; }
+        .content-section ul { padding-left: 1.2rem; }
+        
+        .action-button-group {
+            display: flex;
+            justify-content: space-around;
+            padding: 1rem;
+            border-top: 1px solid var(--border);
+            margin-top: 1rem;
+        }
+        .action-button {
+            background-color: transparent;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+            padding: 0.6rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+        .action-button:hover {
+            background-color: var(--secondary);
+        }
+        
+        .mini-card {
+            background-color: var(--surface);
+            border-radius: 8px;
+            box-shadow: var(--shadow-light);
+            padding: 0.8rem 1rem;
+            margin-bottom: 0.75rem;
+            font-size: 0.9rem;
+            border-left: 4px solid var(--primary);
+        }
+
+        .pill-button {
+            background-color: var(--secondary);
+            color: var(--primary);
+            padding: 0.4rem 0.8rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            margin-right: 0.5rem;
+            margin-bottom: 0.5rem;
+            display: inline-block;
+        }
+
+        /* Responsive Previews (simulated) */
+        .responsive-preview-controls {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+        .responsive-btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--primary);
+            background-color: transparent;
+            color: var(--primary);
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .responsive-btn.active {
+            background-color: var(--primary);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>Design Directions for "The AI Helping Tool"</h1>
+            <p>Exploring visual and interaction approaches for key screens with the "Growth" theme.</p>
+        </div>
+
+        <div class="responsive-preview-controls">
+            <button class="responsive-btn active" data-device="mobile">Mobile View</button>
+            <button class="responsive-btn" data-device="tablet">Tablet View (N/A)</button>
+            <button class="responsive-btn" data-device="desktop">Desktop View (N/A)</button>
+        </div>
+
+        <div class="design-directions-grid">
+
+            <!-- Direction 1.1: Minimalist Input Screen -->
+            <div class="direction-card">
+                <div class="direction-header">
+                    <h3>1.1: Minimalist Input (Momentum Layer)</h3>
+                    <p><strong>Personality:</strong> Calm & Focused. Ultra-clean, puts input front & center.</p>
+                </div>
+                <div class="mockup-preview">
+                    <div class="mockup-phone">
+                        <div class="app-bar"><span>Menu</span><span>The AI Helping Tool</span><span>History</span></div>
+                        <div class="screen" style="justify-content: center; align-items: center;">
+                            <div style="width: 80%;">
+                                <input type="text" class="input-field" placeholder="What are you stuck on?" style="padding: 1.5rem; border-radius: 25px;">
+                                <div class="input-icons">
+                                    <div class="input-icon">📝</div>
+                                    <div class="input-icon">📸</div>
+                                    <div class="input-icon">🎙️</div>
+                                </div>
+                                <button class="btn-primary" style="margin-top: 2rem; border-radius: 25px;">Get Clarity</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Direction 1.2: Contextual Input Screen -->
+            <div class="direction-card">
+                <div class="direction-header">
+                    <h3>1.2: Contextual Input (Momentum Layer)</h3>
+                    <p><strong>Personality:</strong> Friendly & Guided. Shows subtle hints of activity, encourages input.</p>
+                </div>
+                <div class="mockup-preview">
+                    <div class="mockup-phone">
+                        <div class="app-bar"><span>Menu</span><span>The AI Helping Tool</span><span>History</span></div>
+                        <div class="screen">
+                            <div style="padding: 1rem; text-align: center;">
+                                <p style="color: var(--text-secondary); margin-bottom: 0.5rem;">Good morning, BIP!</p>
+                                <h4 style="margin:0; font-size: 1.1rem;">Ready to conquer your studies?</h4>
+                            </div>
+                            <div class="input-card" style="margin-top: 0.5rem; flex-grow: 1; display:flex; flex-direction: column; justify-content: center;">
+                                <input type="text" class="input-field" placeholder="Ask a question or upload material...">
+                                <div class="input-icons">
+                                    <div class="input-icon">📝</div>
+                                    <div class="input-icon">📸</div>
+                                    <div class="input-icon">🎙️</div>
+                                </div>
+                                <button class="btn-primary">Get Clarity</button>
+                            </div>
+                            <div style="text-align: center; padding: 1rem; font-size: 0.8rem; color: var(--text-secondary);">
+                                <p style="margin:0;">Last session: Defined "Cognitive Load"</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Direction 1.3: Action-Oriented Input Screen -->
+            <div class="direction-card">
+                <div class="direction-header">
+                    <h3>1.3: Action-Oriented Input (Momentum Layer)</h3>
+                    <p><strong>Personality:</strong> Direct & Efficient. Guides user immediately to input method.</p>
+                </div>
+                <div class="mockup-preview">
+                    <div class="mockup-phone">
+                        <div class="app-bar"><span>Menu</span><span>The AI Helping Tool</span><span>History</span></div>
+                        <div class="screen" style="justify-content: center; align-items: center;">
+                            <div class="input-card" style="width: 80%; padding: 2rem 1.5rem;">
+                                <h4 style="margin-top: 0; margin-bottom: 1.5rem; text-align: center;">How would you like to get clarity?</h4>
+                                <button class="btn-primary" style="margin-bottom: 1rem;">📝 Type My Question</button>
+                                <button class="btn-primary" style="background-color: var(--secondary); color: var(--primary);">📸 Scan My Textbook</button>
+                                <button class="btn-primary" style="background-color: var(--secondary); color: var(--primary);">🎙️ Speak My Problem</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Direction 2.1: Card-Based Summary Output Screen -->
+            <div class="direction-card">
+                <div class="direction-header">
+                    <h3>2.1: Card-Based Summary (Expansion Layer)</h3>
+                    <p><strong>Personality:</strong> Clean & Digestible. Content in a distinct, scannable card format.</p>
+                </div>
+                <div class="mockup-preview">
+                    <div class="mockup-phone">
+                        <div class="app-bar"><span>&larr; Back</span><span>Clarity Result</span><span>...</span></div>
+                        <div class="screen">
+                            <div class="output-card" style="margin-top: 1.5rem;">
+                                <h4 style="margin-top:0;">What is Cognitive Load?</h4>
+                                <p style="font-weight: 500; color: var(--primary); margin-bottom: 1rem;">Action: Define Intrinsic & Extraneous Load.</p>
+                                <p>Cognitive load refers to the total amount of mental effort being used in the working memory. It is critical to manage this for effective learning.</p>
+                                <div class="action-button-group">
+                                    <button class="action-button">Generate Flashcards</button>
+                                    <button class="action-button">Expand Details</button>
+                                </div>
+                            </div>
+                            <div class="output-card">
+                                <h4 style="margin-top:0;">Related Concepts</h4>
+                                <div class="pill-button">Working Memory</div>
+                                <div class="pill-button">Long-term Memory</div>
+                                <div class="pill-button">Scaffolding</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Direction 2.2: Tabbed Content Output Screen -->
+            <div class="direction-card">
+                <div class="direction-header">
+                    <h3>2.2: Tabbed Content (Expansion Layer)</h3>
+                    <p><strong>Personality:</strong> Organized & Flexible. Offers clear pathways to different content types.</p>
+                </div>
+                <div class="mockup-preview">
+                    <div class="mockup-phone">
+                        <div class="app-bar"><span>&larr; Back</span><span>Clarity Result</span><span>...</span></div>
+                        <div class="screen">
+                            <div class="tabs">
+                                <div class="tab-item active">Summary</div>
+                                <div class="tab-item">Flashcards</div>
+                                <div class="tab-item">Q&A</div>
+                            </div>
+                            <div class="content-section">
+                                <h4 style="margin-top:0;">What is Cognitive Load?</h4>
+                                <p style="font-weight: 500; color: var(--primary); margin-bottom: 1rem;">Action: Define Intrinsic & Extraneous Load.</p>
+                                <p>Cognitive load refers to the total amount of mental effort being used in the working memory. It is critical to manage this for effective learning.</p>
+                                <ul>
+                                    <li>Intrinsic Load: Inherent difficulty of the task.</li>
+                                    <li>Extraneous Load: Caused by poor design or presentation.</li>
+                                </ul>
+                                <div class="action-button-group">
+                                    <button class="action-button">Generate Quiz</button>
+                                    <button class="action-button">Save Result</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Direction 2.3: Progressive Disclosure Output Screen -->
+            <div class="direction-card">
+                <div class="direction-header">
+                    <h3>2.3: Progressive Disclosure (Expansion Layer)</h3>
+                    <p><strong>Personality:</strong> Guided & Uncluttered. Reveals detail only as requested, preventing overwhelm.</p>
+                </div>
+                <div class="mockup-preview">
+                    <div class="mockup-phone">
+                        <div class="app-bar"><span>&larr; Back</span><span>Clarity Result</span><span>...</span></div>
+                        <div class="screen">
+                            <div class="output-card" style="margin-top: 1.5rem;">
+                                <h4 style="margin-top:0;">What is Cognitive Load?</h4>
+                                <p style="font-weight: 500; color: var(--primary); margin-bottom: 1rem;">Action: Define Intrinsic & Extraneous Load.</p>
+                                <p>Cognitive load refers to the total amount of mental effort being used in the working memory.</p>
+                                <p style="text-align: center; margin-top: 1rem;">
+                                    <button class="action-button" style="border: none; background-color: var(--secondary);">Read More</button>
+                                </p>
+                            </div>
+                             <div class="output-card">
+                                <h4 style="margin-top:0;">Your Next Steps</h4>
+                                <div class="mini-card">Review examples of intrinsic load.</div>
+                                <div class="mini-card">Create 3 flashcards on cognitive load types.</div>
+                                <div class="mini-card">Summarize the implications for study methods.</div>
+                                <p style="text-align: center; margin-top: 1rem;">
+                                    <button class="action-button" style="border: none; background-color: var(--secondary);">Generate New Task</button>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const responsiveBtns = document.querySelectorAll('.responsive-btn');
+            const mockupPhones = document.querySelectorAll('.mockup-phone');
+
+            responsiveBtns.forEach(btn => {
+                btn.addEventListener('click', function() {
+                    responsiveBtns.forEach(b => b.classList.remove('active'));
+                    this.classList.add('active');
+                    
+                    const device = this.dataset.device;
+                    // For now, only mobile is implemented visually.
+                    // For tablet/desktop, we'd adjust mockup-phone width/height here
+                    // or toggle different mockup containers.
+                    // Since this is a simple HTML demo, we'll just keep it mobile for now.
+                    // The N/A explicitly states they are not yet implemented.
+                });
+            });
+        });
+    </script>
+
+</body>
+</html>
