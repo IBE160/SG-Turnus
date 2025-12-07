@@ -1,3 +1,13 @@
+name: implementation-readiness
+status: completed
+last_updated: 2025-12-07
+output_file: docs/implementation-readiness-report-2025-12-07.md
+---
+name: create-architecture
+status: completed
+last_updated: 2025-12-07
+output_file: docs/architecture.md
+---
 name: create-epics-and-stories
 status: completed
 last_updated: 2025-12-07
