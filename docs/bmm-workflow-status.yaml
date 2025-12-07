@@ -1,18 +1,4 @@
-generated: "2025-12-04"
-project: "The AI Helping Tool"
-project_type: "Software Development" # Placeholder, please confirm if different
-selected_track: "New Feature" # Placeholder, please confirm if different
-field_type: "AI/ML" # Placeholder, please confirm if different
-workflow_path: ".bmad/bmm/workflows/workflow-status/paths/enterprise-greenfield.yaml"
-workflow_status:
-  brainstorming: "completed"
-  proposal: "completed"
-  analysis: "completed" # Reflects the start of your research phase (technical solutions and UX)
-  planning: "in_progress"
-  prd: "C:\\Users\\mrmag\\Desktop\\SKOLE\\IBE160\\TURNUSPARTIET\\docs/prd.md"
-  create-design: "C:\\Users\\mrmag\\Desktop\\SKOLE\\IBE160\\TURNUSPARTIET\\docs/ux-design-specification.md"
-  solutioning: "pending"
-  implementation: "pending"
-  research_scope:
-    technical_solutions: "completed"
-    ux_best_practices: "completed"
+name: create-epics-and-stories
+status: completed
+last_updated: 2025-12-07
+output_file: docs/epics.md
