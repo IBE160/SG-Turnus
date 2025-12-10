@@ -51,13 +51,14 @@
 
 ## Fase 3
 
-- [] Implementation
-  - [] /run-agent-task sm *sprint-planning {prompt / user-input-file}
-    - [] File: sprint-artifacts/sprint-status.yaml
+- [x] Implementation
+  - [x] /run-agent-task sm *sprint-planning {prompt / user-input-file}
+    - [x] File: sprint-artifacts/sprint-status.yaml
   - for each epic in sprint planning:
-    - [] /run-agent-task sm create-epic-tech-context {prompt / user-input-file}
-      - [] File: sprint-artifacts/tech-spec-epic-{{epic_id}}.md
-    - [] /run-agent-task sm validate-epic-tech-context {prompt / user-input-file}
+    - [x] /run-agent-task sm create-epic-tech-context {prompt / user-input-file}
+      - [x] File: sprint-artifacts/tech-spec-epic-1.md
+    - [x] /run-agent-task sm validate-epic-tech-context {prompt / user-input-file}
+      - [x] File: sprint-artifacts/validation-report-2025-12-10.md
     - for each story in epic:
       - [] /run-agent-task sm *create-story {prompt / user-input-file}
         - [] File: sprint-artifacts/{{story_key}}.md
