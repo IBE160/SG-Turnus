@@ -21,14 +21,21 @@ So that I can begin development efficiently.
 
 ## Tasks / Subtasks
 
-- [ ] Initialize Next.js project with `npx create-next-app@latest the-ai-helping-tool`
+- [ ] Initialize Next.js project with `npx create-next-app@latest the-ai-helping-tool` (AC: 1, 2, 4, 5, 6)
   - [ ] Select `TypeScript`
   - [ ] Select `ESLint`
   - [ ] Select `App Router`
-- [ ] Verify basic setup runs (`npm run dev`)
-- [ ] Ensure `.gitignore` is present and appropriate
-- [ ] Confirm project structure (`/app`, `/components`, `/lib`, `/services`)
-- [ ] Add basic `README.md` (if not generated)
+- [ ] Verify that a new Git repository is initialized (AC: 3)
+  - [ ] Testing: Confirm `.git` directory exists and `git status` shows an initialized repository (AC: 3)
+- [ ] Verify basic setup runs (`npm run dev`) (AC: 5)
+  - [ ] Testing: Run `npm run dev` and confirm application starts without errors (AC: 5)
+- [ ] Ensure `.gitignore` is present and appropriate (AC: 8)
+  - [ ] Testing: Verify `.gitignore` exists and contains entries for `node_modules`, `.next`, and `.env` (AC: 8)
+- [ ] Confirm standard `src` directory structure (`/app`, `/components`, `/lib`, `/services`) (AC: 4)
+  - [ ] Testing: Manually inspect project root for presence of `/app`, `/components`, `/lib`, `/services` (AC: 4)
+- [ ] Add basic `README.md` (if not generated) (AC: 7)
+  - [ ] Testing: Verify `README.md` exists and contains basic setup instructions (AC: 7)
+- [ ] Testing: Run `npm run lint` and confirm no linting errors on initial scaffold (AC: 6)
 
 ## Dev Notes
 
@@ -78,3 +85,8 @@ gemini-1.5-flash
 - /the-ai-helping-tool/frontend/components/...
 - /the-ai-helping-tool/frontend/lib/...
 - /the-ai-helping-tool/frontend/services/...
+
+## Change Log
+
+- **2025-12-10**: Initial draft created by SM agent.
+- **2025-12-10**: Refined "Tasks / Subtasks" with explicit AC references and added testing subtasks. Appended Change Log.
