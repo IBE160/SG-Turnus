@@ -290,8 +290,43 @@ This table maps the user stories and technical implementation of Epic 1 back to 
 
 ## Risks, Assumptions, Open Questions
 
-{{risks_assumptions_questions}}
+### Risks
+
+*   **Third-Party Service Dependency:** Heavy reliance on managed services (Auth0/Clerk, Railway/Render, Resend, S3, PostgreSQL). An outage or significant change in any of these services could impact our timeline or functionality.
+*   **Integration Complexity:** Integrating multiple services (frontend, backend, auth provider, database, storage) can lead to unforeseen issues, especially around security and data flow. The user registration workflow, in particular, has several steps across different systems.
+*   **Environment Mismatch:** Subtle differences between local development environments (e.g., local Postgres vs. managed cloud Postgres) and the production environment could lead to "it works on my machine" issues. Docker usage is recommended but not enforced, increasing this risk.
+*   **Scalability Misconfiguration:** While the chosen architecture is scalable, incorrect configuration of the deployment platform (e.g., auto-scaling rules, database connection pooling) could lead to performance bottlenecks under load.
+
+### Assumptions
+
+*   **Managed Services Meet NFRs:** We assume the chosen managed services (auth, deployment, database) will meet our non-functional requirements for performance, security, and availability out-of-the-box.
+*   **Developer Skillset:** We assume the development team has sufficient expertise in the selected technology stack (Next.js, TypeScript, Python/FastAPI, SQLAlchemy, PostgreSQL, Docker) to implement the design efficiently and securely.
+*   **Stable APIs:** We assume the APIs of the external services we are integrating with (Auth0/Clerk, Resend, AWS S3) will be stable and well-documented.
+*   **Polling is Sufficient for MVP:** We assume that short-polling is an acceptable initial solution for cross-device sync (FR14) and that a real-time WebSocket implementation can be deferred post-MVP without significant user dissatisfaction.
+
+### Open Questions
+
+*   **Specific Managed Provider Choice:** The documents mention "e.g., Auth0, Clerk" and "e.g., Railway, Render". Which specific providers will be used? Final pricing and feature comparisons are needed to make a decision.
+*   **Local Development Consistency:** How will we ensure consistency across local development environments, especially if Docker is not mandatory? Should we provide a fully containerized dev environment setup (`docker-compose.yml`) to mitigate this risk?
+*   **CI/CD Pipeline Details:** The document mentions automated builds and deploys, but what will the specific CI/CD pipeline look like? What triggers deployments (e.g., merge to `main`)? What automated checks (linting, testing) will be included?
+*   **Database Seeding/Migration Strategy:** What is the strategy for managing database schema migrations and seeding initial data for development and testing environments? Will we use a tool like Alembic for the Python backend?
 
 ## Test Strategy Summary
 
-{{test_strategy}}
+The test strategy for Epic 1 focuses on validating the foundational infrastructure and core service integrations to ensure a stable and secure base for future development. The approach is multi-layered, covering unit, integration, and end-to-end testing for the newly created services.
+
+*   **Unit Testing:**
+    *   **Backend (Python/Pytest):** Each service will be tested in isolation. For example, the `UserService` will have unit tests to verify user creation and retrieval logic using mock database connections. Helper functions for data transformation or validation will be tested exhaustively. The target is >80% code coverage for business logic.
+    *   **Frontend (Next.js/Jest & React Testing Library):** Individual React components for the authentication UI (e.g., `LoginForm`, `SignUpForm`) will be unit-tested to verify they render correctly and handle user input. Utility functions within the frontend will also be covered.
+
+*   **Integration Testing:**
+    *   **Backend API (Pytest with Test-Client):** This is a critical focus for this epic. We will write integration tests that make live API calls to a test instance of the Python backend. These tests will verify the entire request/response cycle for each endpoint in `tech-spec-epic-1.md`.
+    *   **Service-to-Service:** We will test the integration points between our backend services and external providers using mocked APIs. For instance, we will test that the `AuthService` correctly calls a mocked `Resend` API when a user registers. The interaction between the `StorageService` and a mocked S3 will also be validated.
+    *   **Database Integration:** Tests will be run against a dedicated test database to ensure the ORM (SQLAlchemy) correctly maps data models to the database schema and that data integrity (e.g., foreign key constraints) is maintained.
+
+*   **End-to-End (E2E) Testing (Cypress/Playwright):**
+    *   A few critical user journeys will be automated to ensure the entire system works together.
+    *   **Test Case 1: User Registration:** A test will automate the process of a new user signing up, receiving a (mocked) verification email, clicking the link, logging in, and landing on the dashboard.
+    *   **Test Case 2: File Upload:** An E2E test will simulate a logged-in user uploading a file and verifying that the file appears in their list of study materials on the UI.
+
+This comprehensive strategy ensures that the core infrastructure is robust, secure, and reliable before any feature development begins in subsequent epics.
