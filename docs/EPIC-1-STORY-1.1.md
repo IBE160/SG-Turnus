@@ -1,6 +1,6 @@
 # Story 1.1: Project Initialization and SPA Scaffolding
 
-Status: drafted
+Status: ready-for-dev
 
 ## Story
 
@@ -66,7 +66,7 @@ So that I can begin development efficiently.
 
 ### Context Reference
 
-<!-- Path(s) to story context XML will be added here by context workflow -->
+- [docs/sprint-artifacts/EPIC-1-STORY-1.1.context.xml]
 
 ### Agent Model Used
 
