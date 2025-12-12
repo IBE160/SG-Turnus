@@ -24,5 +24,5 @@ workflow_path: ".bmad/bmm/workflows/workflow-status/paths/quick-flow-greenfield.
 workflow_status:
   brainstorm-project: docs/brainstorming-session-results-2025-12-04.md
   research: docs/research-technical-constraints.md
-  tech-spec: required
-  sprint-planning: required
+  tech-spec: docs/sprint-artifacts/tech-spec-epic-1.md
+  sprint-planning: docs/sprint-artifacts/sprint-status.yaml

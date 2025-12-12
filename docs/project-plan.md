@@ -60,8 +60,8 @@
     - [x] /run-agent-task sm validate-epic-tech-context {prompt / user-input-file}
       - [x] File: sprint-artifacts/validation-report-2025-12-10.md
     - for each story in epic:
-      - [] /run-agent-task sm *create-story {prompt / user-input-file}
-        - [] File: sprint-artifacts/{{story_key}}.md
+      - [x] /run-agent-task sm *create-story {prompt / user-input-file}
+        - [x] File: sprint-artifacts/1-2-user-account-creation.md
       - [] /run-agent-task sm *validate-create-story {prompt / user-input-file}
       - [] /run-agent-task sm *create-story-context {prompt / user-input-file}
         - [] File: sprint-artifacts/{{story_key}}.context.xml5
