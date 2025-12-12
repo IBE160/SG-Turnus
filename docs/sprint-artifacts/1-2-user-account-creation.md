@@ -1,6 +1,6 @@
 # Story 1.2: user-account-creation
 
-Status: drafted
+Status: ready-for-dev
 
 ## Story
 
@@ -84,7 +84,7 @@ so that I can have a personalized and secure experience.
 
 ### Context Reference
 
-<!-- Path(s) to story context XML will be added here by context workflow -->
+- [docs/sprint-artifacts/1-2-user-account-creation.context.xml]
 
 ### Agent Model Used
 
