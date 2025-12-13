@@ -1,0 +1,17 @@
+<tests>
+    <standards>Multi-layered: Unit (Pytest, Jest), Integration, and E2E (Cypress/Playwright). The project setup allows for future integration of these frameworks.</standards>
+    <locations>'frontend/__tests__/', 'backend/tests/'</locations>
+    <ideas>
+      <idea>Verify valid token and email for backend verification (AC: 2, 3)</idea>
+      <idea>Verify invalid token for backend verification (AC: 2)</idea>
+      <idea>Verify expired token for backend verification (AC: 2)</idea>
+      <idea>Verify non-existent user for backend verification (AC: 2)</idea>
+      <idea>Verify already verified user for backend verification (AC: 3)</idea>
+      <idea>Verify "Verification Successful" page/component creation (AC: 4)</idea>
+      <idea>Verify routing of verification URL to handler (AC: 2)</idea>
+      <idea>Verify success message and redirection on successful verification (AC: 4, 5)</idea>
+      <idea>Verify error message on failed verification (AC: 2)</idea>
+      <idea>Verify email service sends correct verification links (AC: 1, 2)</idea>
+      <idea>Run end-to-end tests for the entire email verification flow (AC: 1, 2, 3, 4, 5)</idea>
+    </ideas>
+  </tests>
