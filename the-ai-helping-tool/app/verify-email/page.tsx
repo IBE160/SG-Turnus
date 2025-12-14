@@ -7,17 +7,22 @@ import Link from 'next/link';
 export default function VerifyEmailPage() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const [message, setMessage] = useState('Verifying your email...');
+
+  const email = searchParams.get('email');
+  const token = searchParams.get('token');
+
+  const [message, setMessage] = useState(
+    (!email || !token) ? 'Verification Failed' : 'Verifying your email...'
+  );
   const [isSuccess, setIsSuccess] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(
+    (!email || !token) ? 'Verification link is incomplete. Please ensure you have the correct email and token.' : null
+  );
 
   useEffect(() => {
-    const email = searchParams.get('email');
-    const token = searchParams.get('token');
-
+    // If email or token are missing, initial state already reflects the error,
+    // so no need to proceed with verification.
     if (!email || !token) {
-      setError('Verification link is incomplete. Please ensure you have the correct email and token.');
-      setMessage('Verification Failed');
       return;
     }
 
@@ -48,7 +53,7 @@ export default function VerifyEmailPage() {
     };
 
     verifyEmail();
-  }, [searchParams, router]);
+  }, [searchParams, router, email, token]);
 
   return (
     <div style={{ padding: '20px', textAlign: 'center' }}>

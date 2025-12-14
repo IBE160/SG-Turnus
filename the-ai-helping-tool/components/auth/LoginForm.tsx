@@ -61,7 +61,7 @@ export default function LoginForm() {
       </Button>
       {/* Optional: Add links for sign-up, forgot password, etc. */}
       <Typography variant="body2" sx={{ mt: 1, textAlign: 'center' }}>
-        Don't have an account? <a href="/signup">Sign Up</a>
+        Don&apos;t have an account? <a href="/signup">Sign Up</a>
       </Typography>
     </Box>
   );

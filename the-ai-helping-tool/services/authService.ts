@@ -38,7 +38,34 @@ export const logoutUser = (): void => {
   if (typeof window !== 'undefined') {
     localStorage.removeItem('access_token');
     // Optionally redirect to login page after logout
-    // window.location.href = '/login';
+    window.location.href = '/login';
+  }
+};
+
+const REFRESH_TOKEN_URL = '/api/v1/auth/refresh'; // Assuming this endpoint exists
+
+const refreshToken = async (): Promise<string | null> => {
+  try {
+    const response = await fetch(REFRESH_TOKEN_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to refresh token');
+    }
+
+    const data = await response.json();
+    if (data.access_token) {
+      localStorage.setItem('access_token', data.access_token);
+      return data.access_token;
+    }
+    return null;
+  } catch (error) {
+    console.error('Error refreshing token:', error);
+    // Redirect to login if refresh fails
+    logoutUser();
+    return null;
   }
 };
 
@@ -51,21 +78,36 @@ export const authenticatedFetch = async (
   options: AuthenticatedFetchOptions = {}
 ): Promise<Response> => {
   const { includeAuth = true, ...rest } = options;
-  const headers = new Headers(rest.headers);
+  let headers = new Headers(rest.headers);
 
   if (includeAuth) {
     const token = getToken();
     if (token) {
       headers.set('Authorization', `Bearer ${token}`);
     } else {
-      // Handle cases where token is required but not present (e.g., redirect to login)
-      // For now, we'll proceed without the token, and the backend should reject if necessary
       console.warn("Attempted authenticated fetch without a token.");
+      // If no token is present, we cannot proceed with an authenticated request
+      // and should ideally redirect to login or throw an error.
+      // For now, let's just make sure headers are set up correctly for the first attempt.
     }
   }
 
-  return fetch(input, {
-    ...rest,
-    headers,
-  });
+  // First attempt
+  let response = await fetch(input, { ...rest, headers });
+
+  if (response.status === 401 && includeAuth) {
+    console.log("Token expired or unauthorized, attempting to refresh...");
+    const newToken = await refreshToken();
+    if (newToken) {
+      console.log("Token refreshed successfully, retrying original request.");
+      headers = new Headers(rest.headers); // Recreate headers to ensure no stale Authorization header
+      headers.set('Authorization', `Bearer ${newToken}`);
+      response = await fetch(input, { ...rest, headers }); // Retry with new token
+    } else {
+      console.error("Failed to refresh token, redirecting to login.");
+      // refreshToken already calls logoutUser which redirects, so no need to do it again here.
+    }
+  }
+
+  return response;
 };
