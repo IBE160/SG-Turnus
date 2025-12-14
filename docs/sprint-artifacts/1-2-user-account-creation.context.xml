@@ -1,10 +1,10 @@
 <story-context id="{bmad_folder}/bmm/workflows/4-implementation/story-context/template" v="1.0">
   <metadata>
     <epicId>1</epicId>
-    <storyId>2</storyId>
+    <storyId>1.2</storyId>
     <title>user-account-creation</title>
     <status>drafted</status>
-    <generatedAt>2025-12-12</generatedAt>
+    <generatedAt>2025-12-14</generatedAt>
     <generator>BMAD Story Context Workflow</generator>
     <sourceStoryPath>docs/sprint-artifacts/1-2-user-account-creation.md</sourceStoryPath>
   </metadata>
@@ -12,7 +12,7 @@
   <story>
     <asA>new user</asA>
     <iWant>to create a personal account using my email and a password</iWant>
-    <soThat>to have a personalized and secure experience</soThat>
+    <soThat>so that I can have a personalized and secure experience</soThat>
     <tasks>
       <task>
         <title>Frontend - Create Sign Up UI</title>
@@ -58,256 +58,117 @@
   </acceptanceCriteria>
 
   <artifacts>
-<docs>
-  <artifact>
-    <path>docs/prd.md</path>
-    <title>The AI Helping Tool - Product Requirements Document</title>
-    <section>Functional Requirements</section>
-    <snippet>FR9: Account Creation: Users shall be able to create personal accounts via email verification or Single Sign-On (SSO). FR10: Secure Authentication: Users shall be able to securely log in and maintain authenticated sessions across multiple devices.</snippet>
-  </artifact>
-  <artifact>
-    <path>docs/prd.md</path>
-    <title>The AI Helping Tool - Product Requirements Document</title>
-    <section>User Journey: Account Creation &amp; Login</section>
-    <snippet>The detailed user journey for account creation and login, including steps, decision points, error states, and success states.</snippet>
-  </artifact>
-  <artifact>
-    <path>docs/prd.md</path>
-    <title>The AI Helping Tool - Product Requirements Document</title>
-    <section>Non-Functional Requirements</section>
-    <snippet>Security: Data Protection, Encryption, User Data Isolation, Authentication &amp; Authorization.</snippet>
-  </artifact>
-  <artifact>
-    <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
-    <title>Epic Technical Specification: Foundation &amp; Core Infrastructure</title>
-    <section>Overview</section>
-    <snippet>Details the implementation plan for Epic 1, including user account management.</snippet>
-  </artifact>
-  <artifact>
-    <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
-    <title>Epic Technical Specification: Foundation &amp; Core Infrastructure</title>
-    <section>Objectives and Scope</section>
-    <snippet>Explicitly mentions implementing user account creation with email/password, email verification, and secure user login.</snippet>
-  </artifact>
-  <artifact>
-    <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
-    <title>Epic Technical Specification: Foundation &amp; Core Infrastructure</title>
-    <section>Services and Modules</section>
-    <snippet>User Service (Backend), Authentication Service (Backend), Auth UI Module (Frontend).</snippet>
-  </artifact>
-  <artifact>
-    <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
-    <title>Epic Technical Specification: Foundation &amp; Core Infrastructure</title>
-    <section>Data Models and Contracts</section>
-    <snippet>Details the `users` table schema in PostgreSQL.</snippet>
-  </artifact>
-  <artifact>
-    <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
-    <title>Epic Technical Specification: Foundation &amp; Core Infrastructure</title>
-    <section>APIs and Interfaces</section>
-    <snippet>Defines `POST /api/v1/auth/register`, `POST /api/v1/auth/verify-email`, `POST /api/v1/auth/login` endpoints.</snippet>
-  </artifact>
-  <artifact>
-    <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
-    <title>Epic Technical Specification: Foundation &amp; Core Infrastructure</title>
-    <section>Workflows and Sequencing</section>
-    <snippet>Detailed "New User Registration and Verification Workflow".</snippet>
-  </artifact>
-  <artifact>
-    <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
-    <title>Epic Technical Specification: Foundation &amp; Core Infrastructure</title>
-    <section>Non-Functional Requirements</section>
-    <snippet>Security: Managed Authentication, JWT Validation, Strict Data Isolation, Encryption.</snippet>
-  </artifact>
-  <artifact>
-    <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
-    <title>Epic Technical Specification: Foundation &amp; Core Infrastructure</title>
-    <section>Dependencies and Integrations</section>
-    <snippet>Managed Authentication Provider (e.g., Auth0/Clerk), Email Service (Resend).</snippet>
-  </artifact>
-  <artifact>
-    <path>docs/architecture.md</path>
-    <title>Architecture</title>
-    <section>Decision Summary</section>
-    <snippet>Authentication: Managed Provider, Next.js frontend, Python backend JWT validation. Data Persistence: PostgreSQL. Email Service: Resend.</snippet>
-  </artifact>
-  <artifact>
-    <path>docs/architecture.md</path>
-    <title>Architecture</title>
-    <section>Project Structure</section>
-    <snippet>Outlines `/frontend/`, `/backend/`, `/the-ai-helping-tool/` structure.</snippet>
-  </artifact>
-  <artifact>
-    <path>docs/architecture.md</path>
-    <title>Architecture</title>
-    <section>Epic to Architecture Mapping</section>
-    <snippet>Epic 1 involves Frontend (Next.js), Backend (Python), Managed Auth Provider, Email Service (Resend).</snippet>
-  </artifact>
-  <artifact>
-    <path>docs/architecture.md</path>
-    <title>Architecture</title>
-    <section>Technology Stack Details</section>
-    <snippet>Lists Next.js, Python backend (FastAPI/Django), PostgreSQL, Auth0/Clerk, Resend.</snippet>
-  </artifact>
-  <artifact>
-    <path>docs/architecture.md</path>
-    <title>Architecture</title>
-    <section>Integration Points</section>
-    <snippet>Next.js Frontend ↔ Python Backend (RESTful API, JSON, JWT), Python Backend ↔ Managed Authentication Provider.</snippet>
-  </artifact>
-  <artifact>
-    <path>docs/architecture.md</path>
-    <title>Architecture</title>
-    <section>Security Architecture</section>
-    <snippet>Details on secure authentication, encryption, access control.</snippet>
-  </artifact>
-  <artifact>
-    <path>docs/ux-design-specification.md</path>
-    <title>The AI Helping Tool UX Design Specification</title>
-    <section>Core User Experience</section>
-    <snippet>Defining Experience, Novel UX Patterns relevant to user interaction.</snippet>
-  </artifact>
-  <artifact>
-    <path>docs/ux-design-specification.md</path>
-    <title>The AI Helping Tool UX Design Specification</title>
-    <section>User Journey: Account Creation &amp; Login</section>
-    <snippet>Detailed steps, decision points, error states, success state for user authentication.</snippet>
-  </artifact>
-  <artifact>
-    <path>docs/ux-design-specification.md</path>
-    <title>The AI Helping Tool UX Design Specification</title>
-    <section>Component Library</section>
-    <snippet>Custom Components Needed (Auth UI Module), Components Requiring Heavy Customization (Buttons, Forms &amp; Input Fields).</snippet>
-  </artifact>
-  <artifact>
-    <path>docs/epics.md</path>
-    <title>The AI Helping Tool - Epic Breakdown</title>
-    <section>Epic 1: Foundation &amp; Core Infrastructure</section>
-    <snippet>Goal includes user account management, secure data handling.</snippet>
-  </artifact>
-  <artifact>
-    <path>docs/epics.md</path>
-    <title>The AI Helping Tool - Epic Breakdown</title>
-    <section>Story 1.2: User Account Creation</section>
-    <snippet>Full story text and Acceptance Criteria.</snippet>
-  </artifact>
-</docs>
+    <docs>
+      <artifact>
+        <path>docs/prd.md</path>
+        <title>The AI Helping Tool - Product Requirements Document</title>
+        <section>Functional Requirements</section>
+        <snippet>FR9: Account Creation: Users shall be able to create personal accounts via email verification or Single Sign-On (SSO).</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
+        <title>Epic Technical Specification: Foundation & Core Infrastructure</title>
+        <section>Services and Modules</section>
+        <snippet>Authentication Service (Backend): Handles user registration, email verification, login, and session management.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
+        <title>Epic Technical Specification: Foundation & Core Infrastructure</title>
+        <section>APIs and Interfaces</section>
+        <snippet>POST /api/v1/auth/register: Creates a new user account.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
+        <title>Epic Technical Specification: Foundation & Core Infrastructure</title>
+        <section>Workflows and Sequencing</section>
+        <snippet>1. New User Registration and Verification Workflow</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Decision Summary</section>
+        <snippet>Authentication: Managed Provider (e.g., Auth0, Clerk)</snippet>
+      </artifact>
+       <artifact>
+        <path>docs/ux-design-specification.md</path>
+        <title>The AI Helping Tool UX Design Specification</title>
+        <section>User Journey: Account Creation &amp; Login</section>
+        <snippet>Detailed steps, decision points, error states, success state for user authentication.</snippet>
+      </artifact>
+    </docs>
     <code>
+      <artifact>
+        <path>backend/app/api/v1/auth.py</path>
+        <kind>api</kind>
+        <symbol>register</symbol>
+        <reason>Backend API endpoint for handling user registration.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/app/core/auth_service.py</path>
+        <kind>service</kind>
+        <symbol>create_user</symbol>
+        <reason>Core business logic for user creation.</reason>
+      </artifact>
       <artifact>
         <path>the-ai-helping-tool/components/auth/SignUpForm.tsx</path>
         <kind>component</kind>
         <symbol>SignUpForm</symbol>
-        <lines></lines>
-        <reason>Frontend UI component for user registration.</reason>
+        <reason>Frontend UI component for the user registration form.</reason>
       </artifact>
       <artifact>
         <path>the-ai-helping-tool/services/authService.ts</path>
         <kind>service</kind>
-        <symbol>registerUser, verifyEmail</symbol>
-        <lines></lines>
-        <reason>Frontend service for API communication related to authentication.</reason>
-      </artifact>
-      <artifact>
-        <path>the-ai-helping-tool/backend/app/api/v1/auth.py</path>
-        <kind>controller</kind>
-        <symbol>register_user, verify_email, login_user</symbol>
-        <lines></lines>
-        <reason>Backend API endpoints for user registration, email verification, and login.</reason>
-      </artifact>
-      <artifact>
-        <path>the-ai-helping-tool/backend/app/core/auth_service.py</path>
-        <kind>service</kind>
-        <symbol>AuthenticationService</symbol>
-        <lines></lines>
-        <reason>Backend business logic for authentication operations.</reason>
-      </artifact>
-      <artifact>
-        <path>the-ai-helping-tool/backend/app/models/user.py</path>
-        <kind>model</kind>
-        <symbol>User</symbol>
-        <lines></lines>
-        <reason>SQLAlchemy ORM model for the 'users' table.</reason>
-      </artifact>
-      <artifact>
-        <path>the-ai-helping-tool/backend/app/schemas/user.py</path>
-        <kind>schema</kind>
-        <symbol>UserCreate, UserResponse</symbol>
-        <lines></lines>
-        <reason>Pydantic schemas for request/response data validation.</reason>
+        <symbol>register</symbol>
+        <reason>Frontend service for calling the registration API endpoint.</reason>
       </artifact>
     </code>
     <dependencies>
-      <ecosystem name="Node.js/npm">
-        <package name="next" version="16.0.8" type="dependency"/>
-        <package name="react" version="19.2.1" type="dependency"/>
-        <package name="react-dom" version="19.2.1" type="dependency"/>
-        <package name="@types/node" version="^20" type="devDependency"/>
-        <package name="@types/react" version="^19" type="devDependency"/>
-        <package name="@types/react-dom" version="^19" type="devDependency"/>
-        <package name="eslint" version="^9" type="devDependency"/>
-        <package name="eslint-config-next" version="16.0.8" type="devDependency"/>
-        <package name="typescript" version="^5" type="devDependency"/>
-      </ecosystem>
-      <ecosystem name="Python/pip">
-        <note>Python backend dependencies (FastAPI/Django, SQLAlchemy, PyJWT, boto3, Pydantic, Celery, Redis) are expected but not yet present in `requirements.txt` as the backend is not yet scaffolded.</note>
-      </ecosystem>
+        <ecosystem name="Node.js/npm">
+            <package name="next" version="16.0.8"/>
+            <package name="react" version="19.2.1"/>
+            <package name="react-dom" version="19.2.1"/>
+            <package name="@mui/material" version="^7.3.6"/>
+        </ecosystem>
+        <ecosystem name="Python/pip">
+            <package name="fastapi"/>
+            <package name="uvicorn"/>
+            <package name="pydantic"/>
+            <package name="resend"/>
+            <package name="email-validator"/>
+        </ecosystem>
     </dependencies>
   </artifacts>
 
   <constraints>
-    <constraint>Use Managed Authentication Provider (e.g., Auth0/Clerk) for user authentication and session management.</constraint>
-    <constraint>Python backend (FastAPI/Django) for API implementation.</constraint>
-    <constraint>PostgreSQL database for storing user data, with SQLAlchemy ORM.</constraint>
-    <constraint>Resend email service for transactional emails, such as account verification.</constraint>
-    <constraint>JWT validation must be performed on every authenticated API request.</constraint>
-    <constraint>Strict data isolation must be enforced: users can only access their own data.</constraint>
-    <constraint>All communication must be encrypted using HTTPS/TLS.</constraint>
-    <constraint>Data at rest in PostgreSQL and S3 must be encrypted.</constraint>
-    <constraint>All sensitive information (API keys, credentials) must be managed via environment variables.</constraint>
-    <constraint>Implement Unit, Integration, and End-to-End tests for all authentication- related functionality.</constraint>
+    <constraint>Use a managed authentication provider (e.g., Auth0, Clerk).</constraint>
+    <constraint>Backend is Python (FastAPI), Frontend is Next.js (TypeScript).</constraint>
+    <constraint>Database is PostgreSQL.</constraint>
+    <constraint>Email service is Resend.</constraint>
+    <constraint>All authenticated endpoints must validate a JWT.</constraint>
+    <constraint>Data must be encrypted in transit (HTTPS) and at rest.</constraint>
+    <constraint>Secrets must be managed via environment variables.</constraint>
   </constraints>
   <interfaces>
     <interface>
-      <name>Register User API</name>
+      <name>Register User</name>
       <kind>REST endpoint</kind>
       <signature>POST /api/v1/auth/register</signature>
-      <path>the-ai-helping-tool/backend/app/api/v1/auth.py</path>
-      <body>{"email": "user@example.com", "auth_provider_id": "provider|uniqueid"}</body>
-      <response>201 Created - {"user_id": 1, "email": "user@example.com"}</response>
-    </interface>
-    <interface>
-      <name>Verify Email API</name>
-      <kind>REST endpoint</kind>
-      <signature>POST /api/v1/auth/verify-email</signature>
-      <path>the-ai-helping-tool/backend/app/api/v1/auth.py</path>
-      <body>{"email": "user@example.com"}</body>
-      <response>202 Accepted - {"message": "Verification email sent."}</response>
-    </interface>
-    <interface>
-      <name>Login User API</name>
-      <kind>REST endpoint</kind>
-      <signature>POST /api/v1/auth/login</signature>
-      <path>the-ai-helping-tool/backend/app/api/v1/auth.py</path>
-      <body>{"auth_provider_id": "provider|uniqueid"}</body>
-      <response>200 OK - {"user_id": 1, "message": "User session confirmed."}</response>
+      <path>backend/app/api/v1/auth.py</path>
     </interface>
   </interfaces>
   <tests>
     <standards>
-      The project employs a multi-layered testing strategy:
-      - Unit Testing: Pytest for Python backend services (targeting &gt;80% coverage), Jest &amp; React Testing Library for Next.js frontend components.
-      - Integration Testing: Pytest with Test-Client for backend API endpoints, mocked APIs for service-to-service interactions, and a dedicated test database for ORM/database integration.
-      - End-to-End (E2E) Testing: Cypress/Playwright for critical user journeys.
+    Unit, Integration, and End-to-End (E2E) testing are required. Backend unit tests use Pytest. Frontend unit tests use Jest and React Testing Library. E2E tests use Cypress or Playwright.
     </standards>
     <locations>
-      <location>the-ai-helping-tool/frontend/__tests__/</location>
-      <location>the-ai-helping-tool/backend/tests/</location>
-      <location>cypress/integration/</location>
+      <location>the-ai-helping-tool/components/auth/__tests__/</location>
+      <location>backend/tests/</location>
+      <location>the-ai-helping-tool/cypress/e2e/</location>
     </locations>
     <ideas>
-      <idea ac_id="1, 2, 6">Unit test for frontend Sign Up form component to verify rendering, user input handling, and basic client-side validation.</idea>
-      <idea ac_id="4, 5, 7">Integration test for the backend `POST /api/v1/auth/register` endpoint, verifying user creation in the database and interaction with the managed auth provider.</idea>
-      <idea ac_id="1-7">E2E test to simulate the complete user registration flow, including form submission, (mocked) email verification, and successful login redirection.</idea>
+      <idea ac_id="1,2,6">Unit test the SignUpForm component for correct rendering and validation logic.</idea>
+      <idea ac_id="4,5,7">Integration test the POST /api/v1/auth/register endpoint to verify user creation and email dispatch.</idea>
+      <idea ac_id="1-7">Write an E2E test for the full sign-up flow.</idea>
     </ideas>
   </tests>
 </story-context>

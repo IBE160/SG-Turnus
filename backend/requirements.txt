@@ -6,3 +6,6 @@ pytest
 httpx
 email-validator
 pytest-mock
+auth0-python
+SQLAlchemy
+psycopg2-binary
