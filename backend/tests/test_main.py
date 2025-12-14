@@ -11,6 +11,7 @@ from backend.main import app
 from backend.app.core import auth_service
 import backend.app.models.user
 import backend.app.services.email_service # Import the module to access EmailService class
+from backend.app.core import jwt_utils # Import jwt_utils
 
 # ----------------------------------------------------
 # Test Database Setup
@@ -49,22 +50,28 @@ client = TestClient(app)
 def mock_external_services_and_singletons():
     """
     Mocks Auth0 and Resend clients by patching specific attributes of the singletons.
+    Also sets up dummy Auth0 environment variables required for jwt_utils.
     """
     # Store original environment variables for restoration
     original_env = os.environ.copy()
 
     # Set dummy environment variables to allow singletons to initialize without ValueError
+    # and for jwt_utils to find required config.
     os.environ["AUTH0_DOMAIN"] = "mock_domain"
+    os.environ["AUTH0_AUDIENCE"] = "mock_audience" # Added for jwt_utils
+    os.environ["AUTH0_ISSUER"] = "https://mock_domain/" # Added for jwt_utils
     os.environ["AUTH0_MANAGEMENT_CLIENT_ID"] = "mock_client_id"
     os.environ["AUTH0_MANAGEMENT_CLIENT_SECRET"] = "mock_client_secret"
     os.environ["RESEND_API_KEY"] = "mock_resend_key"
     os.environ["NEXT_PUBLIC_EMAIL_VERIFICATION_URL"] = "http://localhost:3000"
     os.environ["AUTH0_CLIENT_ID"] = "mock_auth_client_id"
     os.environ["AUTH0_CLIENT_SECRET"] = "mock_auth_client_secret"
-    os.environ["AUTH0_API_AUDIENCE"] = "https://mockapi.example.com"
+    os.environ["AUTH0_API_AUDIENCE"] = "https://mockapi.example.com" # This is for the old auth_service, not jwt_utils
 
     with patch('backend.app.core.auth_service.Auth0') as MockAuth0Class, \
-         patch('resend.Emails.send', new_callable=AsyncMock) as MockResendEmailsSend: # PATCH THIS LINE
+         patch('resend.Emails.send', new_callable=AsyncMock) as MockResendEmailsSend, \
+         patch('backend.main.validate_token', new_callable=AsyncMock) as mock_validate_token, \
+         patch('backend.app.core.jwt_utils.get_jwks', new_callable=AsyncMock) as mock_get_jwks: # Mock jwt_utils.get_jwks
         
         # Configure MockAuth0Class to return a MagicMock instance when instantiated
         mock_auth0_instance = MagicMock()
@@ -83,7 +90,25 @@ def mock_external_services_and_singletons():
         # We also need to configure the return value of MockResendEmailsSend
         MockResendEmailsSend.return_value = MagicMock(id="resend_mock_id_123") # Mock the return value of send
         
-        yield mock_create_method, MockResendEmailsSend # Yield the mock create method, and the patched send method
+        # Configure mock_validate_token to return a valid payload by default
+        mock_validate_token.return_value = {"sub": "auth0|mockuser123", "email": "test@example.com"}
+
+        # Configure mock_get_jwks to return a dummy JWKS structure
+        mock_get_jwks.return_value = {
+            "keys": [
+                {
+                    "alg": "RS256",
+                    "kty": "RSA",
+                    "use": "sig",
+                    "x5c": ["mock_cert"],
+                    "n": "mock_n",
+                    "e": "mock_e",
+                    "kid": "mock_kid"
+                }
+            ]
+        }
+
+        yield mock_create_method, MockResendEmailsSend, mock_validate_token, mock_get_jwks # Yield the new mocks
         
     # Restore original environment variables after the test
     os.environ.clear()
@@ -98,7 +123,7 @@ def mock_httpx_async_client_post():
 # Test successful login
 @pytest.mark.asyncio
 async def test_login_success(mock_external_services_and_singletons, db_session: Session, mock_httpx_async_client_post):
-    mock_auth0_create_method, mock_resend_emails_send = mock_external_services_and_singletons
+    mock_auth0_create_method, mock_resend_emails_send, mock_validate_token, mock_get_jwks = mock_external_services_and_singletons
 
     # Setup mock_httpx_async_client_post for successful login
     mock_response = MagicMock(status_code=200)
@@ -132,7 +157,7 @@ async def test_login_success(mock_external_services_and_singletons, db_session: 
 # Test login with incorrect credentials
 @pytest.mark.asyncio
 async def test_login_incorrect_credentials(mock_external_services_and_singletons, mock_httpx_async_client_post):
-    mock_auth0_create_method, mock_resend_emails_send = mock_external_services_and_singletons
+    mock_auth0_create_method, mock_resend_emails_send, mock_validate_token, mock_get_jwks = mock_external_services_and_singletons
 
     # Setup mock_httpx_async_client_post for incorrect credentials (Auth0 returns 403 Forbidden)
     mock_httpx_async_client_post.return_value = MagicMock(status_code=403)
@@ -145,7 +170,7 @@ async def test_login_incorrect_credentials(mock_external_services_and_singletons
 
     response = client.post(
         "/api/v1/auth/login",
-        json={"email": "wrong@example.com", "password": "WrongPassword!"}
+        json={"email": "wrong@example.com", "password": "Password123!"}
     )
 
     assert response.status_code == 401
@@ -155,7 +180,7 @@ async def test_login_incorrect_credentials(mock_external_services_and_singletons
 # Test login with an internal Auth0 error (e.g., misconfiguration, 500 status)
 @pytest.mark.asyncio
 async def test_login_auth0_internal_error(mock_external_services_and_singletons, mock_httpx_async_client_post):
-    mock_auth0_create_method, mock_resend_emails_send = mock_external_services_and_singletons
+    mock_auth0_create_method, mock_resend_emails_send, mock_validate_token, mock_get_jwks = mock_external_services_and_singletons
 
     # Setup mock_httpx_async_client_post for an internal server error from Auth0
     mock_httpx_async_client_post.return_value = MagicMock(status_code=500)
@@ -186,11 +211,13 @@ def _reinstantiate_auth_service_with_env(env_vars):
     os.environ.update(env_vars)
     # Ensure all Auth0 env vars are present, even if dummy
     os.environ.setdefault("AUTH0_DOMAIN", "dummy_domain")
+    os.environ.setdefault("AUTH0_AUDIENCE", "dummy_audience")
+    os.environ.setdefault("AUTH0_ISSUER", "https://dummy_domain/")
     os.environ.setdefault("AUTH0_MANAGEMENT_CLIENT_ID", "dummy_client_id")
     os.environ.setdefault("AUTH0_MANAGEMENT_CLIENT_SECRET", "dummy_client_secret")
     os.environ.setdefault("AUTH0_CLIENT_ID", "dummy_client_id")
     os.environ.setdefault("AUTH0_CLIENT_SECRET", "dummy_client_secret")
-    os.environ.setdefault("AUTH0_API_AUDIENCE", "dummy_audience")
+    os.environ.setdefault("AUTH0_API_AUDIENCE", "https://mockapi.example.com") # For old auth_service, not jwt_utils
 
     # Re-initialize singletons for this specific test with the desired envs
     # Note: Their __init__ will run and potentially raise ValueError
@@ -210,7 +237,7 @@ def test_health_check():
 
 # Test successful registration
 def test_register_user_success(mock_external_services_and_singletons, db_session: Session):
-    mock_auth0_create_method, mock_resend_emails_send = mock_external_services_and_singletons
+    mock_auth0_create_method, mock_resend_emails_send, mock_validate_token, mock_get_jwks = mock_external_services_and_singletons
     
     response = client.post(
         "/api/v1/auth/register",
@@ -231,7 +258,7 @@ def test_register_user_success(mock_external_services_and_singletons, db_session
 
 # Test duplicate email registration
 def test_register_user_duplicate_email(mock_external_services_and_singletons, db_session: Session):
-    mock_auth0_create_method, mock_resend_emails_send = mock_external_services_and_singletons
+    mock_auth0_create_method, mock_resend_emails_send, mock_validate_token, mock_get_jwks = mock_external_services_and_singletons
     
     # First successful registration
     client.post(
@@ -256,7 +283,7 @@ def test_register_user_duplicate_email(mock_external_services_and_singletons, db
 
 # Test successful email verification
 def test_verify_email_success(mock_external_services_and_singletons, db_session: Session):
-    mock_auth0_create_method, mock_resend_emails_send = mock_external_services_and_singletons
+    mock_auth0_create_method, mock_resend_emails_send, mock_validate_token, mock_get_jwks = mock_external_services_and_singletons
 
     # First, register a user
     register_response = client.post(
@@ -312,7 +339,7 @@ def test_verify_email_user_not_found(db_session: Session):
 
 # Test re-verification of already verified email
 def test_verify_email_already_verified(mock_external_services_and_singletons, db_session: Session):
-    mock_auth0_create_method, mock_resend_emails_send = mock_external_services_and_singletons
+    mock_auth0_create_method, mock_resend_emails_send, mock_validate_token, mock_get_jwks = mock_external_services_and_singletons
     
     # First, register and verify a user
     client.post(
@@ -339,15 +366,27 @@ def test_verify_email_already_verified(mock_external_services_and_singletons, db
     assert reverify_response.json() == {"message": "Email verified successfully."}
 
 # Test accessing protected route without token
-def test_protected_route_unauthenticated():
+def test_protected_route_unauthenticated(mock_external_services_and_singletons): # Add mock_external_services_and_singletons
+    mock_auth0_create_method, mock_resend_emails_send, mock_validate_token, mock_get_jwks = mock_external_services_and_singletons
     response = client.get("/api/v1/protected")
     assert response.status_code == 401
     assert response.json()["detail"] == "Not authenticated"
+    mock_validate_token.assert_not_called() # validate_token should not be called if no token is present
+
+# Test accessing protected route with invalid token
+def test_protected_route_invalid_token(mock_external_services_and_singletons):
+    mock_auth0_create_method, mock_resend_emails_send, mock_validate_token, mock_get_jwks = mock_external_services_and_singletons
+    mock_validate_token.side_effect = ValueError("Invalid token header.") # Simulate invalid token
+    response = client.get("/api/v1/protected", headers={"Authorization": "Bearer invalid_token"})
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Invalid token header."
+    mock_validate_token.assert_called_once_with("invalid_token")
+
 
 # Test successful login and access to protected route
 @pytest.mark.asyncio
 async def test_login_and_access_protected_route(mock_external_services_and_singletons, db_session: Session, mock_httpx_async_client_post):
-    mock_auth0_create_method, mock_resend_emails_send = mock_external_services_and_singletons
+    mock_auth0_create_method, mock_resend_emails_send, mock_validate_token, mock_get_jwks = mock_external_services_and_singletons
 
     # Setup mock_httpx_async_client_post for successful login
     mock_response = MagicMock(status_code=200)
@@ -380,7 +419,7 @@ async def test_login_and_access_protected_route(mock_external_services_and_singl
     )
     assert protected_response.status_code == 200
     assert "Hello" in protected_response.json()["message"]
-    assert "mock_jwt_token_for_protected_route" in protected_response.json()["message"]
+    assert "auth0|mockuser123" in protected_response.json()["message"] # Changed to reflect user_id from payload
 
 # Test Auth0 initialization failure scenario (due to missing env vars)
 def test_auth_service_init_missing_env_vars():
@@ -388,7 +427,7 @@ def test_auth_service_init_missing_env_vars():
     original_env = os.environ.copy()
     
     # Clear Auth0 env vars
-    for key in ["AUTH0_DOMAIN", "AUTH0_MANAGEMENT_CLIENT_ID", "AUTH0_MANAGEMENT_CLIENT_SECRET"]:
+    for key in ["AUTH0_DOMAIN", "AUTH0_MANAGEMENT_CLIENT_ID", "AUTH0_MANAGEMENT_CLIENT_SECRET", "AUTH0_AUDIENCE", "AUTH0_ISSUER"]: # Added AUDIENCE and ISSUER
         os.environ.pop(key, None)
     
     # Set dummy for RESEND and NEXT_PUBLIC_EMAIL_VERIFICATION_URL to allow EmailService to initialize
@@ -418,6 +457,8 @@ def test_email_service_init_missing_env_vars():
     os.environ["AUTH0_MANAGEMENT_CLIENT_ID"] = "dummy_client_id"
     os.environ["AUTH0_MANAGEMENT_CLIENT_SECRET"] = "dummy_client_secret"
     os.environ["NEXT_PUBLIC_EMAIL_VERIFICATION_URL"] = "http://localhost:3000"
+    os.environ["AUTH0_AUDIENCE"] = "dummy_audience" # Added
+    os.environ["AUTH0_ISSUER"] = "https://dummy_domain/" # Added
 
 
     # Assert that EmailService initialization raises a ValueError
