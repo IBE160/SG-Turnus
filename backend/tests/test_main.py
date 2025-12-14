@@ -1,3 +1,4 @@
+import httpx # Import httpx for httpx.HTTPStatusError
 import os
 import re
 from unittest.mock import patch, AsyncMock, MagicMock
@@ -58,6 +59,9 @@ def mock_external_services_and_singletons():
     os.environ["AUTH0_MANAGEMENT_CLIENT_SECRET"] = "mock_client_secret"
     os.environ["RESEND_API_KEY"] = "mock_resend_key"
     os.environ["NEXT_PUBLIC_EMAIL_VERIFICATION_URL"] = "http://localhost:3000"
+    os.environ["AUTH0_CLIENT_ID"] = "mock_auth_client_id"
+    os.environ["AUTH0_CLIENT_SECRET"] = "mock_auth_client_secret"
+    os.environ["AUTH0_API_AUDIENCE"] = "https://mockapi.example.com"
 
     with patch('backend.app.core.auth_service.Auth0') as MockAuth0Class, \
          patch('resend.Emails.send', new_callable=AsyncMock) as MockResendEmailsSend: # PATCH THIS LINE
@@ -85,7 +89,91 @@ def mock_external_services_and_singletons():
     os.environ.clear()
     os.environ.update(original_env)
 
+# Test login endpoint
+@pytest.fixture(autouse=True)
+def mock_httpx_async_client_post():
+    with patch('httpx.AsyncClient.post', new_callable=AsyncMock) as mock_post:
+        yield mock_post
 
+# Test successful login
+@pytest.mark.asyncio
+async def test_login_success(mock_external_services_and_singletons, db_session: Session, mock_httpx_async_client_post):
+    mock_auth0_create_method, mock_resend_emails_send = mock_external_services_and_singletons
+
+    # Setup mock_httpx_async_client_post for successful login
+    mock_response = MagicMock(status_code=200)
+    mock_response.json = AsyncMock(return_value={
+        "access_token": "mock_jwt_token",
+        "expires_in": 3600,
+        "token_type": "Bearer"
+    })
+    mock_response.raise_for_status.return_value = None # Ensure no HTTP error
+    mock_httpx_async_client_post.return_value = mock_response
+
+    # Register a user first in our DB to ensure local user exists or simulate creation
+    client.post(
+        "/api/v1/auth/register",
+        json={"email": "login_test@example.com", "password": "Password123!"}
+    )
+
+    response = client.post(
+        "/api/v1/auth/login",
+        json={"email": "login_test@example.com", "password": "Password123!"}
+    )
+
+    assert response.status_code == 200
+    assert response.json()["access_token"] == "mock_jwt_token"
+    assert response.json()["token_type"] == "Bearer"
+    mock_httpx_async_client_post.assert_called_once()
+    
+    user = db_session.query(backend.app.models.user.User).filter(backend.app.models.user.User.email == "login_test@example.com").first()
+    assert user is not None # Ensure user exists in our DB after login
+
+# Test login with incorrect credentials
+@pytest.mark.asyncio
+async def test_login_incorrect_credentials(mock_external_services_and_singletons, mock_httpx_async_client_post):
+    mock_auth0_create_method, mock_resend_emails_send = mock_external_services_and_singletons
+
+    # Setup mock_httpx_async_client_post for incorrect credentials (Auth0 returns 403 Forbidden)
+    mock_httpx_async_client_post.return_value = MagicMock(status_code=403)
+    mock_httpx_async_client_post.return_value.json.return_value = {"error": "access_denied", "error_description": "Wrong email or password."}
+    mock_httpx_async_client_post.return_value.raise_for_status.side_effect = httpx.HTTPStatusError(
+        "Client error '403 Forbidden' for url 'https://mock_domain/oauth/token'",
+        request=httpx.Request("POST", "https://mock_domain/oauth/token"),
+        response=mock_httpx_async_client_post.return_value
+    )
+
+    response = client.post(
+        "/api/v1/auth/login",
+        json={"email": "wrong@example.com", "password": "WrongPassword!"}
+    )
+
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Incorrect email or password."
+    mock_httpx_async_client_post.assert_called_once()
+
+# Test login with an internal Auth0 error (e.g., misconfiguration, 500 status)
+@pytest.mark.asyncio
+async def test_login_auth0_internal_error(mock_external_services_and_singletons, mock_httpx_async_client_post):
+    mock_auth0_create_method, mock_resend_emails_send = mock_external_services_and_singletons
+
+    # Setup mock_httpx_async_client_post for an internal server error from Auth0
+    mock_httpx_async_client_post.return_value = MagicMock(status_code=500)
+    mock_httpx_async_client_post.return_value.json.return_value = {"error": "internal_error", "error_description": "Something went wrong at Auth0."}
+    mock_httpx_async_client_post.return_value.raise_for_status.side_effect = httpx.HTTPStatusError(
+        "Server error '500 Internal Server Error' for url 'https://mock_domain/oauth/token'",
+        request=httpx.Request("POST", "https://mock_domain/oauth/token"),
+        response=mock_httpx_async_client_post.return_value
+    )
+
+    response = client.post(
+        "/api/v1/auth/login",
+        json={"email": "internal@example.com", "password": "Password123!"}
+    )
+
+    assert response.status_code == 500
+    assert "Auth0 login error" in response.json()["detail"]
+    mock_httpx_async_client_post.assert_called_once()
 # Helper to re-instantiate AuthService for tests needing specific envs
 # This helper is now simpler as it only sets env and returns
 # This helper is used by specific tests to setup env vars
@@ -96,6 +184,13 @@ def _reinstantiate_auth_service_with_env(env_vars):
     # Set new env vars
     os.environ.clear()
     os.environ.update(env_vars)
+    # Ensure all Auth0 env vars are present, even if dummy
+    os.environ.setdefault("AUTH0_DOMAIN", "dummy_domain")
+    os.environ.setdefault("AUTH0_MANAGEMENT_CLIENT_ID", "dummy_client_id")
+    os.environ.setdefault("AUTH0_MANAGEMENT_CLIENT_SECRET", "dummy_client_secret")
+    os.environ.setdefault("AUTH0_CLIENT_ID", "dummy_client_id")
+    os.environ.setdefault("AUTH0_CLIENT_SECRET", "dummy_client_secret")
+    os.environ.setdefault("AUTH0_API_AUDIENCE", "dummy_audience")
 
     # Re-initialize singletons for this specific test with the desired envs
     # Note: Their __init__ will run and potentially raise ValueError
@@ -243,6 +338,50 @@ def test_verify_email_already_verified(mock_external_services_and_singletons, db
     assert reverify_response.status_code == 200
     assert reverify_response.json() == {"message": "Email verified successfully."}
 
+# Test accessing protected route without token
+def test_protected_route_unauthenticated():
+    response = client.get("/api/v1/protected")
+    assert response.status_code == 401
+    assert response.json()["detail"] == "Not authenticated"
+
+# Test successful login and access to protected route
+@pytest.mark.asyncio
+async def test_login_and_access_protected_route(mock_external_services_and_singletons, db_session: Session, mock_httpx_async_client_post):
+    mock_auth0_create_method, mock_resend_emails_send = mock_external_services_and_singletons
+
+    # Setup mock_httpx_async_client_post for successful login
+    mock_response = MagicMock(status_code=200)
+    mock_response.json = AsyncMock(return_value={
+        "access_token": "mock_jwt_token_for_protected_route",
+        "expires_in": 3600,
+        "token_type": "Bearer"
+    })
+    mock_response.raise_for_status.return_value = None
+    mock_httpx_async_client_post.return_value = mock_response
+
+    # Register a user first to ensure local user exists or simulate creation
+    client.post(
+        "/api/v1/auth/register",
+        json={"email": "protected_test@example.com", "password": "Password123!"}
+    )
+
+    # Perform login
+    login_response = client.post(
+        "/api/v1/auth/login",
+        json={"email": "protected_test@example.com", "password": "Password123!"}
+    )
+    assert login_response.status_code == 200
+    access_token = login_response.json()["access_token"]
+
+    # Access protected route with the obtained token
+    protected_response = client.get(
+        "/api/v1/protected",
+        headers={"Authorization": f"Bearer {access_token}"}
+    )
+    assert protected_response.status_code == 200
+    assert "Hello" in protected_response.json()["message"]
+    assert "mock_jwt_token_for_protected_route" in protected_response.json()["message"]
+
 # Test Auth0 initialization failure scenario (due to missing env vars)
 def test_auth_service_init_missing_env_vars():
     # Store original env vars
@@ -258,7 +397,7 @@ def test_auth_service_init_missing_env_vars():
 
 
     # Assert that AuthService initialization raises a ValueError
-    with pytest.raises(ValueError, match="CRITICAL: Auth0 environment variables"):
+    with pytest.raises(ValueError, match="CRITICAL: All required Auth0 environment variables"):
         # Create a fresh instance of AuthService for this test
         auth_service.AuthService() # Call the constructor directly
 

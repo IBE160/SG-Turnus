@@ -1,4 +1,3 @@
-# backend/app/core/auth_service.py
 import os
 import uuid
 from sqlalchemy.orm import Session
@@ -7,6 +6,7 @@ from backend.app.models.user import User
 from fastapi import HTTPException, status
 from auth0.management import Auth0
 from backend.app.services.email_service import email_service # Assuming email_service is correctly configured
+import httpx # Import httpx for making HTTP requests
 
 class UserNotFoundException(Exception):
     pass
@@ -20,18 +20,23 @@ class DuplicateUserException(Exception):
 class Auth0CreationException(Exception):
     pass
 
+class IncorrectLoginCredentialsException(Exception):
+    pass
+
 class AuthService:
     def __init__(self):
         self.auth0_domain = os.getenv("AUTH0_DOMAIN")
         self.auth0_management_client_id = os.getenv("AUTH0_MANAGEMENT_CLIENT_ID")
         self.auth0_management_client_secret = os.getenv("AUTH0_MANAGEMENT_CLIENT_SECRET")
+        
+        self.auth0_client_id = os.getenv("AUTH0_CLIENT_ID") # For authentication API
+        self.auth0_client_secret = os.getenv("AUTH0_CLIENT_SECRET") # For authentication API
 
-        if not all([self.auth0_domain, self.auth0_management_client_id, self.auth0_management_client_secret]):
-            # Instead of falling back to mock, raise an error
-            raise ValueError("CRITICAL: Auth0 environment variables (AUTH0_DOMAIN, AUTH0_MANAGEMENT_CLIENT_ID, AUTH0_MANAGEMENT_CLIENT_SECRET) must be set for AuthService to initialize securely.")
+        if not all([self.auth0_domain, self.auth0_management_client_id, self.auth0_management_client_secret, self.auth0_client_id, self.auth0_client_secret]):
+            raise ValueError("CRITICAL: All required Auth0 environment variables (AUTH0_DOMAIN, AUTH0_MANAGEMENT_CLIENT_ID, AUTH0_MANAGEMENT_CLIENT_SECRET, AUTH0_CLIENT_ID, AUTH0_CLIENT_SECRET) must be set for AuthService to initialize securely.")
         else:
             self._auth0 = Auth0(self.auth0_domain, self.auth0_management_client_id)
-            print(f"Auth0 client initialized for domain: {self.auth0_domain}")
+            print(f"Auth0 management client initialized for domain: {self.auth0_domain}")
 
     async def register_user(self, email: str, password: str, db: Session):
         # Check if user already exists in our database
@@ -105,5 +110,56 @@ class AuthService:
         
         print(f"User email verified: {email}")
         return True
+
+    async def login(self, email: str, password: str, db: Session) -> dict:
+        """Authenticates user with Auth0 and returns access token."""
+        auth_url = f"https://{self.auth0_domain}/oauth/token"
+        headers = {"Content-Type": "application/json"}
+        payload = {
+            "grant_type": "password",
+            "username": email,
+            "password": password,
+            "audience": os.getenv("AUTH0_API_AUDIENCE"), # The audience for your API
+            "client_id": self.auth0_client_id,
+            "client_secret": self.auth0_client_secret
+        }
+
+        async with httpx.AsyncClient() as client:
+            try:
+                response = await client.post(auth_url, json=payload, headers=headers)
+                response.raise_for_status() # Raise an exception for HTTP errors (4xx or 5xx)
+                auth_data = await response.json()
+
+                if "access_token" not in auth_data:
+                    raise IncorrectLoginCredentialsException("Auth0 did not return an access token.")
+                
+                # Verify or create user in our database if not exists
+                user = db.query(User).filter(User.email == email).first()
+                if not user:
+                    # If user exists in Auth0 but not our DB, create a minimal entry
+                    # In a real system, you might fetch user_id from Auth0 token or /userinfo endpoint
+                    # For now, we'll use a placeholder auth_provider_id or extract from token if available
+                    auth_provider_id = "auth0|" + str(uuid.uuid4()) # Placeholder
+                    # A more robust solution would decode the JWT to get the sub (user_id)
+                    new_user = User(auth_provider_id=auth_provider_id, email=email, is_verified=True) # Assume verified if logged in
+                    db.add(new_user)
+                    db.commit()
+                    db.refresh(new_user)
+                    print(f"Created local user entry for {email} after successful Auth0 login.")
+
+                print(f"User {email} logged in successfully via Auth0.")
+                return auth_data # Contains access_token, expires_in, token_type
+
+            except httpx.HTTPStatusError as e:
+                print(f"Auth0 login failed for {email}: {e.response.text}")
+                if e.response.status_code == 403: # Forbidden, often indicates incorrect credentials
+                    raise IncorrectLoginCredentialsException("Incorrect email or password.")
+                raise HTTPException(status_code=e.response.status_code, detail=f"Auth0 login error: {e.response.text}")
+            except IncorrectLoginCredentialsException as e: # Catch custom exception
+                raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+            except Exception as e:
+                print(f"An unexpected error occurred during login for {email}: {e}")
+                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail="An unexpected error occurred during login.")
+
 
 auth_service = AuthService() # Instantiate once

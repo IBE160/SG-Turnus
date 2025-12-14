@@ -1,9 +1,10 @@
 # backend/app/api/v1/auth.py
 from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import BaseModel, EmailStr
-from backend.app.core.auth_service import auth_service, UserNotFoundException, InvalidVerificationTokenException, DuplicateUserException, Auth0CreationException
+from backend.app.core.auth_service import auth_service, UserNotFoundException, InvalidVerificationTokenException, DuplicateUserException, Auth0CreationException, IncorrectLoginCredentialsException
 from backend.app.database import get_db
 from sqlalchemy.orm import Session
+from backend.app.api.schemas import LoginRequest, TokenResponse # Import new schemas
 
 router = APIRouter()
 
@@ -33,3 +34,16 @@ async def verify_email_endpoint(data: schemas.VerifyEmailRequest, db: Session = 
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
     except InvalidVerificationTokenException as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+@router.post("/auth/login", response_model=TokenResponse)
+async def login_for_access_token(request: LoginRequest, db: Session = Depends(get_db)):
+    try:
+        token_data = await auth_service.login(request.email, request.password, db)
+        return TokenResponse(access_token=token_data["access_token"], token_type=token_data.get("token_type", "bearer"))
+    except IncorrectLoginCredentialsException as e:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=str(e),
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+

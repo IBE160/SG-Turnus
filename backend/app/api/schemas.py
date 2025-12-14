@@ -11,3 +11,11 @@ class UserResponse(BaseModel):
 class VerifyEmailRequest(BaseModel):
     email: EmailStr
     token: str
+
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+class TokenResponse(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
