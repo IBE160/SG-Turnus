@@ -47,3 +47,4 @@ backend/venv/
 \n# Databases
 *.db
 *.sqlite3
+backend_nohup.out
