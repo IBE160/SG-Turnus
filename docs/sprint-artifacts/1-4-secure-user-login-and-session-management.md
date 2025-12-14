@@ -1,6 +1,6 @@
 # Story 1.4: Secure User Login and Session Management
 
-Status: review
+Status: done
 
 ## Story
 
