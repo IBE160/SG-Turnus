@@ -1,39 +1,34 @@
-from fastapi.testclient import TestClient
-from backend.main import app
-from backend.app.core import auth_service
-from backend.app.database import get_db
-import backend.app.models.user # Import the module to get its Base and User
-import pytest
-from unittest.mock import patch, AsyncMock, MagicMock
 import os
 import re
+from unittest.mock import patch, AsyncMock, MagicMock
+import pytest
+from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, Session
+from sqlalchemy.orm import Session, sessionmaker
+
+from backend.main import app
+from backend.app.core import auth_service
+import backend.app.models.user
+import backend.app.services.email_service # Import the module to access EmailService class
 
 # ----------------------------------------------------
 # Test Database Setup
 # ----------------------------------------------------
 
-# Create a separate test engine and sessionmaker
-TEST_SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db" # Or :memory: for purely in-memory
+TEST_SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
 test_engine = create_engine(TEST_SQLALCHEMY_DATABASE_URL)
 TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
 
 @pytest.fixture(scope="function")
 def db_session():
-    """
-    Provides a clean, independent database session for each test function.
-    Tables are created before the test and dropped after.
-    """
-    backend.app.models.user.Base.metadata.create_all(bind=test_engine) # Create tables for this test
+    backend.app.models.user.Base.metadata.create_all(bind=test_engine)
     db = TestingSessionLocal()
     try:
         yield db
     finally:
         db.close()
-        backend.app.models.user.Base.metadata.drop_all(bind=test_engine) # Drop tables after test
+        backend.app.models.user.Base.metadata.drop_all(bind=test_engine)
 
-# Override the get_db dependency for FastAPI app during testing
 def override_get_db():
     db = TestingSessionLocal()
     try:
@@ -41,10 +36,8 @@ def override_get_db():
     finally:
         db.close()
 
-# Apply the dependency override to the app
-app.dependency_overrides[get_db] = override_get_db
+app.dependency_overrides[backend.app.database.get_db] = override_get_db
 
-# Create a TestClient instance
 client = TestClient(app)
 
 # ----------------------------------------------------
@@ -52,19 +45,78 @@ client = TestClient(app)
 # ----------------------------------------------------
 
 @pytest.fixture(autouse=True)
-def clear_auth_service_mocks():
+def mock_external_services_and_singletons():
     """
-    Pytest autouse fixture, now empty as mock_db is removed.
+    Mocks Auth0 and Resend clients by patching specific attributes of the singletons.
     """
-    pass # No longer needed as mock_db is removed
+    # Store original environment variables for restoration
+    original_env = os.environ.copy()
+
+    # Set dummy environment variables to allow singletons to initialize without ValueError
+    os.environ["AUTH0_DOMAIN"] = "mock_domain"
+    os.environ["AUTH0_MANAGEMENT_CLIENT_ID"] = "mock_client_id"
+    os.environ["AUTH0_MANAGEMENT_CLIENT_SECRET"] = "mock_client_secret"
+    os.environ["RESEND_API_KEY"] = "mock_resend_key"
+    os.environ["NEXT_PUBLIC_EMAIL_VERIFICATION_URL"] = "http://localhost:3000"
+
+    with patch('backend.app.core.auth_service.Auth0') as MockAuth0Class, \
+         patch('resend.Emails.send', new_callable=AsyncMock) as MockResendEmailsSend: # PATCH THIS LINE
+        
+        # Configure MockAuth0Class to return a MagicMock instance when instantiated
+        mock_auth0_instance = MagicMock()
+        mock_users_object = MagicMock() # Mock the 'users' attribute
+        mock_auth0_instance.users = mock_users_object 
+
+        mock_create_method = MagicMock() # Mock the 'create' method
+        mock_create_method.return_value = {"user_id": f"auth0|mock_id_{os.urandom(8).hex()}"}
+        mock_users_object.create = mock_create_method
+
+        MockAuth0Class.return_value = mock_auth0_instance # When Auth0() is called, return this mock instance
+
+        # Manually set the _auth0 attribute of the *existing* auth_service singleton to our mock
+        auth_service.auth_service._auth0 = mock_auth0_instance
+        
+        # We also need to configure the return value of MockResendEmailsSend
+        MockResendEmailsSend.return_value = MagicMock(id="resend_mock_id_123") # Mock the return value of send
+        
+        yield mock_create_method, MockResendEmailsSend # Yield the mock create method, and the patched send method
+        
+    # Restore original environment variables after the test
+    os.environ.clear()
+    os.environ.update(original_env)
+
+
+# Helper to re-instantiate AuthService for tests needing specific envs
+# This helper is now simpler as it only sets env and returns
+# This helper is used by specific tests to setup env vars
+def _reinstantiate_auth_service_with_env(env_vars):
+    # Store original env vars
+    original_env = os.environ.copy()
+
+    # Set new env vars
+    os.environ.clear()
+    os.environ.update(env_vars)
+
+    # Re-initialize singletons for this specific test with the desired envs
+    # Note: Their __init__ will run and potentially raise ValueError
+    # if env_vars don't meet their requirements.
+    auth_service.auth_service = auth_service.AuthService()
+    backend.app.services.email_service.email_service = backend.app.services.email_service.EmailService()
+
+    # Restore original env vars
+    os.environ.clear()
+    os.environ.update(original_env)
+
 
 def test_health_check():
     response = client.get("/api/v1/health")
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
 
-@patch('backend.app.core.auth_service.email_service.send_verification_email', new_callable=AsyncMock)
-def test_register_user_success(mock_send_email, db_session: Session):
+# Test successful registration
+def test_register_user_success(mock_external_services_and_singletons, db_session: Session):
+    mock_auth0_create_method, mock_resend_emails_send = mock_external_services_and_singletons
+    
     response = client.post(
         "/api/v1/auth/register",
         json={"email": "test@example.com", "password": "Password123!"}
@@ -76,44 +128,53 @@ def test_register_user_success(mock_send_email, db_session: Session):
     user = db_session.query(backend.app.models.user.User).filter(backend.app.models.user.User.email == "test@example.com").first()
     assert user is not None
     assert user.is_verified == False
-    mock_send_email.assert_called_once()
-    assert mock_send_email.call_args.args[0] == "test@example.com"
-    assert "http://localhost:3000/verify-email" in mock_send_email.call_args.args[1]
+    
+    mock_auth0_create_method.assert_called_once()
+    mock_resend_emails_send.assert_called_once()
+    assert mock_resend_emails_send.call_args.args[0]["to"] == "test@example.com"
+    assert "http://localhost:3000/verify-email" in mock_resend_emails_send.call_args.args[0]["html"]
 
-def test_register_user_duplicate_email(db_session: Session):
-    # Register the first user
+# Test duplicate email registration
+def test_register_user_duplicate_email(mock_external_services_and_singletons, db_session: Session):
+    mock_auth0_create_method, mock_resend_emails_send = mock_external_services_and_singletons
+    
+    # First successful registration
     client.post(
         "/api/v1/auth/register",
-        json={"email": "test@example.com", "password": "Password123!"}
+        json={"email": "test_duplicate@example.com", "password": "Password123!"}
     )
+    mock_auth0_create_method.assert_called_once() 
+    mock_auth0_create_method.reset_mock()
+    
+    # Mock Auth0 to raise "user already exists" for the second attempt
+    mock_auth0_create_method.side_effect = Exception("The user already exists.")
+
     # Attempt to register with duplicate email
     response = client.post(
         "/api/v1/auth/register",
-        json={"email": "test@example.com", "password": "AnotherPassword!"}
+        json={"email": "test_duplicate@example.com", "password": "AnotherPassword!"}
     )
     assert response.status_code == 409
-    assert response.json() == {"detail": "User with this email already exists"}
+    assert response.json()["detail"] == "User with this email already exists" 
+    mock_auth0_create_method.assert_not_called() # Correct assertion: should not be called for duplicate
 
-@patch('backend.app.core.auth_service.email_service.send_verification_email', new_callable=AsyncMock)
-def test_verify_email_success(mock_send_email, db_session: Session):
+
+# Test successful email verification
+def test_verify_email_success(mock_external_services_and_singletons, db_session: Session):
+    mock_auth0_create_method, mock_resend_emails_send = mock_external_services_and_singletons
+
     # First, register a user
     register_response = client.post(
         "/api/v1/auth/register",
         json={"email": "verify@example.com", "password": "Password123!"}
     )
     assert register_response.status_code == 201
-    mock_send_email.assert_called_once() # Email sent during registration
-
-    # In a real scenario, the verification token would be stored and retrieved.
-    # For this mock, we assume the token sent matches a temporary token.
-    # The actual token would have been sent in the email by auth_service.
-    # For the purpose of this test, we just need a non-empty token.
-    token = "mock_verification_token"
+    mock_resend_emails_send.assert_called_once() 
 
     # Now, verify the email
     verify_response = client.post(
         "/api/v1/auth/verify-email",
-        json={"email": "verify@example.com", "token": token}
+        json={"email": "verify@example.com", "token": "mock_verification_token"}
     )
     assert verify_response.status_code == 200
     assert verify_response.json() == {"message": "Email verified successfully."}
@@ -122,37 +183,49 @@ def test_verify_email_success(mock_send_email, db_session: Session):
     assert user is not None
     assert user.is_verified == True
 
+# Test verification with invalid token
 def test_verify_email_invalid_token(db_session: Session):
-    # First, register a user
-    client.post(
-        "/api/v1/auth/register",
-        json={"email": "invalidtoken@example.com", "password": "Password123!"}
-    )
-    # Attempt to verify with an invalid token (AuthService expects any non-empty token for now)
+    # This test directly creates the user in the database
+    _reinstantiate_auth_service_with_env({ # Need to ensure singletons are properly initialized for this test
+        "AUTH0_DOMAIN": "mock_domain",
+        "AUTH0_MANAGEMENT_CLIENT_ID": "mock_client_id",
+        "AUTH0_MANAGEMENT_CLIENT_SECRET": "mock_client_secret",
+        "RESEND_API_KEY": "mock_resend_key",
+        "NEXT_PUBLIC_EMAIL_VERIFICATION_URL": "http://localhost:3000"
+    })
+    
+    user = backend.app.models.user.User(auth_provider_id="auth0|test", email="invalidtoken@example.com", is_verified=False)
+    db_session.add(user)
+    db_session.commit()
+
     response = client.post(
         "/api/v1/auth/verify-email",
-        json={"email": "invalidtoken@example.com", "token": ""} # Empty token will fail based on current AuthService logic
+        json={"email": "invalidtoken@example.com", "token": ""} # Empty token should fail
     )
     assert response.status_code == 400
-    assert response.json() == {"detail": "Verification token is missing"}
+    assert response.json()["detail"] == "Verification token is missing"
 
+
+# Test user not found during verification
 def test_verify_email_user_not_found(db_session: Session):
     response = client.post(
         "/api/v1/auth/verify-email",
         json={"email": "nonexistent@example.com", "token": "any_token"}
     )
     assert response.status_code == 404
-    assert response.json() == {"detail": "User not found"}
+    assert response.json()["detail"] == "User not found"
 
-@patch('backend.app.core.auth_service.email_service.send_verification_email', new_callable=AsyncMock)
-def test_verify_email_already_verified(mock_send_email, db_session: Session):
+# Test re-verification of already verified email
+def test_verify_email_already_verified(mock_external_services_and_singletons, db_session: Session):
+    mock_auth0_create_method, mock_resend_emails_send = mock_external_services_and_singletons
+    
     # First, register and verify a user
     client.post(
         "/api/v1/auth/register",
         json={"email": "alreadyverified@example.com", "password": "Password123!"}
     )
 
-    token = "mock_verification_token" # Placeholder token
+    token = "mock_verification_token"
     client.post(
         "/api/v1/auth/verify-email",
         json={"email": "alreadyverified@example.com", "token": token}
@@ -170,39 +243,49 @@ def test_verify_email_already_verified(mock_send_email, db_session: Session):
     assert reverify_response.status_code == 200
     assert reverify_response.json() == {"message": "Email verified successfully."}
 
-@patch.dict(os.environ, {"AUTH0_DOMAIN": "", "AUTH0_MANAGEMENT_CLIENT_ID": "", "AUTH0_MANAGEMENT_CLIENT_SECRET": ""}, clear=True) # Ensure Auth0 env vars are empty
-@patch('backend.app.core.auth_service.email_service.send_verification_email', new_callable=AsyncMock)
-def test_register_user_auth0_success(mock_send_email, db_session: Session):
-    # Auth0 env vars are empty, so AuthService should fall back to mock Auth0 user creation.
-    # The AuthService is a singleton initialized at module load. Its _auth0 will be None
-    # because os.getenv was not patched at that time.
-    # This test verifies the behavior when Auth0 is NOT configured.
+# Test Auth0 initialization failure scenario (due to missing env vars)
+def test_auth_service_init_missing_env_vars():
+    # Store original env vars
+    original_env = os.environ.copy()
+    
+    # Clear Auth0 env vars
+    for key in ["AUTH0_DOMAIN", "AUTH0_MANAGEMENT_CLIENT_ID", "AUTH0_MANAGEMENT_CLIENT_SECRET"]:
+        os.environ.pop(key, None)
+    
+    # Set dummy for RESEND and NEXT_PUBLIC_EMAIL_VERIFICATION_URL to allow EmailService to initialize
+    os.environ["RESEND_API_KEY"] = "dummy_key"
+    os.environ["NEXT_PUBLIC_EMAIL_VERIFICATION_URL"] = "http://localhost:3000"
 
-    # Ensure the auth_service singleton is re-instantiated to pick up the patched os.environ
-    # or that it uses the default behavior based on currently empty env vars.
-    auth_service.auth_service = auth_service.AuthService()
 
-    response = client.post(
-        "/api/v1/auth/register",
-        json={"email": "auth0test@example.com", "password": "Password123!"}
-    )
+    # Assert that AuthService initialization raises a ValueError
+    with pytest.raises(ValueError, match="CRITICAL: Auth0 environment variables"):
+        # Create a fresh instance of AuthService for this test
+        auth_service.AuthService() # Call the constructor directly
 
-    assert response.status_code == 201
-    assert "user_id" in response.json()
-    
-    # Assert that the returned user_id matches the mock_auth_id_UUID pattern
-    assert re.match(r"^mock_auth_id_[a-f0-9\-]+$", response.json()["user_id"])
-    
-    # Ensure the returned user_id matches the created DB user's auth_provider_id
-    user = db_session.query(backend.app.models.user.User).filter(backend.app.models.user.User.email == "auth0test@example.com").first()
-    assert user is not None
-    assert response.json()["user_id"] == user.auth_provider_id
-    
-    assert response.json()["email"] == "auth0test@example.com"
-    
-    # Assert that email was sent (as it's part of the register_user flow)
-    mock_send_email.assert_called_once()
-    
-    # Assert that our local db_session was updated correctly with the generated mock ID
-    assert re.match(r"^mock_auth_id_[a-f0-9\-]+$", user.auth_provider_id)
-    assert user.is_verified == False
+    # Restore original env vars
+    os.environ.clear()
+    os.environ.update(original_env)
+
+# Test EmailService initialization failure scenario (due to missing env vars)
+def test_email_service_init_missing_env_vars():
+    # Store original env var
+    original_env = os.environ.copy()
+
+    # Clear Resend env var
+    os.environ.pop("RESEND_API_KEY", None)
+
+    # Set dummy for Auth0 env vars to allow AuthService to initialize
+    os.environ["AUTH0_DOMAIN"] = "dummy_domain"
+    os.environ["AUTH0_MANAGEMENT_CLIENT_ID"] = "dummy_client_id"
+    os.environ["AUTH0_MANAGEMENT_CLIENT_SECRET"] = "dummy_client_secret"
+    os.environ["NEXT_PUBLIC_EMAIL_VERIFICATION_URL"] = "http://localhost:3000"
+
+
+    # Assert that EmailService initialization raises a ValueError
+    with pytest.raises(ValueError, match="CRITICAL: RESEND_API_KEY environment variable"):
+        # Create a fresh instance of EmailService for this test
+        backend.app.services.email_service.EmailService() # Call the constructor directly
+
+    # Restore original env var
+    os.environ.clear()
+    os.environ.update(original_env)

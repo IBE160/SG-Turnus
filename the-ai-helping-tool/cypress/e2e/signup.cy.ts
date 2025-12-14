@@ -10,53 +10,92 @@ describe('Sign Up Flow', () => {
     cy.get('button[type="submit"]').should('be.visible');
   });
 
-  it('should successfully register a new user and show verification message', () => {
+  it('should successfully register a new user and complete email verification', () => {
+    // Generate a unique email for this test run
     const email = `test-${Date.now()}@example.com`;
     const password = 'Password123!';
 
+    // Intercept the registration request
+    cy.intercept('POST', '/api/v1/auth/register').as('registerUser');
+    // Intercept the email verification request
+    cy.intercept('POST', '/api/v1/auth/verify-email').as('verifyEmail');
+
     cy.get('input[type="email"]').type(email);
     cy.get('input[type="password"]').type(password);
     cy.get('button[type="submit"]').click();
 
-    // Assuming the backend returns success and the frontend shows this message
+    // Verify frontend message
     cy.contains('Thank you for signing up. Please check your email for a verification link.').should('be.visible');
 
-    // In a real E2E test, you would also:
-    // 1. Intercept the backend /api/v1/auth/register request to verify payload
-    // 2. Check a database or email service mock to ensure email was sent
-    // 3. Simulate clicking the verification link (e.g., by visiting the verification URL directly)
-    // 4. Verify successful verification and redirection to login/dashboard
+    // Wait for the registration request to complete and inspect it
+    cy.wait('@registerUser').then((interception) => {
+      expect(interception.request.body.email).to.equal(email);
+      expect(interception.request.body.password).to.equal(password);
+      expect(interception.response.statusCode).to.equal(201);
+      
+      // Extract verification link from the backend's email service log (this would be ideal but hard in E2E)
+      // For now, we assume the link structure and simulate clicking it.
+      // In a real scenario, you'd have a test utility to fetch the actual verification token/link.
+      const verificationToken = 'mock_verification_token'; // Backend currently uses a mock UUID, we'll use a consistent one for test
+      const verificationLink = `http://localhost:3000/verify-email?email=${email}&token=${verificationToken}`;
+      
+      cy.visit(verificationLink); // Simulate user clicking the link
+      
+      // We should see a success message on the verification page (assuming such a page exists)
+      cy.contains('Email verified successfully.').should('be.visible');
+      
+      // Now, assert that the verify-email endpoint was called
+      cy.wait('@verifyEmail').then((verifyInterception) => {
+        expect(verifyInterception.request.body.email).to.equal(email);
+        expect(verifyInterception.request.body.token).to.equal(verificationToken);
+        expect(verifyInterception.response.statusCode).to.equal(200);
+      });
+    });
   });
 
   it('should show an error if registration fails (e.g., duplicate email)', () => {
-    // This test requires a way to mock or force a backend error state.
-    // For simplicity, we'll assume a basic client-side validation, or
-    // a mock service worker could be used to intercept network requests.
+    // Intercept the registration request to mock a duplicate user error
+    cy.intercept('POST', '/api/v1/auth/register', {
+      statusCode: 409,
+      body: { detail: 'User with this email already exists' },
+    }).as('duplicateRegister');
 
-    // Simulate duplicate email (requires running the success test first or
-    // mocking the backend to return a 409 for a specific email)
-    const email = `duplicate@example.com`;
+    const email = `duplicate-test-${Date.now()}@example.com`;
     const password = 'Password123!';
 
-    // First attempt (will 'succeed' but prime the mock_db for duplicate)
-    cy.get('input[type="email"]').type(email);
-    cy.get('input[type="password"]').type(password);
-    cy.get('button[type="submit"]').click();
-    cy.contains('Thank you for signing up. Please check your email for a verification link.').should('be.visible');
-
-    cy.visit('http://localhost:3000/signup'); // Go back to signup page
-
-    // Second attempt with same email
     cy.get('input[type="email"]').type(email);
     cy.get('input[type="password"]').type(password);
     cy.get('button[type="submit"]').click();
 
-    // This part would depend on how your backend handles duplicate errors and
-    // how your frontend displays them. Currently, our mock backend returns 409
-    // and the frontend currently does not explicitly catch this and display
-    // it in the UI, but rather the `authService` mock just returns success.
-    // To properly test this, the `authService` in frontend needs to
-    // actually call the backend, and the backend needs to be running.
-    // For now, this test is more of a placeholder until the full integration.
+    cy.wait('@duplicateRegister'); // Wait for the mocked request
+    cy.contains('User with this email already exists').should('be.visible');
+  });
+
+  it('should show client-side password validation errors', () => {
+    cy.get('input[type="email"]').type('test@example.com');
+    cy.get('input[type="password"]').type('short');
+    cy.get('button[type="submit"]').click(); // Click to trigger validation
+
+    cy.contains('Password must be at least 8 characters long.').should('be.visible');
+
+    cy.get('input[type="password"]').clear().type('password123'); // Missing uppercase
+    cy.contains('Password must contain at least one uppercase letter.').should('be.visible');
+
+    cy.get('input[type="password"]').clear().type('PASSWORD123'); // Missing lowercase
+    cy.contains('Password must contain at least one lowercase letter.').should('be.visible');
+
+    cy.get('input[type="password"]').clear().type('Password'); // Missing number
+    cy.contains('Password must contain at least one number.').should('be.visible');
+
+    cy.get('input[type="password"]').clear().type('Password123'); // Missing special character
+    cy.contains('Password must contain at least one special character').should('be.visible');
+
+    // With a valid password, the error should disappear
+    cy.get('input[type="password"]').clear().type('Password123!');
+    cy.contains('Password must be at least 8 characters long.').should('not.exist');
+    cy.contains('Password must contain at least one uppercase letter.').should('not.exist');
+    cy.contains('Password must contain at least one lowercase letter.').should('not.exist');
+    cy.contains('Password must contain at least one number.').should('not.exist');
+    cy.contains('Password must contain at least one special character').should('not.exist');
   });
 });

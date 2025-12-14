@@ -1,7 +1,7 @@
 # backend/app/api/v1/auth.py
 from fastapi import APIRouter, HTTPException, status, Depends
 from pydantic import BaseModel, EmailStr
-from backend.app.core.auth_service import auth_service, UserNotFoundException, InvalidVerificationTokenException, DuplicateUserException
+from backend.app.core.auth_service import auth_service, UserNotFoundException, InvalidVerificationTokenException, DuplicateUserException, Auth0CreationException
 from backend.app.database import get_db
 from sqlalchemy.orm import Session
 
@@ -21,6 +21,8 @@ async def register_user_endpoint(user: UserCreate, db: Session = Depends(get_db)
         return response_content
     except DuplicateUserException as e:
         raise HTTPException(status_code=status.HTTP_409_CONFLICT, detail=str(e))
+    except Auth0CreationException as e: # Catch the new exception
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e))
 
 @router.post("/auth/verify-email", status_code=status.HTTP_200_OK)
 async def verify_email_endpoint(data: schemas.VerifyEmailRequest, db: Session = Depends(get_db)):

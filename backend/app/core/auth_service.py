@@ -17,6 +17,9 @@ class InvalidVerificationTokenException(Exception):
 class DuplicateUserException(Exception):
     pass
 
+class Auth0CreationException(Exception):
+    pass
+
 class AuthService:
     def __init__(self):
         self.auth0_domain = os.getenv("AUTH0_DOMAIN")
@@ -24,8 +27,8 @@ class AuthService:
         self.auth0_management_client_secret = os.getenv("AUTH0_MANAGEMENT_CLIENT_SECRET")
 
         if not all([self.auth0_domain, self.auth0_management_client_id, self.auth0_management_client_secret]):
-            print("WARNING: Auth0 environment variables not fully set. Running in mock Auth0 mode.")
-            self._auth0 = None # Indicate mock mode
+            # Instead of falling back to mock, raise an error
+            raise ValueError("CRITICAL: Auth0 environment variables (AUTH0_DOMAIN, AUTH0_MANAGEMENT_CLIENT_ID, AUTH0_MANAGEMENT_CLIENT_SECRET) must be set for AuthService to initialize securely.")
         else:
             self._auth0 = Auth0(self.auth0_domain, self.auth0_management_client_id)
             print(f"Auth0 client initialized for domain: {self.auth0_domain}")
@@ -37,28 +40,26 @@ class AuthService:
             raise DuplicateUserException("User with this email already exists")
         
         auth_provider_id = None
-        if self._auth0:
-            try:
-                # Create user in Auth0
-                auth0_user = self._auth0.users.create({
-                    "email": email,
-                    "password": password,
-                    "connection": "Username-Password-Authentication", # Or your specific database connection
-                    "email_verified": False,
-                    "app_metadata": {}
-                })
-                auth_provider_id = auth0_user["user_id"]
-                print(f"User created in Auth0: {email}, Auth0 ID: {auth_provider_id}")
+        # Since _auth0 is guaranteed to be initialized, we can directly use it
+        try:
+            # Create user in Auth0
+            auth0_user = self._auth0.users.create({
+                "email": email,
+                "password": password,
+                "connection": "Username-Password-Authentication", # Or your specific database connection
+                "email_verified": False,
+                "app_metadata": {}
+            })
+            auth_provider_id = auth0_user["user_id"]
+            print(f"User created in Auth0: {email}, Auth0 ID: {auth_provider_id}")
 
-            except Exception as e:
-                # Auth0 errors can vary, catch general exception for now
-                if "The user already exists." in str(e): # Specific Auth0 error for duplicate user
-                    raise DuplicateUserException("User with this email already exists in Auth0")
-                raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=f"Failed to create user in Auth0: {e}")
-        else:
-            # Fallback to mock Auth0 user creation
-            auth_provider_id = f"mock_auth_id_{uuid.uuid4()}"
-            print(f"Mock Auth0 user created: {email}, Auth0 ID: {auth_provider_id}")
+        except Exception as e:
+            print(f"DEBUG: Exception in register_user Auth0 call: {e}")
+            # Auth0 errors can vary, catch general exception for now
+            if "The user already exists." in str(e): # Specific Auth0 error for duplicate user
+                raise DuplicateUserException("User with this email already exists in Auth0")
+            raise Auth0CreationException(f"Failed to create user in Auth0: {e}")
+
 
         # Create user in our database
         new_user = User(auth_provider_id=auth_provider_id, email=email, is_verified=False)
