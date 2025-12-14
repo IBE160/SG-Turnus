@@ -1,0 +1,149 @@
+<story-context id="{bmad_folder}/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.4</storyId>
+    <title>secure-user-login-and-session-management</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-14</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/1-4-secure-user-login-and-session-management.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>registered user</asA>
+    <iWant>to securely log in with my email and password</iWant>
+    <soThat>I can access my personal study materials</soThat>
+    <tasks>
+      <task>
+        <title>Backend - Implement Login Endpoint</title>
+        <acceptance_criteria>4, 5</acceptance_criteria>
+        <subtask>Create API route (e.g., /api/v1/auth/login).</subtask>
+        <subtask>Validate incoming email and password.</subtask>
+        <subtask>Issue a JWT token upon successful authentication.</subtask>
+      </task>
+      <task>
+        <title>Frontend - Implement Login UI &amp; Session Management</title>
+        <acceptance_criteria>1, 2, 3, 5, 6, 7</acceptance_criteria>
+        <subtask>Create a "Log In" page/component with email and password fields.</subtask>
+        <subtask>Handle form submission and call the backend login API.</subtask>
+        <subtask>Securely store the JWT token upon successful login.</subtask>
+        <subtask>Redirect the user to the dashboard after login.</subtask>
+        <subtask>Include the JWT token in subsequent API requests.</subtask>
+      </task>
+      <task>
+        <title>Testing</title>
+        <acceptance_criteria>1-7</acceptance_criteria>
+        <subtask>Add unit tests for the login endpoint logic.</subtask>
+        <subtask>Add component tests for the Login UI.</subtask>
+        <subtask>Add API integration tests for the login endpoint.</subtask>
+        <subtask>Add E2E tests for the complete login flow (deferred).</subtask>
+      </task>
+       <task>
+        <title>Documentation</title>
+        <acceptance_criteria>4, 5</acceptance_criteria>
+        <subtask>Update API documentation for the new login endpoint.</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion>Given a verified user is on the "Log In" page</criterion>
+    <criterion>When they enter their correct email and password</criterion>
+    <criterion>And they submit the form</criterion>
+    <criterion>Then their credentials are validated against the database.</criterion>
+    <criterion>And a secure session is created (e.g., using JWTs in cookies or local storage).</criterion>
+    <criterion>And they are redirected to their personalized dashboard.</criterion>
+    <criterion>And subsequent requests to the backend are authenticated using the session token.</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <artifact>
+        <path>docs/epics.md</path>
+        <title>Epics and User Stories</title>
+        <section>Story 1.4: Secure User Login and Session Management</section>
+        <snippet>As a registered user, I want to securely log in with my email and password, so that I can access my personal study materials.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Decision Summary</section>
+        <snippet>Authentication: A managed provider (e.g., Auth0, Clerk) is the chosen pattern. The Next.js frontend will handle the login UI, and the Python backend will validate JWT/OIDC tokens.</snippet>
+      </artifact>
+    </docs>
+    <code>
+      <artifact>
+        <path>backend/app/api/v1/auth.py</path>
+        <kind>api</kind>
+        <symbol>login</symbol>
+        <reason>Backend API endpoint for handling user login.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/app/core/auth_service.py</path>
+        <kind>service</kind>
+        <symbol>authenticate_user</symbol>
+        <reason>Core business logic for user authentication.</reason>
+      </artifact>
+      <artifact>
+        <path>the-ai-helping-tool/app/login/page.tsx</path>
+        <kind>component</kind>
+        <symbol>LoginPage</symbol>
+        <reason>Frontend UI component for the user login form.</reason>
+      </artifact>
+       <artifact>
+        <path>the-ai-helping-tool/services/authService.ts</path>
+        <kind>service</kind>
+        <symbol>login</symbol>
+        <reason>Frontend service for calling the login API endpoint.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+        <ecosystem name="Node.js/npm">
+            <package name="next" version="16.0.8"/>
+            <package name="react" version="19.2.1"/>
+            <package name="react-dom" version="19.2.1"/>
+            <package name="@mui/material" version="^7.3.6"/>
+        </ecosystem>
+        <ecosystem name="Python/pip">
+            <package name="fastapi"/>
+            <package name="uvicorn"/>
+            <package name="pydantic"/>
+            <package name="passlib"/>
+             <package name="python-jose"/>
+        </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Use a managed authentication provider for identity, but local backend for JWT validation.</constraint>
+    <constraint>Backend is Python (FastAPI), Frontend is Next.js (TypeScript).</constraint>
+    <constraint>Session management will use JWTs stored securely on the client.</constraint>
+    <constraint>All authenticated endpoints must validate a JWT.</constraint>
+    <constraint>Data must be encrypted in transit (HTTPS) and at rest.</constraint>
+    <constraint>Secrets must be managed via environment variables.</constraint>
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>Login User</name>
+      <kind>REST endpoint</kind>
+      <signature>POST /api/v1/auth/login</signature>
+      <path>backend/app/api/v1/auth.py</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>
+    Unit, Integration, and End-to-End (E2E) testing are required. Backend unit tests use Pytest. Frontend unit tests use Jest and React Testing Library. E2E tests use Cypress or Playwright.
+    </standards>
+    <locations>
+      <location>the-ai-helping-tool/components/auth/__tests__/</location>
+      <location>backend/tests/</location>
+      <location>the-ai-helping-tool/cypress/e2e/</location>
+    </locations>
+    <ideas>
+      <idea ac_id="4,5">Unit test the login endpoint logic with valid and invalid credentials.</idea>
+      <idea ac_id="1,2,3">Component test the Login UI for form submission and validation.</idea>
+      <idea ac_id="4,5,7">API integration test for the login endpoint.</idea>
+      <idea ac_id="1-7">E2E test for the complete login flow (deferred).</idea>
+    </ideas>
+  </tests>
+</story-context>
