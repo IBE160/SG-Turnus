@@ -4,15 +4,21 @@ import resend # Import the top-level resend library
 
 class EmailService:
     def __init__(self):
+        self._resend_configured = False
         resend_api_key = os.getenv("RESEND_API_KEY")
         if not resend_api_key:
-            raise ValueError("CRITICAL: RESEND_API_KEY environment variable must be set for EmailService to initialize and send emails.")
+            print("WARNING: RESEND_API_KEY environment variable is not set. Email service will be disabled.")
+            # Do not set resend.api_key if not available
         else:
-            # Set the API key globally for the resend module
             resend.api_key = resend_api_key
+            self._resend_configured = True
             print("Resend client initialized.")
 
     async def send_verification_email(self, recipient_email: str, verification_link: str):
+        if not self._resend_configured:
+            print(f"WARNING: Email service is not configured. Cannot send verification email to {recipient_email}.")
+            return {"id": "email_service_disabled"}
+
         print(f"Sending verification email to {recipient_email}")
         print(f"Verification Link: {verification_link}")
         

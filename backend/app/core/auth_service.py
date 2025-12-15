@@ -31,21 +31,26 @@ class AuthService:
         
         self.auth0_client_id = os.getenv("AUTH0_CLIENT_ID") # For authentication API
         self.auth0_client_secret = os.getenv("AUTH0_CLIENT_SECRET") # For authentication API
+        self._auth0_configured = False # Flag to indicate if Auth0 is configured
 
         if not all([self.auth0_domain, self.auth0_management_client_id, self.auth0_management_client_secret, self.auth0_client_id, self.auth0_client_secret]):
-            raise ValueError("CRITICAL: All required Auth0 environment variables (AUTH0_DOMAIN, AUTH0_MANAGEMENT_CLIENT_ID, AUTH0_MANAGEMENT_CLIENT_SECRET, AUTH0_CLIENT_ID, AUTH0_CLIENT_SECRET) must be set for AuthService to initialize securely.")
+            print("WARNING: Auth0 environment variables are not fully set. Auth0-dependent features will be disabled.")
+            self._auth0 = None
         else:
             self._auth0 = Auth0(self.auth0_domain, self.auth0_management_client_id)
+            self._auth0_configured = True
             print(f"Auth0 management client initialized for domain: {self.auth0_domain}")
 
     async def register_user(self, email: str, password: str, db: Session):
+        if not self._auth0_configured:
+            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Auth0 service is not configured. User registration is currently unavailable.")
+
         # Check if user already exists in our database
         existing_user = db.query(User).filter(User.email == email).first()
         if existing_user:
             raise DuplicateUserException("User with this email already exists")
         
         auth_provider_id = None
-        # Since _auth0 is guaranteed to be initialized, we can directly use it
         try:
             # Create user in Auth0
             auth0_user = self._auth0.users.create({
@@ -113,6 +118,9 @@ class AuthService:
 
     async def login(self, email: str, password: str, db: Session) -> dict:
         """Authenticates user with Auth0 and returns access token."""
+        if not self._auth0_configured:
+            raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Auth0 service is not configured. User login is currently unavailable.")
+
         auth_url = f"https://{self.auth0_domain}/oauth/token"
         headers = {"Content-Type": "application/json"}
         payload = {

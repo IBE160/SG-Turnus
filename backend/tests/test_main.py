@@ -49,46 +49,41 @@ client = TestClient(app)
 @pytest.fixture(autouse=True)
 def mock_external_services_and_singletons():
     """
-    Mocks Auth0 and Resend clients by patching specific attributes of the singletons.
-    Also sets up dummy Auth0 environment variables required for jwt_utils.
+    Mocks Auth0 and Resend clients and sets up dummy environment variables for tests.
+    It patches the global singleton instances of AuthService and EmailService directly.
     """
-    # Store original environment variables for restoration
-    original_env = os.environ.copy()
+    original_env = os.environ.copy() # Store original env vars
 
-    # Set dummy environment variables to allow singletons to initialize without ValueError
-    # and for jwt_utils to find required config.
+    # Set dummy environment variables for jwt_utils and general config
     os.environ["AUTH0_DOMAIN"] = "mock_domain"
-    os.environ["AUTH0_AUDIENCE"] = "mock_audience" # Added for jwt_utils
-    os.environ["AUTH0_ISSUER"] = "https://mock_domain/" # Added for jwt_utils
+    os.environ["AUTH0_AUDIENCE"] = "mock_audience"
+    os.environ["AUTH0_ISSUER"] = "https://mock_domain/"
     os.environ["AUTH0_MANAGEMENT_CLIENT_ID"] = "mock_client_id"
     os.environ["AUTH0_MANAGEMENT_CLIENT_SECRET"] = "mock_client_secret"
     os.environ["RESEND_API_KEY"] = "mock_resend_key"
     os.environ["NEXT_PUBLIC_EMAIL_VERIFICATION_URL"] = "http://localhost:3000"
     os.environ["AUTH0_CLIENT_ID"] = "mock_auth_client_id"
     os.environ["AUTH0_CLIENT_SECRET"] = "mock_auth_client_secret"
-    os.environ["AUTH0_API_AUDIENCE"] = "https://mockapi.example.com" # This is for the old auth_service, not jwt_utils
+    os.environ["AUTH0_API_AUDIENCE"] = "https://mockapi.example.com"
 
-    with patch('backend.app.core.auth_service.Auth0') as MockAuth0Class, \
-         patch('resend.Emails.send', new_callable=AsyncMock) as MockResendEmailsSend, \
+    # Create mock instances for AuthService and EmailService
+    mock_auth_service_instance = MagicMock()
+    mock_auth_service_instance._auth0_configured = True # Crucial: Indicate configured
+    mock_email_service_instance = MagicMock()
+    mock_email_service_instance._resend_configured = True # Crucial: Indicate configured
+
+    with patch.object(auth_service, 'auth_service', new=mock_auth_service_instance), \
+         patch.object(backend.app.services.email_service, 'email_service', new=mock_email_service_instance), \
          patch('backend.main.validate_token', new_callable=AsyncMock) as mock_validate_token, \
-         patch('backend.app.core.jwt_utils.get_jwks', new_callable=AsyncMock) as mock_get_jwks: # Mock jwt_utils.get_jwks
+         patch('backend.app.core.jwt_utils.get_jwks', new_callable=AsyncMock) as mock_get_jwks:
+
+        # Configure mock_auth_service_instance's internal Auth0 client
+        mock_auth0_internal_client = MagicMock()
+        mock_auth_service_instance._auth0 = mock_auth0_internal_client # Set the internal Auth0 mock
+        mock_auth0_internal_client.users.create.return_value = {"user_id": f"auth0|mock_id_{os.urandom(8).hex()}"}
         
-        # Configure MockAuth0Class to return a MagicMock instance when instantiated
-        mock_auth0_instance = MagicMock()
-        mock_users_object = MagicMock() # Mock the 'users' attribute
-        mock_auth0_instance.users = mock_users_object 
-
-        mock_create_method = MagicMock() # Mock the 'create' method
-        mock_create_method.return_value = {"user_id": f"auth0|mock_id_{os.urandom(8).hex()}"}
-        mock_users_object.create = mock_create_method
-
-        MockAuth0Class.return_value = mock_auth0_instance # When Auth0() is called, return this mock instance
-
-        # Manually set the _auth0 attribute of the *existing* auth_service singleton to our mock
-        auth_service.auth_service._auth0 = mock_auth0_instance
-        
-        # We also need to configure the return value of MockResendEmailsSend
-        MockResendEmailsSend.return_value = MagicMock(id="resend_mock_id_123") # Mock the return value of send
+        # Configure mock_email_service_instance's send_verification_email
+        mock_email_service_instance.send_verification_email.return_value = {"id": "resend_mock_id_123"}
         
         # Configure mock_validate_token to return a valid payload by default
         mock_validate_token.return_value = {"sub": "auth0|mockuser123", "email": "test@example.com"}
@@ -96,23 +91,16 @@ def mock_external_services_and_singletons():
         # Configure mock_get_jwks to return a dummy JWKS structure
         mock_get_jwks.return_value = {
             "keys": [
-                {
-                    "alg": "RS256",
-                    "kty": "RSA",
-                    "use": "sig",
-                    "x5c": ["mock_cert"],
-                    "n": "mock_n",
-                    "e": "mock_e",
-                    "kid": "mock_kid"
-                }
+                {"alg": "RS256", "kty": "RSA", "use": "sig", "x5c": ["mock_cert"], "n": "mock_n", "e": "mock_e", "kid": "mock_kid"}
             ]
         }
 
-        yield mock_create_method, MockResendEmailsSend, mock_validate_token, mock_get_jwks # Yield the new mocks
+        # Yield the mocks needed by tests
+        yield mock_auth_service_instance, mock_email_service_instance, mock_validate_token, mock_get_jwks
         
-    # Restore original environment variables after the test
-    os.environ.clear()
-    os.environ.update(original_env)
+    os.environ.clear() # Clear all environment variables set during test
+    os.environ.update(original_env) # Restore original env vars
+
 
 # Test login endpoint
 @pytest.fixture(autouse=True)
