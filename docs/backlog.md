@@ -17,3 +17,6 @@ Routing guidance:
 | 2025-12-14 | 1.4 | 1 | Enhancement | Low | TBD | Open | Implement more comprehensive client-side input validation for password strength and email format in `LoginForm.tsx`. (file: `the-ai-helping-tool/components/auth/LoginForm.tsx`) |
 | 2025-12-14 | 1.4 | 1 | Refactor | Low | TBD | Open | Replace `print` statements with structured logging using Python's `logging` module in `backend/app/core/auth_service.py`. (file: `backend/app/core/auth_service.py`) |
 | 2025-12-14 | 1.4 | 1 | Security | Low | TBD | Open | Investigate and implement token storage using HttpOnly cookies instead of `localStorage` in `the-ai-helping-tool/services/authService.ts`. (file: `the-ai-helping-tool/services/authService.ts`) |
+| 2025-12-15 | 1.4 | 1 | Security | Medium | TBD | Open | Implement robust storage and verification for email verification tokens (replace mock). (file: `backend/app/core/auth_service.py`) |
+| 2025-12-15 | 1.4 | 1 | Refactor | Medium | TBD | Open | Use the actual `sub` from the JWT for `auth_provider_id` instead of a placeholder. (file: `backend/app/core/auth_service.py`) |
+| 2025-12-15 | 1.4 | 1 | Docs | Medium | TBD | Open | Create the `tech-spec-epic-1.md` documentation. (file: `docs/tech-spec-epic-1.md`) |

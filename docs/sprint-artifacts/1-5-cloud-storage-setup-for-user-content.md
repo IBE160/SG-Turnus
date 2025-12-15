@@ -56,6 +56,25 @@ The Architecture document provides further guidance:
 - Source tree components to touch: `backend/app/models/` for `StudyMaterial` schema, `backend/app/services/` for file handling logic, `backend/app/api/` for new endpoints.
 - Testing standards summary: Unit and Integration tests for file operations.
 
+### Learnings from Previous Story
+
+**From Story 1.4 (Status: done)**
+
+- **Primary Success**: A critical JWT validation vulnerability in the login flow was successfully resolved, significantly improving application security.
+- **Identified Gaps**: The senior developer review highlighted several items of technical debt and process improvement. Key issues include a missing unit test for unverified user login scenarios, the deferral of crucial E2E tests for the login flow, and the need for security hardening around token storage and user ID management.
+- **Process Note**: The absence of a technical specification document for the epic was noted as a process gap to be addressed.
+
+### Carried-Over Action Items from Story 1.4
+
+The following high-priority items from the previous story's review are not direct blockers for the current story (1.5) and have been moved to the backlog for future prioritization. This allows the team to focus on the cloud storage implementation.
+
+- **Status:** Moved to Backlog
+  - **[High]** Implement a unit test for unverified user login attempts.
+  - **[Medium]** Prioritize and implement E2E tests for the complete login flow.
+  - **[Medium]** Implement robust storage and verification for email verification tokens.
+  - **[Medium]** Use the actual `sub` (user ID) from the JWT for the `auth_provider_id` when creating a local user record.
+  - **[Medium]** Create the `tech-spec-epic-1.md` documentation.
+
 ### Project Structure Notes
 
 - The `StudyMaterial` model in `backend/app/models/` will be updated to include references to stored files (e.g., `s3_key`). New services will be created in `backend/app/services/` for interacting with cloud storage APIs.
