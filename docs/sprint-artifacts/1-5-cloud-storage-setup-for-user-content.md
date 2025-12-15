@@ -52,28 +52,24 @@ The Architecture document provides further guidance:
   - [ ] Subtask: Add `s3_key` (or equivalent) field to `StudyMaterial` model [Source: architecture.md#Data Architecture]
 ## Dev Notes
 
-- Relevant architecture patterns and constraints: Object Storage (e.g., Amazon S3), encryption at rest, secure access policies for backend services.
-- Source tree components to touch: `backend/app/models/` for `StudyMaterial` schema, `backend/app/services/` for file handling logic, `backend/app/api/` for new endpoints.
-- Testing standards summary: Unit and Integration tests for file operations.
+- **Architecture:** This story implements the Object Storage pattern for file management. All work must align with the decisions in `architecture.md`, particularly regarding security (encryption at rest, access control) and data architecture (storing metadata in PostgreSQL, files in S3).
+- **Coding Standards:** All code must adhere to the naming conventions, code organization, and format/consistency rules detailed in the `architecture.md#Implementation Patterns` section.
+- **Testing:** Unit and integration tests are required for all new functionality, including bucket provisioning, access policy configuration, and backend file operations, as per the project's `architecture.md#Testing Strategy`.
+- **Source Tree Components:**
+    - `backend/app/models/`: The `StudyMaterial` model will be updated to include a reference to the stored object (e.g., `s3_key`).
+    - `backend/app/services/`: New service logic will be created for interacting with the cloud storage provider's API.
+    - `backend/app/api/`: New endpoints will be added for file upload, download, and management.
 
 ### Learnings from Previous Story
 
-**From Story 1.4 (Status: done)**
+**From Story 1.4: Secure User Login and Session Management (Status: done)**
 
-- **Primary Success**: A critical JWT validation vulnerability in the login flow was successfully resolved, significantly improving application security.
-- **Identified Gaps**: The senior developer review highlighted several items of technical debt and process improvement. Key issues include a missing unit test for unverified user login scenarios, the deferral of crucial E2E tests for the login flow, and the need for security hardening around token storage and user ID management.
-- **Process Note**: The absence of a technical specification document for the epic was noted as a process gap to be addressed.
-
-### Carried-Over Action Items from Story 1.4
-
-The following high-priority items from the previous story's review are not direct blockers for the current story (1.5) and have been moved to the backlog for future prioritization. This allows the team to focus on the cloud storage implementation.
-
-- **Status:** Moved to Backlog
-  - **[High]** Implement a unit test for unverified user login attempts.
-  - **[Medium]** Prioritize and implement E2E tests for the complete login flow.
-  - **[Medium]** Implement robust storage and verification for email verification tokens.
-  - **[Medium]** Use the actual `sub` (user ID) from the JWT for the `auth_provider_id` when creating a local user record.
-  - **[Medium]** Create the `tech-spec-epic-1.md` documentation.
+- **Primary Success**: A critical JWT validation vulnerability was resolved, significantly improving application security. The backend now correctly performs signature verification against the auth provider's public keys. [Source: docs/sprint-artifacts/1-4-secure-user-login-and-session-management.md#Senior-Developer-Review-(AI)]
+- **Identified Gaps & Technical Debt**: The senior developer review of Story 1.4 highlighted several items of technical debt. Key issues include a missing unit test for unverified user login scenarios, the deferral of crucial E2E tests for the login flow, and the need for security hardening around token storage and user ID management. These are being tracked in the backlog.
+- **New/Modified Files**: The previous story modified the authentication and user management flow, touching the following files:
+    - Modified: `backend/app/api/schemas.py`, `backend/app/core/auth_service.py`, `backend/app/api/v1/auth.py`, `backend/tests/test_main.py`, `the-ai-helping-tool/services/authService.ts`
+    - Added: `backend/tests/test_auth_service.py`, `the-ai-helping-tool/app/login/page.tsx`, `the-ai-helping-tool/components/auth/LoginForm.tsx`, `the-ai-helping-tool/app/dashboard/page.tsx`, `the-ai-helping-tool/components/auth/__tests__/LoginForm.test.tsx`
+- **Unresolved Action Items**: A critical action item from the previous review—implementing a unit test for unverified user login—remains outstanding. While not a direct blocker for this story, it is a high-priority item in the backlog that affects overall application stability.
 
 ### Project Structure Notes
 
@@ -81,6 +77,7 @@ The following high-priority items from the previous story's review are not direc
 
 ### References
 
+- [Source: docs/sprint-artifacts/tech-spec-epic-1.md#Story-1.5:-Cloud-Storage-Setup-for-User-Content]
 - [Source: epics.md#Story 1.5: Cloud Storage Setup for User Content]
 - [Source: architecture.md#File Storage]
 - [Source: architecture.md#High Security Strategy]
@@ -88,6 +85,8 @@ The following high-priority items from the previous story's review are not direc
 - [Source: architecture.md#Integration Points]
 - [Source: architecture.md#Data Architecture]
 - [Source: architecture.md#Testing Strategy]
+- [Source: architecture.md#Implementation Patterns]
+- [Source: docs/sprint-artifacts/1-4-secure-user-login-and-session-management.md#Senior-Developer-Review-(AI)]
 
 ## Dev Agent Record
 
@@ -104,6 +103,8 @@ The following high-priority items from the previous story's review are not direc
 ### Completion Notes List
 
 ### File List
+
+- docs/sprint-artifacts/1-4-secure-user-login-and-session-management.context.xml [Source: validation-report-1-4-secure-user-login-and-session-management-2025-12-14.md]
 
 ## Change Log
 
