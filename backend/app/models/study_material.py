@@ -18,13 +18,12 @@ class PyObjectId(ObjectId):
     def __modify_schema__(cls, field_schema: dict):
         field_schema.update(type="string")
 
-class User(BaseModel):
+class StudyMaterial(BaseModel):
     id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    auth_provider_id: str = Field(...)
-    email: str = Field(...)
-    is_verified: bool = False
-    verification_token: Optional[str] = None
-    verification_token_expires_at: Optional[datetime] = None
+    user_id: PyObjectId = Field(...)
+    title: str = Field(...)
+    content: str = Field(...)
+    type: str = Field(...) # e.g., 'summary', 'flashcard', 'original_upload'
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
@@ -36,11 +35,10 @@ class User(BaseModel):
         }
         schema_extra = {
             "example": {
-                "auth_provider_id": "google_1234567890",
-                "email": "test@example.com",
-                "is_verified": False,
-                "verification_token": "some_token",
-                "verification_token_expires_at": "2025-12-31T23:59:59Z",
+                "user_id": "60a7d5b1b4c5d6e7f8a9b0c1",
+                "title": "Introduction to Quantum Physics Summary",
+                "content": "Quantum physics is a fundamental theory...",
+                "type": "summary",
                 "created_at": "2025-12-01T12:00:00Z",
                 "updated_at": "2025-12-01T12:00:00Z",
             }

@@ -1,25 +1,25 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
 import os
-from backend.app.models.user import Base # Import Base from where models are defined
-from backend.app.models.study_material import StudyMaterial
+from motor.motor_asyncio import AsyncIOMotorClient
+from typing import AsyncGenerator
 
-# Get database URL from environment variable
-# Use SQLite in-memory for E2E tests if E2E_TEST_MODE is set
-if os.getenv("E2E_TEST_MODE") == "true":
-    SQLALCHEMY_DATABASE_URL = "sqlite:///:memory:"
-else:
-    SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost/dbname")
+# MongoDB connection details
+MONGO_DETAILS = os.getenv("MONGO_URL", "mongodb://localhost:27017")
+DATABASE_NAME = os.getenv("MONGO_DB_NAME", "your_database_name")
 
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+client: AsyncIOMotorClient = None
 
-def create_db_and_tables():
-    Base.metadata.create_all(bind=engine)
+async def connect_to_mongo():
+    global client
+    client = AsyncIOMotorClient(MONGO_DETAILS)
+    print(f"Connected to MongoDB at {MONGO_DETAILS}")
 
-def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+async def close_mongo_connection():
+    global client
+    if client:
+        client.close()
+        print("Closed MongoDB connection")
+
+async def get_database() -> AsyncGenerator[AsyncIOMotorClient, None]:
+    if client is None:
+        await connect_to_mongo()
+    yield client.get_database(DATABASE_NAME)

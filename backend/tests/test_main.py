@@ -1,59 +1,65 @@
-import httpx # Import httpx for httpx.HTTPStatusError
 import os
 import re
-import importlib # Added for module reloading
+import importlib
 from unittest.mock import patch, AsyncMock, MagicMock
 import pytest
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine
-from sqlalchemy.orm import Session, sessionmaker
+from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorDatabase
 
 from backend.main import app
 from backend.app.core import auth_service
-import backend.app.models.user
-import backend.app.services.email_service # Import the module to access EmailService class
-from backend.app.core import jwt_utils # Import jwt_utils
+import backend.app.services.email_service
+import backend.app.services.storage_service
+import backend.app.database
+from backend.app.models.user import User as PydanticUser
+from backend.app.models.study_material import StudyMaterial
 
 # ----------------------------------------------------
-# Test Database Setup
+# Test Database Setup (MongoDB)
 # ----------------------------------------------------
 
-TEST_SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
-test_engine = create_engine(TEST_SQLALCHEMY_DATABASE_URL)
-TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_engine)
+# Use a unique test database name for each test run to ensure isolation
+TEST_MONGO_DATABASE_NAME = f"test_db_{os.urandom(8).hex()}"
+TEST_MONGO_DETAILS = os.getenv("TEST_MONGO_URL", "mongodb://localhost:27017")
+
+@pytest.fixture(scope="session")
+def event_loop():
+    """Create a new event loop for tests."""
+    import asyncio
+    loop = asyncio.get_event_loop_policy().new_event_loop()
+    yield loop
+    loop.close()
+
+@pytest.fixture(scope="session")
+async def mongo_client():
+    """Provides a Motor client for testing."""
+    client = AsyncIOMotorClient(TEST_MONGO_DETAILS)
+    yield client
+    client.close()
+
+@pytest.fixture(scope="function", autouse=True)
+async def clean_test_db(mongo_client: AsyncIOMotorClient):
+    """Cleans the test database before each test."""
+    test_db = mongo_client[TEST_MONGO_DATABASE_NAME]
+    yield
+    for collection_name in await test_db.list_collection_names():
+        await test_db[collection_name].drop()
 
 @pytest.fixture(scope="function")
-def db_session():
-    backend.app.models.user.Base.metadata.create_all(bind=test_engine)
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-        backend.app.models.user.Base.metadata.drop_all(bind=test_engine)
-
-def override_get_db():
-    db = TestingSessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
-
-app.dependency_overrides[backend.app.database.get_db] = override_get_db
-
+async def override_get_database(mongo_client: AsyncIOMotorClient):
+    """Overrides the get_database dependency for tests."""
+    async def _get_database_override():
+        yield mongo_client[TEST_MONGO_DATABASE_NAME]
+    
+    app.dependency_overrides[backend.app.database.get_database] = _get_database_override
+    yield
+    app.dependency_overrides.clear()
+    
 @pytest.fixture(scope="function")
-def test_client(db_session):
-    # Patch the application's database engine, session, and create_db_and_tables for testing
-    with patch('backend.app.database.engine', new=test_engine), \
-         patch('backend.app.database.SessionLocal', new=TestingSessionLocal), \
-         patch('backend.app.database.create_db_and_tables', new=MagicMock()): # Mock create_db_and_tables to do nothing
-        # Use the db_session fixture to ensure clean tables for each test
-        # and override the get_db dependency for the FastAPI app
-        app.dependency_overrides[backend.app.database.get_db] = override_get_db
-        with TestClient(app) as client:
-            yield client
-        # Clean up dependency override after the test
-        app.dependency_overrides.clear()
+def test_client(override_get_database):
+    """Provides a test client for the FastAPI app with MongoDB dependencies overridden."""
+    with TestClient(app) as client:
+        yield client
 
 # ----------------------------------------------------
 # Fixtures and Test Functions
@@ -79,6 +85,8 @@ def mock_external_services_and_singletons():
     os.environ["AUTH0_CLIENT_SECRET"] = "mock_auth_client_secret"
     os.environ["AUTH0_API_AUDIENCE"] = "https://mockapi.example.com"
     os.environ["E2E_TEST_MODE"] = "true"
+    os.environ["MONGO_URL"] = TEST_MONGO_DETAILS # Set test Mongo URL
+    os.environ["MONGO_DB_NAME"] = TEST_MONGO_DATABASE_NAME # Set test Mongo DB Name
     # S3 Environment Variables
     os.environ["S3_BUCKET_NAME"] = "test-bucket"
     os.environ["AWS_ACCESS_KEY_ID"] = "test-access-key"
@@ -147,16 +155,81 @@ def mock_external_services_and_singletons():
     os.environ.update(original_env)
 
 
-# Test login endpoint
 @pytest.fixture(autouse=True)
 def mock_httpx_async_client_post():
     with patch('httpx.AsyncClient.post', new_callable=AsyncMock) as mock_post:
         yield mock_post
 
-# Test successful login
+# ----------------------------------------------------
+# New Test Functions (MongoDB)
+# ----------------------------------------------------
+
 @pytest.mark.asyncio
-async def test_login_success(mock_external_services_and_singletons, db_session: Session, mock_httpx_async_client_post, test_client):
-    mock_auth0_create_method, mock_resend_emails_send, mock_validate_token, mock_get_jwks = mock_external_services_and_singletons
+async def test_read_root():
+    """Test the health check endpoint."""
+    with TestClient(app) as client:
+        response = client.get("/api/v1/health")
+        assert response.status_code == 200
+        assert response.json() == {"status": "ok"}
+
+@pytest.mark.asyncio
+async def test_protected_route(test_client, mock_external_services_and_singletons):
+    mock_auth_service, mock_email_service, mock_validate_token, mock_get_jwks, mock_storage_service = mock_external_services_and_singletons
+    mock_validate_token.return_value = {"sub": "auth0|mockuser123", "email": "test@example.com", "is_verified": True}
+    
+    response = test_client.get("/api/v1/protected", headers={"Authorization": "Bearer some_token"})
+    assert response.status_code == 200
+    assert "Hello, user auth0|mockuser123!" in response.json()["message"]
+
+@pytest.mark.asyncio
+async def test_get_user_verification_status_success(test_client, mongo_client: AsyncIOMotorClient, mock_external_services_and_singletons):
+    mock_auth_service, mock_email_service, mock_validate_token, mock_get_jwks, mock_storage_service = mock_external_services_and_singletons
+    
+    test_email = "verified@example.com"
+    user_collection = mongo_client[TEST_MONGO_DATABASE_NAME]["users"]
+    
+    await user_collection.insert_one(PydanticUser(
+        auth_provider_id="auth0|verified_user",
+        email=test_email,
+        is_verified=True
+    ).dict(by_alias=True))
+
+    response = test_client.get(f"/api/v1/test/user-verification-status/{test_email}")
+    assert response.status_code == 200
+    assert response.json()["email"] == test_email
+    assert response.json()["is_verified"] is True
+
+@pytest.mark.asyncio
+async def test_get_user_verification_status_not_found(test_client, mongo_client: AsyncIOMotorClient, mock_external_services_and_singletons):
+    mock_auth_service, mock_email_service, mock_validate_token, mock_get_jwks, mock_storage_service = mock_external_services_and_singletons
+    
+    test_email = "nonexistent@example.com"
+    response = test_client.get(f"/api/v1/test/user-verification-status/{test_email}")
+    assert response.status_code == 404
+    assert response.json()["detail"] == "User not found"
+
+@pytest.mark.asyncio
+async def test_get_user_verification_status_not_verified(test_client, mongo_client: AsyncIOMotorClient, mock_external_services_and_singletons):
+    mock_auth_service, mock_email_service, mock_validate_token, mock_get_jwks, mock_storage_service = mock_external_services_and_singletons
+    
+    test_email = "unverified@example.com"
+    user_collection = mongo_client[TEST_MONGO_DATABASE_NAME]["users"]
+    
+    await user_collection.insert_one(PydanticUser(
+        auth_provider_id="auth0|unverified_user",
+        email=test_email,
+        is_verified=False
+    ).dict(by_alias=True))
+
+    response = test_client.get(f"/api/v1/test/user-verification-status/{test_email}")
+    assert response.status_code == 200
+    assert response.json()["email"] == test_email
+    assert response.json()["is_verified"] is False
+
+# Existing tests commented out for now
+@pytest.mark.asyncio
+async def test_login_success(mock_external_services_and_singletons, mock_httpx_async_client_post, test_client, mongo_client: AsyncIOMotorClient):
+    mock_auth0_create_method, mock_resend_emails_send, mock_validate_token, mock_get_jwks, mock_storage_service = mock_external_services_and_singletons
 
     # Setup mock_httpx_async_client_post for successful login
     mock_response = MagicMock(status_code=200)
@@ -184,13 +257,13 @@ async def test_login_success(mock_external_services_and_singletons, db_session: 
     assert response.json()["token_type"] == "Bearer"
     mock_httpx_async_client_post.assert_called_once()
     
-    user = db_session.query(backend.app.models.user.User).filter(backend.app.models.user.User.email == "login_test@example.com").first()
+    user_collection = mongo_client[TEST_MONGO_DATABASE_NAME]["users"]
+    user = await user_collection.find_one({"email": "login_test@example.com"})
     assert user is not None # Ensure user exists in our DB after login
 
-# Test login with incorrect credentials
 @pytest.mark.asyncio
 async def test_login_incorrect_credentials(mock_external_services_and_singletons, mock_httpx_async_client_post, test_client):
-    mock_auth0_create_method, mock_resend_emails_send, mock_validate_token, mock_get_jwks = mock_external_services_and_singletons
+    mock_auth0_create_method, mock_resend_emails_send, mock_validate_token, mock_get_jwks, mock_storage_service = mock_external_services_and_singletons
 
     # Setup mock_httpx_async_client_post for incorrect credentials (Auth0 returns 403 Forbidden)
     mock_httpx_async_client_post.return_value = MagicMock(status_code=403)
@@ -210,10 +283,9 @@ async def test_login_incorrect_credentials(mock_external_services_and_singletons
     assert response.json()["detail"] == "Incorrect email or password."
     mock_httpx_async_client_post.assert_called_once()
 
-# Test login with an internal Auth0 error (e.g., misconfiguration, 500 status)
 @pytest.mark.asyncio
 async def test_login_auth0_internal_error(mock_external_services_and_singletons, mock_httpx_async_client_post, test_client):
-    mock_auth0_create_method, mock_resend_emails_send, mock_validate_token, mock_get_jwks = mock_external_services_and_singletons
+    mock_auth0_create_method, mock_resend_emails_send, mock_validate_token, mock_get_jwks, mock_storage_service = mock_external_services_and_singletons
 
     # Setup mock_httpx_async_client_post for an internal server error from Auth0
     mock_httpx_async_client_post.return_value = MagicMock(status_code=500)
@@ -231,18 +303,17 @@ async def test_login_auth0_internal_error(mock_external_services_and_singletons,
 
     assert response.status_code == 500
     assert "Auth0 login error" in response.json()["detail"]
-    mock_httpx_async_client_post.assert_called_once()    # Restore original env var
+    mock_httpx_async_client_post.assert_called_once()
+    # Restore original env var
     os.environ.clear()
     os.environ.update(original_env)
 
-
-# ----------------------------------------------------
-# User Content API Tests
-# ----------------------------------------------------
-
 @pytest.mark.asyncio
-async def test_upload_file_success(mock_external_services_and_singletons, db_session: Session, test_client):
+async def test_upload_file_success(mock_external_services_and_singletons, test_client, mongo_client: AsyncIOMotorClient):
     mock_auth_service, mock_email_service, mock_validate_token, mock_get_jwks, mock_storage_service = mock_external_services_and_singletons
+
+    user_collection = mongo_client[TEST_MONGO_DATABASE_NAME]["users"]
+    material_collection = mongo_client[TEST_MONGO_DATABASE_NAME]["studymaterials"]
 
     # Authenticate a user
     user_email = "upload_test@example.com"
@@ -251,10 +322,8 @@ async def test_upload_file_success(mock_external_services_and_singletons, db_ses
     login_response = test_client.post("/api/v1/auth/login", json={"email": user_email, "password": user_password})
     access_token = login_response.json()["access_token"]
     
-    # Mock the current user in dependencies
-    mock_validate_token.return_value = {"sub": "auth0|mockuser123", "email": user_email, "is_verified": True}
-    current_user_db = db_session.query(backend.app.models.user.User).filter(backend.app.models.user.User.email == user_email).first()
-    mock_validate_token.return_value = {"sub": current_user_db.auth_provider_id, "email": current_user_db.email, "is_verified": current_user_db.is_verified}
+    current_user_db = await user_collection.find_one({"email": user_email})
+    mock_validate_token.return_value = {"sub": current_user_db["auth_provider_id"], "email": current_user_db["email"], "is_verified": current_user_db["is_verified"]}
 
 
     file_content = b"This is a test file for upload."
@@ -275,15 +344,16 @@ async def test_upload_file_success(mock_external_services_and_singletons, db_ses
     mock_storage_service.upload_file.assert_called_once()
     args, kwargs = mock_storage_service.upload_file.call_args
     assert args[0] == file_content
-    assert re.match(r"users/\d+/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\.txt", args[1]) # Check object_name format
+    # Adjusted regex to match ObjectId format
+    assert re.match(r"users/[0-9a-fA-F]{24}/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\.txt", args[1]) # Check object_name format
     assert kwargs['content_type'] == "text/plain"
 
-    study_material = db_session.query(backend.app.models.study_material.StudyMaterial).filter_by(id=response.json()["file_id"]).first()
+    study_material = await material_collection.find_one({"_id": ObjectId(response.json()["file_id"])})
     assert study_material is not None
-    assert study_material.user_id == current_user_db.id
-    assert study_material.file_name == file_name
-    assert study_material.s3_key == response.json()["s3_key"]
-    assert study_material.processing_status == "uploaded"
+    assert str(study_material["user_id"]) == str(current_user_db["_id"])
+    assert study_material["title"] == file_name # Assuming filename is stored as title
+    assert study_material["s3_key"] == response.json()["s3_key"]
+    assert study_material["processing_status"] == "uploaded"
 
 @pytest.mark.asyncio
 async def test_upload_file_unauthenticated(test_client):
@@ -297,8 +367,11 @@ async def test_upload_file_unauthenticated(test_client):
     assert response.json()["detail"] == "Not authenticated"
 
 @pytest.mark.asyncio
-async def test_download_file_success(mock_external_services_and_singletons, db_session: Session, test_client):
+async def test_download_file_success(mock_external_services_and_singletons, test_client, mongo_client: AsyncIOMotorClient):
     mock_auth_service, mock_email_service, mock_validate_token, mock_get_jwks, mock_storage_service = mock_external_services_and_singletons
+
+    user_collection = mongo_client[TEST_MONGO_DATABASE_NAME]["users"]
+    material_collection = mongo_client[TEST_MONGO_DATABASE_NAME]["studymaterials"]
 
     # Authenticate a user
     user_email = "download_test@example.com"
@@ -307,25 +380,26 @@ async def test_download_file_success(mock_external_services_and_singletons, db_s
     login_response = test_client.post("/api/v1/auth/login", json={"email": user_email, "password": user_password})
     access_token = login_response.json()["access_token"]
     
-    current_user_db = db_session.query(backend.app.models.user.User).filter(backend.app.models.user.User.email == user_email).first()
-    mock_validate_token.return_value = {"sub": current_user_db.auth_provider_id, "email": current_user_db.email, "is_verified": current_user_db.is_verified}
+    current_user_db = await user_collection.find_one({"email": user_email})
+    mock_validate_token.return_value = {"sub": current_user_db["auth_provider_id"], "email": current_user_db["email"], "is_verified": current_user_db["is_verified"]}
 
     # Manually create a StudyMaterial entry for download
-    s3_object_name = f"users/{current_user_db.id}/download_test.txt"
-    study_material = backend.app.models.study_material.StudyMaterial(
-        user_id=current_user_db.id,
-        file_name="download_document.txt",
+    s3_object_name = f"users/{str(current_user_db['_id'])}/download_test.txt"
+    study_material_data = StudyMaterial(
+        user_id=current_user_db["_id"],
+        title="download_document.txt",
+        content="mock content", # Added content field
+        type="document", # Added type field
         s3_key=s3_object_name,
         processing_status="completed"
     )
-    db_session.add(study_material)
-    db_session.commit()
-    db_session.refresh(study_material)
+    insert_result = await material_collection.insert_one(study_material_data.dict(by_alias=True))
+    study_material_id = str(insert_result.inserted_id)
 
     mock_storage_service.download_file.return_value = b"Downloaded content from S3"
 
     response = test_client.get(
-        f"/api/v1/user-content/download/{study_material.id}",
+        f"/api/v1/user-content/download/{study_material_id}",
         headers={"Authorization": f"Bearer {access_token}"}
     )
 
@@ -334,9 +408,11 @@ async def test_download_file_success(mock_external_services_and_singletons, db_s
     mock_storage_service.download_file.assert_called_once_with(s3_object_name)
 
 @pytest.mark.asyncio
-async def test_download_file_not_found_db(mock_external_services_and_singletons, db_session: Session, test_client):
+async def test_download_file_not_found_db(mock_external_services_and_singletons, test_client, mongo_client: AsyncIOMotorClient):
     mock_auth_service, mock_email_service, mock_validate_token, mock_get_jwks, mock_storage_service = mock_external_services_and_singletons
     
+    user_collection = mongo_client[TEST_MONGO_DATABASE_NAME]["users"]
+
     # Authenticate a user
     user_email = "download_notfound_test@example.com"
     user_password = "Password123!"
@@ -344,12 +420,12 @@ async def test_download_file_not_found_db(mock_external_services_and_singletons,
     login_response = test_client.post("/api/v1/auth/login", json={"email": user_email, "password": user_password})
     access_token = login_response.json()["access_token"]
     
-    current_user_db = db_session.query(backend.app.models.user.User).filter(backend.app.models.user.User.email == user_email).first()
-    mock_validate_token.return_value = {"sub": current_user_db.auth_provider_id, "email": current_user_db.email, "is_verified": current_user_db.is_verified}
+    current_user_db = await user_collection.find_one({"email": user_email})
+    mock_validate_token.return_value = {"sub": current_user_db["auth_provider_id"], "email": current_user_db["email"], "is_verified": current_user_db["is_verified"]}
 
 
     response = test_client.get(
-        "/api/v1/user-content/download/99999", # Non-existent ID
+        "/api/v1/user-content/download/60a7d5b1b4c5d6e7f8a9b0c1", # Non-existent ObjectId
         headers={"Authorization": f"Bearer {access_token}"}
     )
 
@@ -358,8 +434,11 @@ async def test_download_file_not_found_db(mock_external_services_and_singletons,
     mock_storage_service.download_file.assert_not_called()
 
 @pytest.mark.asyncio
-async def test_download_file_not_found_s3(mock_external_services_and_singletons, db_session: Session, test_client):
+async def test_download_file_not_found_s3(mock_external_services_and_singletons, test_client, mongo_client: AsyncIOMotorClient):
     mock_auth_service, mock_email_service, mock_validate_token, mock_get_jwks, mock_storage_service = mock_external_services_and_singletons
+
+    user_collection = mongo_client[TEST_MONGO_DATABASE_NAME]["users"]
+    material_collection = mongo_client[TEST_MONGO_DATABASE_NAME]["studymaterials"]
 
     # Authenticate a user
     user_email = "download_s3_notfound_test@example.com"
@@ -368,26 +447,27 @@ async def test_download_file_not_found_s3(mock_external_services_and_singletons,
     login_response = test_client.post("/api/v1/auth/login", json={"email": user_email, "password": user_password})
     access_token = login_response.json()["access_token"]
     
-    current_user_db = db_session.query(backend.app.models.user.User).filter(backend.app.models.user.User.email == user_email).first()
-    mock_validate_token.return_value = {"sub": current_user_db.auth_provider_id, "email": current_user_db.email, "is_verified": current_user_db.is_verified}
+    current_user_db = await user_collection.find_one({"email": user_email})
+    mock_validate_token.return_value = {"sub": current_user_db["auth_provider_id"], "email": current_user_db["email"], "is_verified": current_user_db["is_verified"]}
 
 
     # Manually create a StudyMaterial entry
-    s3_object_name = f"users/{current_user_db.id}/download_s3_notfound.txt"
-    study_material = backend.app.models.study_material.StudyMaterial(
-        user_id=current_user_db.id,
-        file_name="s3_notfound_document.txt",
+    s3_object_name = f"users/{str(current_user_db['_id'])}/download_s3_notfound.txt"
+    study_material_data = StudyMaterial(
+        user_id=current_user_db["_id"],
+        title="s3_notfound_document.txt",
+        content="mock content", # Added content field
+        type="document", # Added type field
         s3_key=s3_object_name,
         processing_status="completed"
     )
-    db_session.add(study_material)
-    db_session.commit()
-    db_session.refresh(study_material)
+    insert_result = await material_collection.insert_one(study_material_data.dict(by_alias=True))
+    study_material_id = str(insert_result.inserted_id)
 
     mock_storage_service.download_file.return_value = None # Simulate file not found in S3
 
     response = test_client.get(
-        f"/api/v1/user-content/download/{study_material.id}",
+        f"/api/v1/user-content/download/{study_material_id}",
         headers={"Authorization": f"Bearer {access_token}"}
     )
 
@@ -396,8 +476,11 @@ async def test_download_file_not_found_s3(mock_external_services_and_singletons,
     mock_storage_service.download_file.assert_called_once_with(s3_object_name)
 
 @pytest.mark.asyncio
-async def test_download_file_unauthorized(mock_external_services_and_singletons, db_session: Session, test_client):
+async def test_download_file_unauthorized(mock_external_services_and_singletons, test_client, mongo_client: AsyncIOMotorClient):
     mock_auth_service, mock_email_service, mock_validate_token, mock_get_jwks, mock_storage_service = mock_external_services_and_singletons
+
+    user_collection = mongo_client[TEST_MONGO_DATABASE_NAME]["users"]
+    material_collection = mongo_client[TEST_MONGO_DATABASE_NAME]["studymaterials"]
 
     # User 1 registers and uploads a file
     user1_email = "user1@example.com"
@@ -406,8 +489,8 @@ async def test_download_file_unauthorized(mock_external_services_and_singletons,
     login_response1 = test_client.post("/api/v1/auth/login", json={"email": user1_email, "password": user1_password})
     access_token1 = login_response1.json()["access_token"]
     
-    user1_db = db_session.query(backend.app.models.user.User).filter(backend.app.models.user.User.email == user1_email).first()
-    mock_validate_token.return_value = {"sub": user1_db.auth_provider_id, "email": user1_db.email, "is_verified": user1_db.is_verified}
+    user1_db = await user_collection.find_one({"email": user1_email})
+    mock_validate_token.return_value = {"sub": user1_db["auth_provider_id"], "email": user1_db["email"], "is_verified": user1_db["is_verified"]}
 
 
     upload_response = test_client.post(
@@ -425,8 +508,8 @@ async def test_download_file_unauthorized(mock_external_services_and_singletons,
     login_response2 = test_client.post("/api/v1/auth/login", json={"email": user2_email, "password": user2_password})
     access_token2 = login_response2.json()["access_token"]
 
-    user2_db = db_session.query(backend.app.models.user.User).filter(backend.app.models.user.User.email == user2_email).first()
-    mock_validate_token.return_value = {"sub": user2_db.auth_provider_id, "email": user2_db.email, "is_verified": user2_db.is_verified}
+    user2_db = await user_collection.find_one({"email": user2_email})
+    mock_validate_token.return_value = {"sub": user2_db["auth_provider_id"], "email": user2_db["email"], "is_verified": user2_db["is_verified"]}
 
 
     # User 2 tries to download User 1's file
@@ -440,8 +523,11 @@ async def test_download_file_unauthorized(mock_external_services_and_singletons,
     mock_storage_service.download_file.assert_not_called()
 
 @pytest.mark.asyncio
-async def test_delete_file_success(mock_external_services_and_singletons, db_session: Session, test_client):
+async def test_delete_file_success(mock_external_services_and_singletons, test_client, mongo_client: AsyncIOMotorClient):
     mock_auth_service, mock_email_service, mock_validate_token, mock_get_jwks, mock_storage_service = mock_external_services_and_singletons
+
+    user_collection = mongo_client[TEST_MONGO_DATABASE_NAME]["users"]
+    material_collection = mongo_client[TEST_MONGO_DATABASE_NAME]["studymaterials"]
 
     # Authenticate a user
     user_email = "delete_test@example.com"
@@ -450,8 +536,8 @@ async def test_delete_file_success(mock_external_services_and_singletons, db_ses
     login_response = test_client.post("/api/v1/auth/login", json={"email": user_email, "password": user_password})
     access_token = login_response.json()["access_token"]
 
-    current_user_db = db_session.query(backend.app.models.user.User).filter(backend.app.models.user.User.email == user_email).first()
-    mock_validate_token.return_value = {"sub": current_user_db.auth_provider_id, "email": current_user_db.email, "is_verified": current_user_db.is_verified}
+    current_user_db = await user_collection.find_one({"email": user_email})
+    mock_validate_token.return_value = {"sub": current_user_db["auth_provider_id"], "email": current_user_db["email"], "is_verified": current_user_db["is_verified"]}
 
 
     # Upload a file first
@@ -474,12 +560,15 @@ async def test_delete_file_success(mock_external_services_and_singletons, db_ses
     mock_storage_service.delete_file.assert_called_once_with(s3_key_to_delete)
 
     # Verify deleted from DB
-    deleted_material = db_session.query(backend.app.models.study_material.StudyMaterial).filter_by(id=file_id_to_delete).first()
+    deleted_material = await material_collection.find_one({"_id": ObjectId(file_id_to_delete)})
     assert deleted_material is None
 
 @pytest.mark.asyncio
-async def test_delete_file_unauthorized(mock_external_services_and_singletons, db_session: Session, test_client):
+async def test_delete_file_unauthorized(mock_external_services_and_singletons, test_client, mongo_client: AsyncIOMotorClient):
     mock_auth_service, mock_email_service, mock_validate_token, mock_get_jwks, mock_storage_service = mock_external_services_and_singletons
+
+    user_collection = mongo_client[TEST_MONGO_DATABASE_NAME]["users"]
+    material_collection = mongo_client[TEST_MONGO_DATABASE_NAME]["studymaterials"]
 
     # User 1 registers and uploads a file
     user1_email = "delete_user1@example.com"
@@ -488,8 +577,8 @@ async def test_delete_file_unauthorized(mock_external_services_and_singletons, d
     login_response1 = test_client.post("/api/v1/auth/login", json={"email": user1_email, "password": user1_password})
     access_token1 = login_response1.json()["access_token"]
 
-    user1_db = db_session.query(backend.app.models.user.User).filter(backend.app.models.user.User.email == user1_email).first()
-    mock_validate_token.return_value = {"sub": user1_db.auth_provider_id, "email": user1_db.email, "is_verified": user1_db.is_verified}
+    user1_db = await user_collection.find_one({"email": user1_email})
+    mock_validate_token.return_value = {"sub": user1_db["auth_provider_id"], "email": user1_db["email"], "is_verified": user1_db["is_verified"]}
 
 
     upload_response = test_client.post(
@@ -507,8 +596,8 @@ async def test_delete_file_unauthorized(mock_external_services_and_singletons, d
     login_response2 = test_client.post("/api/v1/auth/login", json={"email": user2_email, "password": user2_password})
     access_token2 = login_response2.json()["access_token"]
     
-    user2_db = db_session.query(backend.app.models.user.User).filter(backend.app.models.user.User.email == user2_email).first()
-    mock_validate_token.return_value = {"sub": user2_db.auth_provider_id, "email": user2_db.email, "is_verified": user2_db.is_verified}
+    user2_db = await user_collection.find_one({"email": user2_email})
+    mock_validate_token.return_value = {"sub": user2_db["auth_provider_id"], "email": user2_db["email"], "is_verified": user2_db["is_verified"]}
 
 
     # User 2 tries to delete User 1's file
@@ -522,8 +611,11 @@ async def test_delete_file_unauthorized(mock_external_services_and_singletons, d
     mock_storage_service.delete_file.assert_not_called()
 
 @pytest.mark.asyncio
-async def test_list_files_success(mock_external_services_and_singletons, db_session: Session, test_client):
+async def test_list_files_success(mock_external_services_and_singletons, test_client, mongo_client: AsyncIOMotorClient):
     mock_auth_service, mock_email_service, mock_validate_token, mock_get_jwks, mock_storage_service = mock_external_services_and_singletons
+
+    user_collection = mongo_client[TEST_MONGO_DATABASE_NAME]["users"]
+    material_collection = mongo_client[TEST_MONGO_DATABASE_NAME]["studymaterials"]
 
     # Authenticate a user
     user_email = "list_test@example.com"
@@ -532,24 +624,19 @@ async def test_list_files_success(mock_external_services_and_singletons, db_sess
     login_response = test_client.post("/api/v1/auth/login", json={"email": user_email, "password": user_password})
     access_token = login_response.json()["access_token"]
 
-    current_user_db = db_session.query(backend.app.models.user.User).filter(backend.app.models.user.User.email == user_email).first()
-    mock_validate_token.return_value = {"sub": current_user_db.auth_provider_id, "email": current_user_db.email, "is_verified": current_user_db.is_verified}
+    current_user_db = await user_collection.find_one({"email": user_email})
+    mock_validate_token.return_value = {"sub": current_user_db["auth_provider_id"], "email": current_user_db["email"], "is_verified": current_user_db["is_verified"]}
 
 
-    # Upload two files for the user
+    # Upload two files for the user - simulate by directly inserting into DB
+    user_id = current_user_db["_id"]
     file1_name = "list_doc1.txt"
     file2_name = "list_doc2.pdf"
     
-    test_client.post(
-        "/api/v1/user-content/upload",
-        headers={"Authorization": f"Bearer {access_token}"},
-        files={"file": (file1_name, b"content1", "text/plain")}
-    )
-    test_client.post(
-        "/api/v1/user-content/upload",
-        headers={"Authorization": f"Bearer {access_token}"},
-        files={"file": (file2_name, b"content2", "application/pdf")}
-    )
+    material1 = StudyMaterial(user_id=user_id, title=file1_name, content="content1", type="document", s3_key=f"users/{user_id}/{file1_name}")
+    material2 = StudyMaterial(user_id=user_id, title=file2_name, content="content2", type="document", s3_key=f"users/{user_id}/{file2_name}")
+    
+    await material_collection.insert_many([material1.dict(by_alias=True), material2.dict(by_alias=True)])
 
     response = test_client.get(
         "/api/v1/user-content/list",
@@ -559,12 +646,14 @@ async def test_list_files_success(mock_external_services_and_singletons, db_sess
     assert response.status_code == 200
     files_listed = response.json()
     assert len(files_listed) == 2
-    assert any(f["file_name"] == file1_name for f in files_listed)
-    assert any(f["file_name"] == file2_name for f in files_listed)
+    assert any(f["title"] == file1_name for f in files_listed)
+    assert any(f["title"] == file2_name for f in files_listed)
 
 @pytest.mark.asyncio
-async def test_list_files_empty(mock_external_services_and_singletons, db_session: Session, test_client):
+async def test_list_files_empty(mock_external_services_and_singletons, test_client, mongo_client: AsyncIOMotorClient):
     mock_auth_service, mock_email_service, mock_validate_token, mock_get_jwks, mock_storage_service = mock_external_services_and_singletons
+
+    user_collection = mongo_client[TEST_MONGO_DATABASE_NAME]["users"]
 
     # Authenticate a user with no uploaded files
     user_email = "empty_list_test@example.com"
@@ -573,8 +662,8 @@ async def test_list_files_empty(mock_external_services_and_singletons, db_sessio
     login_response = test_client.post("/api/v1/auth/login", json={"email": user_email, "password": user_password})
     access_token = login_response.json()["access_token"]
     
-    current_user_db = db_session.query(backend.app.models.user.User).filter(backend.app.models.user.User.email == user_email).first()
-    mock_validate_token.return_value = {"sub": current_user_db.auth_provider_id, "email": current_user_db.email, "is_verified": current_user_db.is_verified}
+    current_user_db = await user_collection.find_one({"email": user_email})
+    mock_validate_token.return_value = {"sub": current_user_db["auth_provider_id"], "email": current_user_db["email"], "is_verified": current_user_db["is_verified"]}
 
 
     response = test_client.get(
