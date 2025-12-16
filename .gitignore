@@ -55,3 +55,4 @@ backend/venv/
 # Ignore Python venv
 backend/venv/
 backend/venv/
+backend_nohup.out
