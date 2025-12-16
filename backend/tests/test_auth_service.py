@@ -154,21 +154,25 @@ async def test_login_auth0_internal_error(mock_env_vars, mock_auth0_management_c
     mock_httpx_post.assert_awaited_once()
 
 @pytest.mark.asyncio
-async def test_login_missing_access_token_in_response(mock_env_vars, mock_auth0_management_client, mock_httpx_post, mock_db_session):
+async def test_login_unverified_user(mock_env_vars, mock_auth0_management_client, mock_httpx_post, mock_db_session):
     auth_service_instance = AuthService()
-    email = "no_token@example.com"
-    password = "Password123!"
+    email = "unverified_user@example.com"
+    password = "SecurePassword123!"
 
-    # Setup mock response for httpx.post that doesn't include access_token
+    # Mock Auth0 response for successful login
     mock_response = MagicMock(status_code=200)
-    mock_response.json = AsyncMock(return_value={"expires_in": 3600, "token_type": "Bearer"})
+    mock_response.json = AsyncMock(return_value={"access_token": "auth0_token_xyz", "token_type": "Bearer"})
     mock_response.raise_for_status.side_effect = None
     mock_httpx_post.return_value = mock_response
 
-    from fastapi import HTTPException
+    # Mock local DB to return an unverified user
+    unverified_user = User(auth_provider_id="auth0|unverified_id", email=email, is_verified=False)
+    mock_db_session.query.return_value.filter.return_value.first.return_value = unverified_user
+
     with pytest.raises(HTTPException) as excinfo:
         await auth_service_instance.login(email, password, mock_db_session)
-    assert excinfo.value.status_code == 401
-    assert "Auth0 did not return an access token." in excinfo.value.detail
     
+    assert excinfo.value.status_code == 401
+    assert excinfo.value.detail == "User email not verified."
+
     mock_httpx_post.assert_awaited_once()

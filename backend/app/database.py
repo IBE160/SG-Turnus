@@ -2,6 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 import os
 from backend.app.models.user import Base # Import Base from where models are defined
+from backend.app.models.study_material import StudyMaterial
 
 # Get database URL from environment variable
 # Use SQLite in-memory for E2E tests if E2E_TEST_MODE is set

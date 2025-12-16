@@ -5,10 +5,16 @@ import resend # Import the top-level resend library
 class EmailService:
     def __init__(self):
         self._resend_configured = False
+        # Determine if running in a development environment
+        environment = os.getenv("ENVIRONMENT", "development").lower()
+        is_development = environment in ["development", "dev"]
+
         resend_api_key = os.getenv("RESEND_API_KEY")
         if not resend_api_key:
-            print("WARNING: RESEND_API_KEY environment variable is not set. Email service will be disabled.")
-            # Do not set resend.api_key if not available
+            if not is_development:
+                raise RuntimeError("ERROR: RESEND_API_KEY environment variable is not set. Cannot run in non-development environment without email service configured.")
+            else:
+                print("WARNING: RESEND_API_KEY environment variable is not set. Email service will be disabled in this development environment.")
         else:
             resend.api_key = resend_api_key
             self._resend_configured = True

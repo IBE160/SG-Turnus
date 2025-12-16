@@ -11,6 +11,8 @@ class User(Base):
     auth_provider_id = Column(String, unique=True, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=False)
     is_verified = Column(Boolean, default=False)
+    verification_token = Column(String, nullable=True, unique=True, index=True)
+    verification_token_expires_at = Column(DateTime, nullable=True)
     created_at = Column(DateTime, default=func.now())
     updated_at = Column(DateTime, default=func.now(), onupdate=func.now())
 

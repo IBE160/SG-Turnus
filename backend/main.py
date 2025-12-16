@@ -1,24 +1,11 @@
 from fastapi import FastAPI, Depends, HTTPException, status
-from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from backend.app.api.v1.auth import router as auth_router
-from backend.app.database import create_db_and_tables
-from backend.app.core.jwt_utils import validate_token # Import the validation function
+from backend.app.api.v1.user_content import router as user_content_router
+from backend.app.database import create_db_and_tables, get_db
+from backend.app.dependencies import get_current_user
+from backend.app.models.user import User
+from sqlalchemy.orm import Session
 import os
-
-token_auth_scheme = HTTPBearer()
-
-async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(token_auth_scheme)):
-    try:
-        payload = await validate_token(credentials.credentials)
-        # In a real scenario, you might fetch user details from your database
-        # using the 'sub' (subject) claim from the payload.
-        return {"user_id": payload.get("sub"), "token_payload": payload}
-    except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=str(e),
-            headers={"WWW-Authenticate": "Bearer"},
-        )
 
 app = FastAPI()
 
@@ -34,5 +21,19 @@ def read_root():
 async def protected_route(current_user: dict = Depends(get_current_user)):
     return {"message": f"Hello, user {current_user['user_id']}! You have access to protected data."}
 
+# Test-only endpoint for Cypress to verify email status
+@app.get("/api/v1/test/user-verification-status/{email}")
+async def get_user_verification_status(email: str, db: Session = Depends(get_db)):
+    environment = os.getenv("ENVIRONMENT", "development").lower()
+    if environment not in ["development", "test"]:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied. This endpoint is only available in development or test environments.")
+    
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
+    
+    return {"email": user.email, "is_verified": user.is_verified}
+
 app.include_router(auth_router, prefix="/api/v1")
+app.include_router(user_content_router, prefix="/api/v1")
 
