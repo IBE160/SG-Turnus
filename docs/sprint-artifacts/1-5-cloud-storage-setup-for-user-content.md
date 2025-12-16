@@ -1,6 +1,6 @@
 # Story 1.5: Cloud Storage Setup for User Content
 
-Status: drafted
+Status: in-progress
 
 ## Story
 

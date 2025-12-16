@@ -1,46 +1,47 @@
-# generated: 2025-12-10
+# generated: 2025-12-16
 # project: The AI Helping Tool
 # project_key: the-ai-helping-tool
 # tracking_system: file-system
-# story_location: docs/sprint-artifacts
+# story_location: /Users/alexanderlindlokken/SG-Turnus/docs/sprint-artifacts
 
 # STATUS DEFINITIONS:
 # ==================
 # Epic Status:
 #   - backlog: Epic exists in epic file but not contexted
-#   - contexted: Next epic tech context created by *epic-tech-context (required)
+#   - contexted: Epic tech context created (required before drafting stories)
 #
 # Story Status:
 #   - backlog: Story only exists in epic file
-#   - drafted: Story file created in stories folder by *create-story
-#   - ready-for-dev: Draft approved and story context created by *story-ready
-#   - in-progress: Developer actively working on implementation by *dev-story
-#   - review: Implementation complete, ready for review by *code-review
-#   - done: Story completed by *story-done
+#   - drafted: Story file created in stories folder
+#   - ready-for-dev: Draft approved and story context created
+#   - in-progress: Developer actively working on implementation
+#   - review: Under SM review (via code-review workflow)
+#   - done: Story completed
 #
 # Retrospective Status:
 #   - optional: Can be completed but not required
-#   - completed: Retrospective has been done by *retrospective
+#   - completed: Retrospective has been done
 #
 # WORKFLOW NOTES:
 # ===============
 # - Epics should be 'contexted' before stories can be 'drafted'
-# - SM typically drafts next story ONLY after previous one is 'done' to incorporate learnings
-# - Dev moves story to 'review', dev reviews, then Dev moves to 'done'
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically drafts next story after previous one to incorporate learnings
+# - Dev moves story to 'review', SM reviews, then Dev moves to 'done'
 
-generated: 2025-12-10
+generated: 2025-12-16
 project: The AI Helping Tool
 project_key: the-ai-helping-tool
 tracking_system: file-system
-story_location: docs/sprint-artifacts
+story_location: /Users/alexanderlindlokken/SG-Turnus/docs/sprint-artifacts
 
 development_status:
-  epic-1: contexted
-  EPIC-1-STORY-1.1: done
-  1-2-user-account-creation: review
-  1-3-user-email-verification: done
-  1-4-secure-user-login-and-session-management: review
-  1-5-cloud-storage-setup-for-user-content: backlog
+  epic-1: backlog
+  1-1-project-initialization-and-spa-scaffolding: backlog
+  1-2-user-account-creation: drafted
+  1-3-user-email-verification: drafted
+  1-4-secure-user-login-and-session-management: drafted
+  1-5-cloud-storage-setup-for-user-content: drafted
   1-6-database-setup-for-processed-data: backlog
   1-7-cross-device-synchronization: backlog
   1-8-basic-seo-for-public-pages: backlog
