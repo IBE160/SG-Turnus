@@ -48,3 +48,10 @@ backend/venv/
 *.db
 *.sqlite3
 backend_nohup.out
+
+# Ignore Python venv
+backend/venv/
+
+# Ignore Python venv
+backend/venv/
+backend/venv/
