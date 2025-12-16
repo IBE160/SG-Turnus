@@ -17,8 +17,7 @@ describe('Sign Up Flow', () => {
 
     // Intercept the registration request
     cy.intercept('POST', '/api/v1/auth/register').as('registerUser');
-    // Intercept the email verification request
-    cy.intercept('POST', '/api/v1/auth/verify-email').as('verifyEmail');
+    // We no longer need to intercept verify-email as we will be using cy.request directly
 
     cy.get('input[type="email"]').type(email);
     cy.get('input[type="password"]').type(password);
@@ -33,23 +32,19 @@ describe('Sign Up Flow', () => {
       expect(interception.request.body.password).to.equal(password);
       expect(interception.response.statusCode).to.equal(201);
       
-      // Extract verification link from the backend's email service log (this would be ideal but hard in E2E)
-      // For now, we assume the link structure and simulate clicking it.
-      // In a real scenario, you'd have a test utility to fetch the actual verification token/link.
-      const verificationToken = 'mock_verification_token'; // Backend currently uses a mock UUID, we'll use a consistent one for test
-      const verificationLink = `http://localhost:3000/verify-email?email=${email}&token=${verificationToken}`;
+      // Extract the actual verification token from the response body (backend modification)
+      const verificationToken = interception.response.body.verification_token;
+      expect(verificationToken).to.not.be.empty;
+
+      // Programmatically call the email verification endpoint
+      cy.request('POST', '/api/v1/auth/verify-email', { email, token: verificationToken })
+        .then((response) => {
+          expect(response.status).to.equal(200);
+          expect(response.body.message).to.equal('Email verified successfully');
+        });
       
-      cy.visit(verificationLink); // Simulate user clicking the link
-      
-      // We should see a success message on the verification page (assuming such a page exists)
-      cy.contains('Email verified successfully.').should('be.visible');
-      
-      // Now, assert that the verify-email endpoint was called
-      cy.wait('@verifyEmail').then((verifyInterception) => {
-        expect(verifyInterception.request.body.email).to.equal(email);
-        expect(verifyInterception.request.body.token).to.equal(verificationToken);
-        expect(verifyInterception.response.statusCode).to.equal(200);
-      });
+      // Verify user's verification status directly from the database via a custom Cypress task
+      cy.task('getUserVerificationStatus', email).should('be.true');
     });
   });
 

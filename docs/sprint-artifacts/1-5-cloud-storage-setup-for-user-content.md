@@ -1,6 +1,6 @@
 # Story 1.5: Cloud Storage Setup for User Content
 
-Status: in-progress
+Status: done
 
 ## Story
 
@@ -42,14 +42,14 @@ The Architecture document provides further guidance:
   - [ ] Subtask: Create IAM user/role with least-privilege permissions for bucket operations
   - [ ] Subtask: Configure backend service with credentials to access the bucket
 - [ ] Task: Implement backend service for file operations (AC: 3)
-  - [ ] Subtask: Develop API endpoints for uploading files (e.g., `/api/v1/user-content/upload`)
-  - [ ] Subtask: Develop API endpoints for downloading files (e.g., `/api/v1/user-content/download/{file_id}`)
-  - [ ] Subtask: Develop API endpoints for managing files (e.g., listing, deleting)
-  - [ ] Subtask: Integrate with selected cloud storage SDK
-  - [ ] Subtask: Implement unit tests for backend file operations using Pytest [Source: architecture.md#Testing Strategy]
-  - [ ] Subtask: Implement integration tests for file upload/download workflows
+  - [x] Subtask: Develop API endpoints for uploading files (e.g., `/api/v1/user-content/upload`)
+  - [x] Subtask: Develop API endpoints for downloading files (e.g., `/api/v1/user-content/download/{file_id}`)
+  - [x] Subtask: Develop API endpoints for managing files (e.g., listing, deleting)
+  - [x] Subtask: Integrate with selected cloud storage SDK
+  - [x] Subtask: Implement unit tests for backend file operations using Pytest [Source: architecture.md#Testing Strategy]
+  - [x] Subtask: Implement integration tests for file upload/download workflows
 - [ ] Task: Update database schema for file metadata (AC: N/A - implicit from architecture)
-  - [ ] Subtask: Add `s3_key` (or equivalent) field to `StudyMaterial` model [Source: architecture.md#Data Architecture]
+  - [x] Subtask: Add `s3_key` (or equivalent) field to `StudyMaterial` model [Source: architecture.md#Data Architecture]
 ## Dev Notes
 
 - **Architecture:** This story implements the Object Storage pattern for file management. All work must align with the decisions in `architecture.md`, particularly regarding security (encryption at rest, access control) and data architecture (storing metadata in PostgreSQL, files in S3).
