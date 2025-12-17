@@ -1,11 +1,11 @@
-<story-context id="{bmad_folder}/bmm/workflows/4-implementation/story-context/template" v="1.0">
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
   <metadata>
     <epicId>1</epicId>
-    <storyId>1.8</storyId>
-    <title>basic-seo-for-public-pages</title>
+    <storyId>8</storyId>
+    <title>Basic SEO for Public Pages</title>
     <status>drafted</status>
     <generatedAt>2025-12-17</generatedAt>
-    <generator>BMAD Story Context Workflow (manual)</generator>
+    <generator>BMAD Story Context Workflow</generator>
     <sourceStoryPath>docs/sprint-artifacts/1-8-basic-seo-for-public-pages.md</sourceStoryPath>
   </metadata>
 
@@ -15,111 +15,165 @@
     <soThat>potential users can discover the tool through search engines</soThat>
     <tasks>
       <task>
-        <title>Frontend - Implement Meta Tags and Header Structure</title>
-        <acceptance_criteria>1, 2, 3</acceptance_criteria>
-        <subtask>Identify the main landing page component/route in the Next.js application.</subtask>
-        <subtask>Implement dynamic generation of <title> tags based on page content.</subtask>
-        <subtask>Implement dynamic generation of <meta name="description"> tags.</subtask>
-        <subtask>Ensure proper use of H1, H2, etc., for content structure on the landing page.</subtask>
+        <description>Implement &lt;title&gt; tag for the landing page (AC: 3)</description>
+        <subtask>Identify the landing page component in Next.js frontend (Reference: `docs/architecture.md#Project-Structure`)</subtask>
+        <subtask>Implement dynamic &lt;title&gt; tag based on page content or static value.</subtask>
+        <subtask>Verify &lt;title&gt; tag in browser developer tools.</subtask>
+        <subtask>Add a unit test (Jest) to ensure &lt;title&gt; tag is rendered correctly. (Reference: `docs/architecture.md#Testing-Strategy`)</subtask>
       </task>
       <task>
-        <title>Deployment - Verify SSR/SSG Configuration</title>
-        <acceptance_criteria>1, 2, 3</acceptance_criteria>
-        <subtask>Confirm Next.js application is configured for Server-Side Rendering (SSR) or Static Site Generation (SSG) for public pages.</subtask>
-        <subtask>Verify that meta tags and structured headers are present in the server-rendered HTML source.</subtask>
+        <description>Implement descriptive meta description for the landing page (AC: 4)</description>
+        <subtask>Implement `&lt;meta name="description" content="..."&gt;` tag for the landing page.</subtask>
+        <subtask>Verify meta description in browser developer tools.</subtask>
+        <subtask>Add a unit test (Jest) to ensure meta description is rendered correctly. (Reference: `docs/architecture.md#Testing-Strategy`)</subtask>
       </task>
       <task>
-        <title>Testing</title>
-        <acceptance_criteria>1, 2, 3</acceptance_criteria>
-        <subtask>Write unit tests to verify the presence and content of meta tags.</subtask>
-        <subtask>Write E2E tests to check the rendered HTML source for SEO elements.</subtask>
+        <description>Implement appropriate header tags (`&lt;h1&gt;`, `&lt;h2&gt;`, etc.) for the landing page content (AC: 5)</description>
+        <subtask>Review landing page content for semantic use of header tags.</subtask>
+        <subtask>Ensure only one `&lt;h1&gt;` tag per page.</subtask>
+        <subtask>Implement `&lt;h1&gt;`, `&lt;h2&gt;`, etc., for content structure.</subtask>
+        <subtask>Verify header tags using accessibility tools or browser developer tools.</subtask>
+        <subtask>Add a unit test (Jest) to ensure header tags are present and correctly structured. (Reference: `docs/architecture.md#Testing-Strategy`)</subtask>
+      </task>
+      <task>
+        <description>Consider Server-Side Rendering (SSR) or Static Site Generation (SSG) for public-facing pages for optimal SEO. (Reference: `docs/epics.md#Story-1.8:-Basic-SEO-for-Public-Pages`, `docs/architecture.md#Project-Initialization`)</description>
+        <subtask>Investigate current Next.js configuration for SSR/SSG for public pages.</subtask>
+        <subtask>If not already configured, propose changes to utilize SSR/SSG for improved SEO.</subtask>
       </task>
     </tasks>
   </story>
 
   <acceptanceCriteria>
-    <criterion>Given the public-facing landing page</criterion>
-    <criterion>When the page is deployed</criterion>
-    <criterion>Then it has a relevant &lt;title&gt; tag.</criterion>
-    <criterion>And it has a descriptive meta description.</criterion>
-    <criterion>And it has appropriate header tags (&lt;h1&gt;, &lt;h2&gt;, etc.).</criterion>
+    <ac>Given the public-facing landing page</ac>
+    <ac>When the page is deployed</ac>
+    <ac>Then it has a relevant &lt;title&gt; tag.</ac>
+    <ac>And it has a descriptive meta description.</ac>
+    <ac>And it has appropriate header tags (`&lt;h1&gt;`, `&lt;h2&gt;`, etc.).</ac>
   </acceptanceCriteria>
 
   <artifacts>
     <docs>
-      <artifact>
+      <doc>
         <path>docs/prd.md</path>
         <title>The AI Helping Tool - Product Requirements Document</title>
-        <section>Functional Requirements</section>
-        <snippet>FR26: Basic SEO: The application's public-facing pages shall be optimized for search engines.</snippet>
-      </artifact>
-      <artifact>
-        <path>docs/epics.md</path>
-        <title>The AI Helping Tool - Epic Breakdown</title>
-        <section>Epic 1: Foundation &amp; Core Infrastructure</section>
-        <snippet>Story 1.8: Basic SEO for Public Pages</snippet>
-      </artifact>
-      <artifact>
-        <path>docs/ux-design-specification.md</path>
-        <title>The AI Helping Tool UX Design Specification</title>
-        <section>Public Pages Layout</section>
-        <snippet>Layout and content structure for public-facing pages, including landing page.</snippet>
-      </artifact>
-      <!-- Assuming architecture document might mention SEO strategies or Next.js usage -->
-      <artifact>
+        <section>Web App Specific Requirements - Platform Support - SEO Strategy</section>
+        <snippet>Basic SEO principles will be applied to static and public-facing content (e.g., landing pages, marketing materials) to enhance discoverability. Core application content, being dynamic, will rely on direct user engagement.</snippet>
+      </doc>
+      <doc>
         <path>docs/architecture.md</path>
         <title>Architecture</title>
-        <section>Frontend Framework Choices</section>
-        <snippet>Next.js was chosen for its SSR/SSG capabilities, which are beneficial for SEO.</snippet>
-      </artifact>
+        <section>Decision Summary - Testing Strategy</section>
+        <snippet>Multi-layered: Unit (Pytest, Jest), Integration, and E2E (Cypress/Playwright)</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Project Initialization</section>
+        <snippet>The frontend will be initialized using Next.js with TypeScript. This choice provides a powerful and scalable foundation for the React-based user interface, with excellent features like Server-Side Rendering (SSR) and Static Site Generation (SSG) that can be leveraged for performance and SEO.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>The AI Helping Tool UX Design Specification</title>
+        <section>8. Responsive Design &amp; Accessibility - 8.2 Accessibility Strategy</section>
+        <snippet>WCAG Compliance Target: The application will aim for WCAG 2.1 Level AA compliance, as outlined in the PRD, to meet industry best practices and legal requirements for educational platforms.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>The AI Helping Tool - Epic Breakdown</title>
+        <section>Epic 1: Foundation &amp; Core Infrastructure - Story 1.8: Basic SEO for Public Pages</section>
+        <snippet>As a marketing team member, I want basic SEO to be applied to the landing page, So that potential users can discover the tool through search engines.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>The AI Helping Tool - Epic Breakdown</title>
+        <section>Epic 1: Foundation &amp; Core Infrastructure - Story 1.8: Basic SEO for Public Pages</section>
+        <snippet>Acceptance Criteria: Given the public-facing landing page, When the page is deployed, Then it has a relevant &lt;title&gt; tag. And it has a descriptive meta description. And it has appropriate header tags (`&lt;h1&gt;`, `&lt;h2&gt;`, etc.).</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>The AI Helping Tool - Epic Breakdown</title>
+        <section>Epic 1: Foundation &amp; Core Infrastructure - Story 1.8: Basic SEO for Public Pages</section>
+        <snippet>Technical Notes: Covers FR26. For an SPA, Server-Side Rendering (SSR) or Static Site Generation (SSG) for public-facing pages might be necessary for optimal SEO. Frameworks like Next.js handle this out of the box.</snippet>
+      </doc>
     </docs>
     <code>
-      <!-- Assuming Next.js App Router structure -->
-      <artifact>
-        <path>the-ai-helping-tool/app/layout.tsx</path>
-        <kind>component</kind>
-        <symbol>RootLayout</symbol>
-        <reason>Main layout file for defining global metadata, including title and description.</reason>
-      </artifact>
-      <artifact>
+      <code-artifact>
         <path>the-ai-helping-tool/app/page.tsx</path>
-        <kind>component</kind>
-        <symbol>HomePage</symbol>
-        <reason>Landing page content, including header tags.</reason>
-      </artifact>
+        <kind>Next.js Page Component</kind>
+        <symbol>Home</symbol>
+        <lines></lines>
+        <reason>Likely the main landing page component where SEO tags will be implemented.</reason>
+      </code-artifact>
     </code>
     <dependencies>
-        <ecosystem name="Node.js/npm">
-            <package name="next" version="^14.x.x"/>
-            <package name="react" version="^18.x.x"/>
-            <package name="react-dom" version="^18.x.x"/>
-        </ecosystem>
+      <nodejs>
+        <dependency name="@emotion/react" version="^11.14.0" />
+        <dependency name="@emotion/styled" version="^11.14.1" />
+        <dependency name="@mui/material" version="^7.3.6" />
+        <dependency name="axios" version="^1.7.2" />
+        <dependency name="next" version="16.0.8" />
+        <dependency name="react" version="19.2.1" />
+        <dependency name="react-dom" version="19.2.1" />
+        <dev-dependency name="@testing-library/jest-dom" version="^6.9.1" />
+        <dev-dependency name="@testing-library/react" version="^16.3.0" />
+        <dev-dependency name="@types/node" version="^20" />
+        <dev-dependency name="@types/react" version="^19" />
+        <dev-dependency name="@types/react-dom" version="^19" />
+        <dev-dependency name="cypress" version="^15.7.1" />
+        <dev-dependency name="eslint" version="^9" />
+        <dev-dependency name="eslint-config-next" version="16.0.8" />
+        <dev-dependency name="jest" version="^30.2.0" />
+        <dev-dependency name="jest-environment-jsdom" version="^30.2.0" />
+        <dev-dependency name="typescript" version="^5" />
+      </nodejs>
+      <python>
+        <dependency name="fastapi" />
+        <dependency name="uvicorn[standard]" />
+        <dependency name="resend" />
+        <dependency name="pytest" />
+        <dependency name="httpx" />
+        <dependency name="email-validator" />
+        <dependency name="pytest-mock" />
+        <dependency name="auth0-python" />
+        <dependency name="SQLAlchemy" />
+        <dependency name="psycopg2-binary" />
+        <dependency name="python-jose" />
+        <dependency name="python-multipart" />
+        <dependency name="langchain" />
+        <dependency name="langchain-openai" />
+        <dependency name="openai" />
+        <dependency name="boto3" version="==1.42.11" />
+        <dependency name="botocore" version="==1.42.11" />
+        <dependency name="pydantic" version="&lt;2" />
+      </python>
     </dependencies>
   </artifacts>
 
   <constraints>
-    <constraint>Frontend uses Next.js for its built-in SEO features (SSR/SSG, metadata API).</constraint>
-    <constraint>All public-facing pages must be crawlable by search engines.</constraint>
+    <constraint>
+      <type>Architectural</type>
+      <description>Next.js framework supports Server-Side Rendering (SSR) or Static Site Generation (SSG) which are crucial for optimal SEO on public-facing pages.</description>
+      <source>docs/epics.md#Story-1.8:-Basic-SEO-for-Public-Pages</source>
+    </constraint>
+    <constraint>
+      <type>Testing</type>
+      <description>Testing Strategy: Multi-layered: Unit (Pytest, Jest), Integration, and E2E (Cypress/Playwright).</description>
+      <source>docs/architecture.md#Decision-Summary</source>
+    </constraint>
   </constraints>
-  <interfaces>
-    <interface>
-      <name>Landing Page</name>
-      <kind>Web Page</kind>
-      <signature>/</signature>
-      <path>the-ai-helping-tool/app/page.tsx</path>
-    </interface>
-  </interfaces>
+  <interfaces></interfaces>
   <tests>
-    <standards>
-    Unit and E2E testing are required. Frontend unit tests use Jest and React Testing Library. E2E tests use Cypress or Playwright to verify rendered HTML.
-    </standards>
+    <standards>Unit testing (Jest) for component rendering. E2E tests (Cypress/Playwright) for public page discoverability.</standards>
     <locations>
-      <location>the-ai-helping-tool/app/__tests__/</location>
-      <location>the-ai-helping-tool/cypress/e2e/</location>
+      <location>the-ai-helping-tool/app/__tests__</location>
+      <location>the-ai-helping-tool/cypress</location>
+      <location>backend/tests</location>
     </locations>
     <ideas>
-      <idea ac_id="1,2">Unit test the layout/page components for correct meta tag rendering.</idea>
-      <idea ac_id="3">E2E test the landing page to assert the presence and content of <title>, <meta name="description">, and header tags in the final rendered HTML.</idea>
+      <idea ac-id="3">Implement unit tests (Jest) for the landing page component (the-ai-helping-tool/app/page.tsx) to verify the presence and content of the `&lt;title&gt;` tag.</idea>
+      <idea ac-id="4">Implement unit tests (Jest) for the landing page component (the-ai-helping-tool/app/page.tsx) to verify the presence and content of the `&lt;meta name="description"&gt;` tag.</idea>
+      <idea ac-id="5">Implement unit tests (Jest) for the landing page component (the-ai-helping-tool/app/page.tsx) to verify the presence and correct structure of `&lt;h1&gt;`, `&lt;h2&gt;`, etc., tags.</idea>
+      <idea>Consider E2E tests (Cypress/Playwright) for the deployed landing page to validate crawlability by search engines (simulated) and correct rendering of SEO elements in a browser.</idea>
     </ideas>
   </tests>
 </story-context>

@@ -1,3 +1,8 @@
+export const metadata = {
+  title: 'The AI Helping Tool - Your Smart Companion for Learning and Productivity',
+  description: 'Empower your learning with AI-powered study assistance. Get instant clarity, generate study materials, and boost your productivity.',
+};
+
 export default function Home() {
   return (
     <div>
@@ -7,3 +12,4 @@ export default function Home() {
     </div>
   );
 }
+
