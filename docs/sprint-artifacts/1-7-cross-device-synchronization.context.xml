@@ -1,0 +1,89 @@
+<story_context>
+  <story_id>1.7</story_id>
+  <story_key>1-7-cross-device-synchronization</story_key>
+  <story_title>Cross-Device Synchronization</story_title>
+  <user_story>
+    <as_a>user</as_a>
+    <i_want>my study materials and progress to be automatically saved and updated across all my devices</i_want>
+    <so_that>I can switch between my laptop and phone seamlessly</so_that>
+  </user_story>
+  <acceptance_criteria>
+    <criterion>
+      <given>a user is logged in on multiple devices</given>
+      <when>they create or edit a study material on one device</when>
+      <then>the changes are persisted to the backend (database and cloud storage).</then>
+      <and>the changes are reflected on their other logged-in devices within a short time frame (via polling or refresh).</and>
+    </criterion>
+  </acceptance_criteria>
+  <artifacts>
+    <docs>
+      <entry path="docs/prd.md" title="The AI Helping Tool - Product Requirements Document" section="Functional Requirements" snippet="FR14: Cross-Device Synchronization: User progress and materials shall be synchronized in real-time across all their devices."/>
+      <entry path="docs/prd.md" title="The AI Helping Tool - Product Requirements Document" section="Web App Specific Requirements" snippet="Real-time Interactions: The core AI features... will deliver real-time responses to user inputs, ensuring immediate feedback and guidance."/>
+      <entry path="docs/architecture.md" title="Architecture" section="Decision Summary" sub_section="Real-time Capabilities" snippet="Polling (MVP) with planned upgrade path... Starts with simple, efficient short-polling for cross-device sync to reduce initial complexity. The architecture will be designed for a future upgrade to WebSockets (Socket.IO) or a managed service (Pusher) as needed."/>
+      <entry path="docs/architecture.md" title="Architecture" section="Epic to Architecture Mapping" sub_section="Epic 1: Foundation & Core Infrastructure" snippet="Backend (Python): ...data storage (PostgreSQL) setup..."/>
+      <entry path="docs/architecture.md" title="Architecture" section="Technology Stack Details" sub_section="Core Technologies" snippet="PostgreSQL - A powerful, reliable, and versatile relational database..."/>
+      <entry path="docs/ux-design-specification.md" title="The AI Helping Tool UX Design Specification" section="User Journey: Reviewing Generated Study Materials" sub_section="Flow Steps" snippet="System responds: Provides immediate feedback for quizzes (correct/incorrect), updates learning progress for flashcards."/>
+      <entry path="docs/ux-design-specification.md" title="The AI Helping Tool UX Design Specification" section="UX Pattern Decisions" sub_section="Notification Patterns" snippet="Snackbar/Toast for transient system notifications... Persistent Alert components..."/>
+      <entry path="docs/sprint-artifacts/tech-spec-epic-1.md" title="Epic Technical Specification: Foundation & Core Infrastructure" section="Objectives and Scope" snippet="Implementing the mechanism for real-time cross-device synchronization, initially via polling (FR14)."/>
+      <entry path="docs/sprint-artifacts/tech-spec-epic-1.md" title="Epic Technical Specification: Foundation & Core Infrastructure" section="APIs and Interfaces" snippet="GET /api/v1/study-materials: Retrieves a list of the user's study materials."/>
+      <entry path="docs/sprint-artifacts/tech-spec-epic-1.md" title="Epic Technical Specification: Foundation & Core Infrastructure" section="Non-Functional Requirements" sub_section="Reliability/Availability" snippet="Stateless Services: Both the Next.js frontend and Python backend services will be designed to be stateless... Session state is managed via JWTs."/>
+      <entry path="docs/sprint-artifacts/tech-spec-epic-1.md" title="Epic Technical Specification: Foundation & Core Infrastructure" section="Non-Functional Requirements" sub_section="Assumptions" snippet="Polling is Sufficient for MVP: We assume that short-polling is an acceptable initial solution for cross-device sync (FR14) and that a real-time WebSocket implementation can be deferred post-MVP..."/>
+    </docs>
+    <code>
+      <entry path="the-ai-helping-tool/frontend/" kind="directory" reason="Frontend application responsible for displaying and interacting with study materials."/>
+      <entry path="the-ai-helping-tool/backend/" kind="directory" reason="Backend application responsible for data persistence and API endpoints."/>
+      <entry path="backend/app/models/" kind="directory" reason="Directory for SQLAlchemy models that define database schema, e.g., for study materials and user progress."/>
+      <entry path="backend/app/api/" kind="directory" reason="Directory for REST API endpoint definitions, including those for study materials."/>
+      <entry path="frontend/services/" kind="directory" reason="Frontend service layer for making API calls to the backend."/>
+    </code>
+    <interfaces>
+      <entry name="GET /api/v1/study-materials" kind="REST endpoint" signature="GET /api/v1/study-materials" path="backend/app/api/"/>
+      <entry name="POST /api/v1/study-materials" kind="REST endpoint" signature="POST /api/v1/study-materials" path="backend/app/api/"/>
+      <entry name="PostgreSQL Database" kind="database" signature="SQLAlchemy ORM for data models" path="backend/app/models/"/>
+      <entry name="Amazon S3" kind="object storage" signature="boto3 SDK for file operations" path="backend/app/services/"/>
+    </interfaces>
+    <constraints>
+      <constraint>Use polling for cross-device synchronization in MVP, with an upgrade path to WebSockets. (Architectural decision)</constraint>
+      <constraint>Stateless frontend and backend services, with session state managed via JWTs. (Reliability/Availability NFR)</constraint>
+      <constraint>All API endpoints must be protected by JWT validation. (Security NFR)</constraint>
+      <constraint>Strict data isolation must be enforced: users can only access their own data. (Security NFR)</constraint>
+      <constraint>Data must be persisted to PostgreSQL and files to S3. (Architectural decision)</constraint>
+    </constraints>
+    <dependencies>
+      <ecosystem name="Frontend (Next.js)">
+        <package name="Next.js" version="latest"/>
+        <package name="React" version="latest"/>
+        <package name="Material UI" version="latest"/>
+      </ecosystem>
+      <ecosystem name="Backend (Python)">
+        <package name="FastAPI" version="latest"/>
+        <package name="SQLAlchemy" version="latest"/>
+        <package name="PyJWT" version="latest"/>
+        <package name="boto3" version="latest"/>
+        <package name="Pydantic" version="latest"/>
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+  <tests>
+    <standards>The test strategy for Epic 1 focuses on validating the foundational infrastructure and core service integrations to ensure a stable and secure base for future development. The approach is multi-layered, covering unit, integration, and end-to-end testing for the newly created services.</standards>
+    <locations>
+      <location>backend/tests/</location>
+      <location>frontend/__tests__/</location>
+      <location>cypress/</location>
+    </locations>
+    <ideas>
+      <idea criterion_id="1">
+        <description>Unit test frontend components that display study materials to ensure they re-render correctly upon data changes received from polling.</description>
+      </idea>
+      <idea criterion_id="1">
+        <description>Unit test backend API endpoints that retrieve study materials to confirm they fetch the latest data from the database.</description>
+      </idea>
+      <idea criterion_id="1">
+        <description>Integration test: Make a change to a study material via one client's API call, then simulate another client's polling mechanism to verify it retrieves the updated data.</description>
+      </idea>
+      <idea criterion_id="1">
+        <description>E2E test: Simulate two logged-in users (or browser instances for the same user) on different devices. User 1 makes a change, User 2 observes the change reflected after a short delay, verifying cross-device data consistency via polling.</description>
+      </idea>
+    </ideas>
+  </tests>
+</story_context>
