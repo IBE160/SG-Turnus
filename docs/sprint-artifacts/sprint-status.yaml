@@ -47,13 +47,13 @@ development_status:
   1-8-basic-seo-for-public-pages: backlog
   1-9-browser-compatibility: backlog
   epic-1-retrospective: optional
-  epic-2: backlog
-  2-1-input-processing-and-signal-extraction: backlog
-  2-2-task-intent-detection: backlog
-  2-3-user-state-inference: backlog
-  2-4-uncertainty-handling-and-calibration: backlog
-  2-5-next-step-selection-logic: backlog
-  2-6-first-interaction-pattern-implementation: backlog
+  epic-2: contexted
+  2-1-input-processing-and-signal-extraction: done
+  2-2-task-intent-detection: done
+  2-3-user-state-inference: done
+  2-4-uncertainty-handling-and-calibration: drafted
+  2-5-next-step-selection-logic: ready-for-dev
+  2-6-first-interaction-pattern-implementation: ready-for-dev
   epic-2-retrospective: optional
   epic-3: backlog
   3-1-automated-summary-generation: backlog
