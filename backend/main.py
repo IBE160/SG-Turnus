@@ -1,7 +1,7 @@
 from fastapi import FastAPI, Depends, HTTPException, status
 from sqlalchemy.orm import Session # Import Session for type hinting
 from backend.app.api.v1.auth import router as auth_router
-from backend.app.api.v1.user_content import router as user_content_router
+from backend.app.api.v1.study_materials import router as study_materials_router
 from backend.app.api.v1.nlp import router as nlp_router
 from backend.app.api.v1.clarity import router as clarity_router
 from backend.app.dependencies import get_current_user
@@ -31,6 +31,6 @@ async def protected_route(current_user: dict = Depends(get_current_user)):
 
 
 app.include_router(auth_router, prefix="/api/v1")
-app.include_router(user_content_router, prefix="/api/v1")
+app.include_router(study_materials_router, prefix="/api/v1")
 app.include_router(nlp_router, prefix="/api/v1")
 app.include_router(clarity_router, prefix="/api/v1")

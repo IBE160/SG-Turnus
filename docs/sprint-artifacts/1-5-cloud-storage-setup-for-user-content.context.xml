@@ -1,0 +1,134 @@
+<story-context id="{bmad_folder}/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.5</storyId>
+    <title>cloud-storage-setup-for-user-content</title>
+    <status>drafted</status>
+    <generatedAt>2025-12-17</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/1-5-cloud-storage-setup-for-user-content.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>to set up a secure and scalable cloud storage solution</iWant>
+    <soThat>user-uploaded materials and generated content can be stored reliably</soThat>
+    <tasks>
+      <task>
+        <title>Infrastructure - Provision Cloud Storage</title>
+        <acceptance_criteria>3</acceptance_criteria>
+        <subtask>Choose a cloud provider (e.g., AWS S3, Google Cloud Storage).</subtask>
+        <subtask>Create a new storage bucket for user content.</subtask>
+        <subtask>Configure bucket with appropriate naming conventions and region.</subtask>
+      </task>
+      <task>
+        <title>Infrastructure - Configure Access Policies</title>
+        <acceptance_criteria>4</acceptance_criteria>
+        <subtask>Define IAM policies for the bucket to restrict public access.</subtask>
+        <subtask>Ensure data is private by default and only accessible via authenticated API calls.</subtask>
+        <subtask>Set up CORS policies if necessary for direct client uploads (future consideration).</subtask>
+      </task>
+      <task>
+        <title>Backend - Integrate Cloud Storage Client</title>
+        <acceptance_criteria>5</acceptance_criteria>
+        <subtask>Install necessary cloud provider SDK/libraries in the backend.</subtask>
+        <subtask>Implement methods for uploading files to the bucket.</subtask>
+        <subtask>Implement methods for downloading files from the bucket.</subtask>
+        <subtask>Implement methods for deleting files from the bucket.</subtask>
+        <subtask>Configure backend with secure credentials (IAM roles or service accounts) for bucket access.</subtask>
+      </task>
+      <task>
+        <title>Testing</title>
+        <acceptance_criteria>3, 4, 5</acceptance_criteria>
+        <subtask>Write unit tests for the backend storage service interactions.</subtask>
+        <subtask>Write integration tests to verify file upload/download/delete operations with the actual cloud storage.</subtask>
+        <subtask>Verify access policies are correctly enforced (e.g., attempt unauthenticated access).</subtask>
+      </task>
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+    <criterion>Given user content needs to be stored</criterion>
+    <criterion>When the cloud storage is configured</criterion>
+    <criterion>Then a cloud storage bucket (e.g., AWS S3, Google Cloud Storage) is created.</criterion>
+    <criterion>And access policies are configured to ensure data is private by default.</criterion>
+    <criterion>And the application backend has the necessary credentials and permissions to upload, download, and manage files in the bucket.</criterion>
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <artifact>
+        <path>docs/prd.md</path>
+        <title>The AI Helping Tool - Product Requirements Document</title>
+        <section>Functional Requirements</section>
+        <snippet>FR12: Cloud Storage &amp; Processing: The system shall provide secure cloud storage for user-uploaded materials and generated content.</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/sprint-artifacts/tech-spec-epic-1.md</path>
+        <title>Epic Technical Specification: Foundation &amp; Core Infrastructure</title>
+        <section>Data Storage</section>
+        <snippet>Cloud Object Storage: For raw user uploads and large generated media (e.g., AWS S3, GCP Cloud Storage).</snippet>
+      </artifact>
+      <artifact>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Data Storage Decisions</section>
+        <snippet>Choice of Cloud Provider for Object Storage (e.g., AWS S3).</snippet>
+      </artifact>
+    </docs>
+    <code>
+      <artifact>
+        <path>backend/app/core/storage_service.py</path>
+        <kind>service</kind>
+        <symbol>upload_file</symbol>
+        <reason>Core business logic for interacting with cloud storage.</reason>
+      </artifact>
+      <artifact>
+        <path>backend/app/api/v1/files.py</path>
+        <kind>api</kind>
+        <symbol>upload</symbol>
+        <reason>Backend API endpoint for handling file uploads.</reason>
+      </artifact>
+    </code>
+    <dependencies>
+        <ecosystem name="Python/pip">
+            <package name="boto3" version="^1.34.0"/> <!-- Example for AWS S3 -->
+        </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Use a major cloud provider (e.g., AWS, GCP, Azure).</constraint>
+    <constraint>Data must be private by default and accessed via authenticated backend services.</constraint>
+    <constraint>Backend (Python FastAPI) will handle all direct interaction with the cloud storage.</constraint>
+    <constraint>All credentials for cloud storage must be managed securely (e.g., IAM roles, environment variables).</constraint>
+  </constraints>
+  <interfaces>
+    <interface>
+      <name>Cloud Storage API</name>
+      <kind>External Service API</kind>
+      <signature>e.g., S3 PutObject, GetObject</signature>
+      <path>N/A (external service)</path>
+    </interface>
+    <interface>
+      <name>Upload File</name>
+      <kind>REST endpoint</kind>
+      <signature>POST /api/v1/files/upload</signature>
+      <path>backend/app/api/v1/files.py</path>
+    </interface>
+  </interfaces>
+  <tests>
+    <standards>
+    Unit and Integration testing are required. Backend unit tests use Pytest. Integration tests will involve actual calls to a test bucket in the cloud provider.
+    </standards>
+    <locations>
+      <location>backend/tests/core/test_storage_service.py</location>
+      <location>backend/tests/api/test_files_api.py</location>
+    </locations>
+    <ideas>
+      <idea ac_id="3,5">Unit test the storage service for correct client initialization and method calls.</idea>
+      <idea ac_id="3,5">Integration test file upload/download/delete functionality against a dedicated test bucket.</idea>
+      <idea ac_id="4">Verify that direct public access to the bucket is denied.</idea>
+    </ideas>
+  </tests>
+</story-context>

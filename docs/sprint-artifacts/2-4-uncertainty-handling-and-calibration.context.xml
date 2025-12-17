@@ -1,0 +1,74 @@
+<story_context>
+  <story_id>2.4</story_id>
+  <story_key>2-4-uncertainty-handling-and-calibration</story_key>
+  <story_title>Uncertainty Handling and Calibration</story_title>
+  <user_story>
+    <as_a>AI engine</as_a>
+    <i_want>to handle situations where my interpretation confidence is low</i_want>
+    <so_that>I can avoid definitive statements and instead use calibration questions or exploratory phrasing</so_that>
+  </user_story>
+  <acceptance_criteria>
+    <criterion>
+      <given>a low confidence score for task intent or user state inference</given>
+      <when>the system needs to provide a next step</when>
+      <then>it prefers generating calibration questions (e.g., "What do you think this term means?") or exploratory phrasing (e.g., "Perhaps you're looking for...").</then>
+      <and>it avoids making definitive or potentially incorrect statements.</and>
+    </criterion>
+  </acceptance_criteria>
+  <artifacts>
+    <docs>
+      <entry path="docs/architecture.md" title="Architecture" section="Novel Architectural Patterns" sub_section="AI Orchestration Pattern: 'The Clarity Engine'" snippet="Guardrails and Fallbacks: Confidence scores will be used throughout the inference and planning stages. If the system's confidence in its plan is low, it will intentionally fall back to a &quot;safe&quot; state, such as asking a clarifying calibration question..."/>
+      <entry path="docs/sprint-artifacts/2-4-uncertainty-handling-and-calibration.md" title="Story 2.4: Uncertainty Handling and Calibration" section="Technical Notes" snippet="Covers FR4. This involves logic to evaluate confidence thresholds and select appropriate response templates."/>
+    </docs>
+    <code>
+      <entry path="backend/app/core/planner_service.py" kind="file" reason="The Planner module where the confidence evaluation and response selection logic will be implemented."/>
+      <entry path="backend/app/core/ai/calibration_module.py" kind="file" reason="New module to be created for generating calibration questions."/>
+      <entry path="backend/app/core/ai/exploratory_module.py" kind="file" reason="New module to be created for generating exploratory phrasings."/>
+      <entry path="backend/app/api/schemas.py" kind="file" reason="API schemas will be updated to support new response types."/>
+      <entry path="backend/tests/" kind="directory" reason="Directory for Pytest unit and integration tests."/>
+      <entry path="the-ai-helping-tool/cypress/integration/" kind="directory" reason="Directory for Cypress E2E tests."/>
+    </code>
+    <interfaces>
+      <entry name="Planner Service" kind="service" signature="evaluate_confidence_and_plan()" path="backend/app/core/planner_service.py"/>
+      <entry name="Calibration Module" kind="module" signature="generate_question()" path="backend/app/core/ai/calibration_module.py"/>
+      <entry name="Exploratory Module" kind="module" signature="generate_phrasing()" path="backend/app/core/ai/exploratory_module.py"/>
+    </interfaces>
+    <constraints>
+      <constraint>Must use confidence scores from Task Intent Detection (Story 2.2) and User State Inference (Story 2.3).</constraint>
+      <constraint>Response selection must prioritize calibration questions or exploratory phrasing when confidence is below a configurable threshold.</constraint>
+      <constraint>Generated responses must avoid definitive statements when confidence is low.</constraint>
+      <constraint>The implementation will be in the Python backend using LangChain.</constraint>
+    </constraints>
+    <dependencies>
+      <ecosystem name="Backend (Python)">
+        <package name="FastAPI" version="latest"/>
+        <package name="LangChain" version="latest"/>
+        <package name="Pydantic" version="latest"/>
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+  <tests>
+    <standards>Testing will focus on ensuring the system correctly identifies low-confidence scenarios and responds with appropriate, non-definitive language. This includes unit tests for the logic, integration tests for the response selection, and E2E tests for the user-facing output.</standards>
+    <locations>
+      <location>backend/tests/</location>
+      <location>the-ai-helping-tool/cypress/integration/</location>
+    </locations>
+    <ideas>
+      <idea criterion_id="1">
+        <description>Unit test the confidence threshold evaluation logic with scores above, below, and at the threshold.</description>
+      </idea>
+      <idea criterion_id="1">
+        <description>Unit test the calibration question generation module to ensure it produces relevant and grammatically correct questions.</description>
+      </idea>
+      <idea criterion_id="1">
+        <description>Unit test the exploratory phrasing generation module to verify it generates appropriate, non-definitive statements.</description>
+      </idea>
+      <idea criterion_id="1">
+        <description>Integration test the Planner module to confirm it selects the correct response type (direct step, calibration, or exploratory) based on the input confidence score.</description>
+      </idea>
+      <idea criterion_id="1">
+        <description>E2E test to simulate a user interaction where the backend has low confidence, and verify that the frontend correctly displays a calibration question or exploratory phrase.</description>
+      </idea>
+    </ideas>
+  </tests>
+</story_context>

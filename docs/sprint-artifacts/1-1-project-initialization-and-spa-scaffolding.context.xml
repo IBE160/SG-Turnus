@@ -1,0 +1,138 @@
+<story-context id=".bmad/bmm/workflows/4-implementation/story-context/template" v="1.0">
+  <metadata>
+    <epicId>1</epicId>
+    <storyId>1.1</storyId>
+    <title>Project Initialization and SPA Scaffolding</title>
+    <status>review</status>
+    <generatedAt>2025-12-10</generatedAt>
+    <generator>BMAD Story Context Workflow</generator>
+    <sourceStoryPath>docs/sprint-artifacts/1-1-project-initialization-and-spa-scaffolding.md</sourceStoryPath>
+  </metadata>
+
+  <story>
+    <asA>developer</asA>
+    <iWant>a new Single-Page Application (SPA) project initialized with a standard folder structure and build system</iWant>
+    <soThat>I can begin development efficiently.</soThat>
+    <tasks>
+- [ ] Initialize Next.js project with `npx create-next-app@latest the-ai-helping-tool` (AC: 1, 2, 4, 5, 6)
+  - [ ] Select `TypeScript`
+  - [ ] Select `ESLint`
+  - [ ] Select `App Router`
+- [ ] Verify that a new Git repository is initialized (AC: 3)
+  - [ ] Testing: Confirm `.git` directory exists and `git status` shows an initialized repository (AC: 3)
+- [ ] Verify basic setup runs (`npm run dev`) (AC: 5)
+  - [ ] Testing: Run `npm run dev` and confirm application starts without errors (AC: 5)
+- [ ] Ensure `.gitignore` is present and appropriate (AC: 8)
+  - [ ] Testing: Verify `.gitignore` exists and contains entries for `node_modules`, `.next`, and `.env` (AC: 8)
+- [ ] Confirm standard `src` directory structure (`/app`, `/components`, `/lib`, `/services`) (AC: 4)
+  - [ ] Testing: Manually inspect project root for presence of `/app`, `/components`, `/lib`, `/services` (AC: 4)
+- [ ] Add basic `README.md` (if not generated) (AC: 7)
+  - [ ] Testing: Verify `README.md` exists and contains basic setup instructions (AC: 7)
+- [ ] Testing: Run `npm run lint` and confirm no linting errors on initial scaffold (AC: 6)
+    </tasks>
+  </story>
+
+  <acceptanceCriteria>
+1.  Given a new project is required
+2.  When the project is scaffolded
+3.  Then a new Git repository is created.
+4.  And a standard `src` directory structure (e.g., `components`, `pages`, `services`) is in place.
+5.  And a build tool (e.g., Vite, Create React App) is configured with basic build and serve scripts.
+6.  And a linter and formatter (e.g., ESLint, Prettier) are configured to ensure code quality.
+7.  And a `README.md` with setup instructions is created.
+8.  And a `.gitignore` file is present to exclude unnecessary files.
+  </acceptanceCriteria>
+
+  <artifacts>
+    <docs>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>The AI Helping Tool - Product Requirements Document</title>
+        <section>Web App Specific Requirements</section>
+        <snippet>The application will be built as a Single-Page Application to provide a fluid and responsive user experience. Support for the latest stable versions of major modern browsers including Chrome, Firefox, Edge, and Safari.</snippet>
+      </doc>
+      <doc>
+        <path>docs/prd.md</path>
+        <title>The AI Helping Tool - Product Requirements Document</title>
+        <section>Functional Requirements</section>
+        <snippet>FR24: The application shall be built as a Single-Page Application (SPA) to ensure a dynamic and interactive user experience. FR25: The application shall support the latest stable versions of leading web browsers.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Project Initialization</section>
+        <snippet>To align with the requirement for a separate Python backend, the frontend will be initialized using Next.js with TypeScript. The initial project setup will be achieved using `npx create-next-app@latest the-ai-helping-tool` and selecting TypeScript, ESLint, and App Router.</snippet>
+      </doc>
+      <doc>
+        <path>docs/architecture.md</path>
+        <title>Architecture</title>
+        <section>Project Structure</section>
+        <snippet>A standard and efficient Next.js project directory layout is established: `/the-ai-helping-tool/frontend/`, containing `/app/`, `/components/`, `/lib/`, `/services/`.</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>The AI Helping Tool - Epic Breakdown</title>
+        <section>Epic 1: Foundation & Core Infrastructure</section>
+        <snippet>Goal: Establish the fundamental technical infrastructure, user account management, and secure data handling. Covers FR24 (SPA Architecture), FR25 (Browser Compatibility), FR26 (Basic SEO).</snippet>
+      </doc>
+      <doc>
+        <path>docs/epics.md</path>
+        <title>The AI Helping Tool - Epic Breakdown</title>
+        <section>Story 1.1: Project Initialization and SPA Scaffolding</section>
+        <snippet>As a developer, I want a new Single-Page Application (SPA) project initialized with a standard folder structure and build system, so that I can begin development efficiently.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>The AI Helping Tool UX Design Specification</title>
+        <section>Design System Foundation</section>
+        <snippet>Material UI was chosen as the design system foundation for its comprehensive component library, strong accessibility features, and ease of customization, providing a solid and efficient foundation for a web application.</snippet>
+      </doc>
+      <doc>
+        <path>docs/ux-design-specification.md</path>
+        <title>The AI Helping Tool UX Design Specification</title>
+        <section>Responsive Design & Accessibility</section>
+        <snippet>The strategy ensures a consistent, intuitive, and accessible experience across all devices. Breakpoint strategy (Material UI inspired) for mobile, tablet, and desktop layouts. WCAG 2.1 Level AA compliance is a core goal.</snippet>
+      </doc>
+    </docs>
+    <code></code>
+    <dependencies>
+      <ecosystem name="Node.js/Frontend">
+        <package name="next" />
+        <package name="react" />
+        <package name="typescript" />
+        <package name="eslint" />
+      </ecosystem>
+      <ecosystem name="Python/Backend">
+        <package name="FastAPI/Django REST Framework" />
+        <package name="PostgreSQL" />
+        <package name="LangChain" />
+        <package name="OpenAI API" />
+        <package name="Amazon S3" />
+        <package name="Celery" />
+        <package name="Redis" />
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+
+  <constraints>
+    <constraint>Frontend framework: Next.js with TypeScript</constraint>
+    <constraint>Build tool: Next.js integrated compiler (SWC)</constraint>
+    <constraint>Routing: App Router</constraint>
+    <constraint>Linting: ESLint</constraint>
+    <constraint>Project Structure: Standard Next.js directory layout (/frontend, /app, /components, /lib, /services)</constraint>
+  </constraints>
+  <interfaces></interfaces>
+  <tests>
+    <standards>Multi-layered: Unit (Pytest, Jest), Integration, and E2E (Cypress/Playwright). Initial project setup should allow for future integration of these frameworks.</standards>
+    <locations>To be determined with project structure, but likely 'frontend/__tests__/' and 'backend/tests/'.</locations>
+    <ideas>
+      <idea>Verify `npx create-next-app` scaffolding runs successfully (AC: 1, 2).</idea>
+      <idea>Verify `npm run dev` starts the development server without errors (AC: 5).</idea>
+      <idea>Verify `.gitignore` correctly excludes specified files (e.g., `node_modules`, `.next`, `.env`) (AC: 8).</idea>
+      <idea>Verify the standard `src` directory structure is in place (`/app`, `/components`, `/lib`, `/services`) (AC: 4).</idea>
+      <idea>Verify `README.md` exists and contains basic setup instructions (AC: 7).</idea>
+      <idea>Verify initial linting passes without errors (`npm run lint`) (AC: 6).</idea>
+      <idea>Confirm a new Git repository is initialized after scaffolding (AC: 3).</idea>
+    </ideas>
+  </tests>
+</story-context>

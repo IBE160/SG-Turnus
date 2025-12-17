@@ -1,0 +1,68 @@
+<story_context>
+  <story_id>2.6</story_id>
+  <story_key>2-6-first-interaction-pattern-implementation</story_key>
+  <story_title>First Interaction Pattern Implementation</story_title>
+  <user_story>
+    <as_a>AI engine</as_a>
+    <i_want>to implement a library of diverse first interaction patterns (e.g., Anchor Questions, Micro-Explanation)</i_want>
+    <so_that>I can effectively engage the user and quickly build clarity</so_that>
+  </user_story>
+  <acceptance_criteria>
+    <criterion>
+      <given>a determined "next step"</given>
+      <when>the system needs to generate the initial response</when>
+      <then>it can utilize patterns like Anchor Question, Micro-Explanation + Quick Check, One-Second Calibration Question, Problem Decomposition Step, or Concept Snapshot.</then>
+      <and>the chosen pattern effectively initiates the interaction based on the context.</and>
+    </criterion>
+  </acceptance_criteria>
+  <artifacts>
+    <docs>
+      <entry path="docs/epics.md" title="The AI Helping Tool - Epic Breakdown" section="Story 2.6: First Interaction Pattern Implementation" snippet="Covers FR6. This involves implementing different response templates and logic to populate them dynamically."/>
+      <entry path="docs/research-first-interaction-patterns.md" title="Research: First Interaction Patterns" section="Pattern Library" snippet="Details the various patterns like Anchor Question, Micro-Explanation, etc., that the AI should be able to use."/>
+    </docs>
+    <code>
+      <entry path="backend/app/core/generator_service.py" kind="file" reason="The Generator service will be responsible for selecting and populating the interaction patterns."/>
+      <entry path="backend/app/core/ai/interaction_patterns.py" kind="file" reason="New file to be created to house the library of interaction patterns."/>
+      <entry path="backend/app/api/schemas.py" kind="file" reason="API schemas will be updated to support the structured responses of the interaction patterns."/>
+      <entry path="backend/tests/" kind="directory" reason="Directory for Pytest unit and integration tests."/>
+      <entry path="the-ai-helping-tool/cypress/integration/" kind="directory" reason="Directory for Cypress E2E tests."/>
+    </code>
+    <interfaces>
+      <entry name="Generator Service" kind="service" signature="generate_response()" path="backend/app/core/generator_service.py"/>
+      <entry name="Interaction Pattern Library" kind="module" signature="get_pattern()" path="backend/app/core/ai/interaction_patterns.py"/>
+    </interfaces>
+    <constraints>
+      <constraint>Must use the 'next step' determined by the Planner Service (Story 2.5) as input.</constraint>
+      <constraint>The selection of an interaction pattern must be based on the user's state and intent.</constraint>
+      <constraint>The implementation will be in the Python backend.</constraint>
+    </constraints>
+    <dependencies>
+      <ecosystem name="Backend (Python)">
+        <package name="FastAPI" version="latest"/>
+        <package name="LangChain" version="latest"/>
+        <package name="Pydantic" version="latest"/>
+      </ecosystem>
+    </dependencies>
+  </artifacts>
+  <tests>
+    <standards>Testing will ensure that the correct interaction pattern is selected for a given context and that the response is populated with accurate and relevant information. It will cover the logic of pattern selection and the content generation for each pattern.</standards>
+    <locations>
+      <location>backend/tests/</location>
+      <location>the-ai-helping-tool/cypress/integration/</location>
+    </locations>
+    <ideas>
+      <idea criterion_id="1">
+        <description>Unit test the pattern selection logic to verify it chooses the appropriate pattern for different user states and intents.</description>
+      </idea>
+      <idea criterion_id="1">
+        <description>Unit test the content population for each interaction pattern to ensure templates are filled correctly.</description>
+      </idea>
+      <idea criterion_id="1">
+        <description>Integration test the Generator Service to confirm it produces a complete and valid user-facing response object.</description>
+      </idea>
+      <idea criterion_id="1">
+        <description>E2E test to simulate various scenarios and verify that the frontend correctly renders the different interaction patterns served by the backend.</description>
+      </idea>
+    </ideas>
+  </tests>
+</story_context>
