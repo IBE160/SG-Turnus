@@ -10,9 +10,9 @@ SQLAlchemy
 psycopg2-binary
 python-jose
 python-multipart
-
-
-
+langchain
+langchain-openai
+openai
 
 
 boto3==1.42.11
