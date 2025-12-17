@@ -1,47 +1,19 @@
-from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel, Field
-from bson import ObjectId
+from sqlalchemy import Column, Integer, String, Boolean, DateTime, func
+from sqlalchemy.orm import relationship
+from backend.app.database import Base
+import datetime
 
-class PyObjectId(ObjectId):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+class User(Base):
+    __tablename__ = "users"
 
-    @classmethod
-    def validate(cls, v):
-        if not ObjectId.is_valid(v):
-            raise ValueError("Invalid objectid")
-        return ObjectId(v)
+    id = Column(Integer, primary_key=True, index=True)
+    auth_provider_id = Column(String, unique=True, index=True, nullable=False)
+    email = Column(String, unique=True, index=True, nullable=False)
+    is_verified = Column(Boolean, default=False)
+    verification_token = Column(String, nullable=True)
+    verification_token_expires_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime, default=datetime.datetime.utcnow)
+    updated_at = Column(DateTime, default=datetime.datetime.utcnow, onupdate=datetime.datetime.utcnow)
 
-    @classmethod
-    def __modify_schema__(cls, field_schema: dict):
-        field_schema.update(type="string")
-
-class User(BaseModel):
-    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    auth_provider_id: str = Field(...)
-    email: str = Field(...)
-    is_verified: bool = False
-    verification_token: Optional[str] = None
-    verification_token_expires_at: Optional[datetime] = None
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
-
-    class Config:
-        allow_population_by_field_name = True
-        arbitrary_types_allowed = True
-        json_encoders = {
-            ObjectId: str
-        }
-        schema_extra = {
-            "example": {
-                "auth_provider_id": "google_1234567890",
-                "email": "test@example.com",
-                "is_verified": False,
-                "verification_token": "some_token",
-                "verification_token_expires_at": "2025-12-31T23:59:59Z",
-                "created_at": "2025-12-01T12:00:00Z",
-                "updated_at": "2025-12-01T12:00:00Z",
-            }
-        }
+    # Relationship to StudyMaterial
+    study_materials = relationship("StudyMaterial", back_populates="owner")

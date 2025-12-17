@@ -1,45 +1,18 @@
-from datetime import datetime
-from typing import Optional
-from pydantic import BaseModel, Field
-from bson import ObjectId
+from sqlalchemy import Column, Integer, String, DateTime, ForeignKey, func
+from sqlalchemy.orm import relationship
+from backend.app.database import Base
+from backend.app.models.user import User # Import User for relationship
+import datetime
 
-class PyObjectId(ObjectId):
-    @classmethod
-    def __get_validators__(cls):
-        yield cls.validate
+class StudyMaterial(Base):
+    __tablename__ = "study_materials"
 
-    @classmethod
-    def validate(cls, v):
-        if not ObjectId.is_valid(v):
-            raise ValueError("Invalid objectid")
-        return ObjectId(v)
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    file_name = Column(String, nullable=False)
+    s3_key = Column(String, nullable=False)
+    upload_date = Column(DateTime, default=datetime.datetime.utcnow)
+    processing_status = Column(String, default="pending") # e.g., 'pending', 'processing', 'complete', 'failed'
 
-    @classmethod
-    def __modify_schema__(cls, field_schema: dict):
-        field_schema.update(type="string")
-
-class StudyMaterial(BaseModel):
-    id: PyObjectId = Field(default_factory=PyObjectId, alias="_id")
-    user_id: PyObjectId = Field(...)
-    title: str = Field(...)
-    content: str = Field(...)
-    type: str = Field(...) # e.g., 'summary', 'flashcard', 'original_upload'
-    created_at: datetime = Field(default_factory=datetime.utcnow)
-    updated_at: datetime = Field(default_factory=datetime.utcnow)
-
-    class Config:
-        allow_population_by_field_name = True
-        arbitrary_types_allowed = True
-        json_encoders = {
-            ObjectId: str
-        }
-        schema_extra = {
-            "example": {
-                "user_id": "60a7d5b1b4c5d6e7f8a9b0c1",
-                "title": "Introduction to Quantum Physics Summary",
-                "content": "Quantum physics is a fundamental theory...",
-                "type": "summary",
-                "created_at": "2025-12-01T12:00:00Z",
-                "updated_at": "2025-12-01T12:00:00Z",
-            }
-        }
+    # Relationship to User
+    owner = relationship("User", back_populates="study_materials")

@@ -1,6 +1,5 @@
 fastapi
 uvicorn[standard]
-pydantic
 resend
 pytest
 httpx
@@ -10,8 +9,12 @@ auth0-python
 SQLAlchemy
 psycopg2-binary
 python-jose
-boto3
 python-multipart
-pymongo
-motor
 
+
+
+
+
+boto3==1.42.11
+botocore==1.42.11
+pydantic<2

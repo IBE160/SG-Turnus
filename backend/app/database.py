@@ -1,25 +1,23 @@
 import os
-from motor.motor_asyncio import AsyncIOMotorClient
-from typing import AsyncGenerator
+from sqlalchemy import create_engine
+from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy.orm import sessionmaker, Session
 
-# MongoDB connection details
-MONGO_DETAILS = os.getenv("MONGO_URL", "mongodb://localhost:27017")
-DATABASE_NAME = os.getenv("MONGO_DB_NAME", "your_database_name")
+# PostgreSQL connection details
+SQLALCHEMY_DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://user:password@localhost/dbname")
 
-client: AsyncIOMotorClient = None
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+Base = declarative_base()
 
-async def connect_to_mongo():
-    global client
-    client = AsyncIOMotorClient(MONGO_DETAILS)
-    print(f"Connected to MongoDB at {MONGO_DETAILS}")
+def get_db():
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
 
-async def close_mongo_connection():
-    global client
-    if client:
-        client.close()
-        print("Closed MongoDB connection")
-
-async def get_database() -> AsyncGenerator[AsyncIOMotorClient, None]:
-    if client is None:
-        await connect_to_mongo()
-    yield client.get_database(DATABASE_NAME)
+def init_db():
+    # This will create tables if they don't exist
+    # Make sure to import all models that inherit from Base before calling this
+    Base.metadata.create_all(bind=engine)
