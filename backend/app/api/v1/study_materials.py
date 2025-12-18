@@ -5,7 +5,8 @@ from backend.app.database import get_db
 from backend.app.models.study_material import StudyMaterial
 from backend.app.models.user import User
 from backend.app.dependencies import get_current_user
-from backend.app.api.schemas import StudyMaterialCreate, StudyMaterialResponse, StudyMaterialUpdate
+from backend.app.api.schemas import StudyMaterialCreate, StudyMaterialResponse, StudyMaterialUpdate, SummarizeRequest, SummarizeResponse, FlashcardGenerateRequest, FlashcardGenerateResponse
+from backend.app.services.nlp_service import NLPService # Import NLPService
 import shutil
 import os
 import datetime
@@ -20,12 +21,33 @@ router = APIRouter(
     responses={404: {"description": "Not found"}},
 )
 
-# Helper function to get study material by ID and user
-def get_user_study_material(db: Session, study_material_id: int, user_id: int):
-    return db.query(StudyMaterial).filter(
-        StudyMaterial.id == study_material_id,
-        StudyMaterial.user_id == user_id
-    ).first()
+# Initialize NLPService as a dependency
+def get_nlp_service():
+    return NLPService()
+
+@router.post("/summarize", response_model=SummarizeResponse)
+async def summarize_text(
+    request: SummarizeRequest,
+    current_user: User = Depends(get_current_user),
+    nlp_service: NLPService = Depends(get_nlp_service)
+):
+    """
+    Generates a summary of the provided text using the NLPService.
+    """
+    summary = nlp_service.get_summary(request.text, request.detail_level)
+    return SummarizeResponse(summary=summary)
+
+@router.post("/flashcards", response_model=FlashcardGenerateResponse)
+async def generate_flashcards_api(
+    request: FlashcardGenerateRequest,
+    current_user: User = Depends(get_current_user),
+    nlp_service: NLPService = Depends(get_nlp_service)
+):
+    """
+    Generates flashcards from the provided text using the NLPService.
+    """
+    flashcards = nlp_service.get_flashcards(request.text)
+    return FlashcardGenerateResponse(flashcards=flashcards)
 
 @router.get("/", response_model=List[StudyMaterialResponse])
 def read_study_materials(
@@ -160,4 +182,6 @@ def delete_study_material(
     db.delete(db_study_material)
     db.commit()
     return
+
+
 

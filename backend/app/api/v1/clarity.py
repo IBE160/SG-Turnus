@@ -6,11 +6,17 @@ from backend.app.api.schemas import NLPRequest, ClarityResponse
 router = APIRouter()
 
 # Initialize services
-nlp_service = NLPService()
 clarity_service = ClarityService()
 
+# Dependency for NLPService
+def get_nlp_service_clarity():
+    return NLPService()
+
 @router.post("/next-step", response_model=ClarityResponse)
-async def get_next_step(request: NLPRequest):
+async def get_next_step(
+    request: NLPRequest,
+    nlp_service: NLPService = Depends(get_nlp_service_clarity)
+):
     """
     Analyzes user input and determines the most helpful next step.
     """

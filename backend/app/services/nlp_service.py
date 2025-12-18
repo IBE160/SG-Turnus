@@ -1,5 +1,8 @@
 import spacy
 from enum import Enum
+from backend.app.core.ai.summarization_module import SummarizationModule
+from backend.app.core.ai.flashcard_generation_module import FlashcardGenerationModule, Flashcard # Import Flashcard and FlashcardGenerationModule
+from typing import List
 
 # Define Intent categories
 class Intent(str, Enum):
@@ -24,6 +27,8 @@ class NLPService:
     def __init__(self):
         # Load the English spaCy model
         self.nlp = spacy.load("en_core_web_sm")
+        self.summarization_module = SummarizationModule()
+        self.flashcard_generation_module = FlashcardGenerationModule() # Initialize FlashcardGenerationModule
 
     def detect_intent(self, text: str, tokens: list[str], found_question_words: list[str]) -> tuple[Intent, float]:
         """
@@ -36,6 +41,10 @@ class NLPService:
         if "summarize" in lower_tokens or "summary" in lower_tokens:
             return Intent.SUMMARIZATION, 0.9
 
+        # Rule for Active Recall (e.g., "quiz", "test me", "flashcards")
+        if "quiz" in lower_tokens or "test" in lower_tokens or "flashcards" in lower_tokens: # Added "flashcards"
+            return Intent.ACTIVE_RECALL, 0.7
+
         # Rule for Clarification (e.g., "what is", "explain")
         if any(q_word in found_question_words for q_word in ["what", "how"]) or \
            "explain" in lower_tokens or "define" in lower_tokens:
@@ -44,10 +53,6 @@ class NLPService:
         # Rule for Problem Solving (e.g., "solve", "how to")
         if "solve" in lower_tokens or ("how" in lower_tokens and "to" in lower_tokens):
             return Intent.PROBLEM_SOLVING, 0.7
-
-        # Rule for Active Recall (e.g., "quiz", "test me")
-        if "quiz" in lower_tokens or "test" in lower_tokens:
-            return Intent.ACTIVE_RECALL, 0.7
 
         # Rule for Concept Linking (e.g., "relate", "connect")
         if "relate" in lower_tokens or "connect" in lower_tokens:
@@ -156,3 +161,15 @@ class NLPService:
             "user_state_confidence": user_state_confidence
         }
         return signals
+
+    def get_summary(self, text: str, detail_level: str = "normal") -> str:
+        """
+        Generates a summary of the given text using the SummarizationModule.
+        """
+        return self.summarization_module.generate_summary(text, detail_level)
+
+    def get_flashcards(self, text: str) -> List[Flashcard]: # New method
+        """
+        Generates flashcards from the given text using the FlashcardGenerationModule.
+        """
+        return self.flashcard_generation_module.generate_flashcards(text)

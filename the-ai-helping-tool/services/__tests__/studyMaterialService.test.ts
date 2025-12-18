@@ -1,178 +1,150 @@
 // the-ai-helping-tool/services/__tests__/studyMaterialService.test.ts
+import { summarizeText, generateFlashcards } from '../studyMaterialService'; // Import generateFlashcards
 
-import {
-  getStudyMaterials,
-  createStudyMaterial,
-  updateStudyMaterial,
-  getUpdatedStudyMaterials,
-  StudyMaterialResponse,
-  StudyMaterialUpdate,
-} from '../studyMaterialService';
-
-const API_BASE_URL = '/api/v1';
+// Mock the global fetch API
+global.fetch = jest.fn();
 
 describe('studyMaterialService', () => {
   beforeEach(() => {
-    // Reset mocks before each test
-    global.fetch = jest.fn();
-  });
-
-  afterEach(() => {
+    (fetch as jest.Mock).mockClear();
     jest.restoreAllMocks();
   });
 
-  describe('getStudyMaterials', () => {
-    it('should fetch study materials successfully', async () => {
-      const mockMaterials: StudyMaterialResponse[] = [
-        {
-          id: 1,
-          user_id: 1,
-          file_name: 'test1.pdf',
-          s3_key: 's3/test1.pdf',
-          upload_date: new Date().toISOString(),
-          processing_status: 'completed',
-        },
-      ];
-
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+  describe('summarizeText', () => {
+    it('should successfully generate a normal summary', async () => {
+      const mockSummary = { summary: 'This is a mocked summary.' };
+      (fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
-        json: async () => mockMaterials,
+        json: async () => mockSummary,
       });
 
-      const materials = await getStudyMaterials();
-      expect(materials).toEqual(mockMaterials);
-      expect(global.fetch).toHaveBeenCalledWith(`${API_BASE_URL}/study-materials`, {
-        method: 'GET',
-      });
-    });
-
-    it('should throw an error if fetching study materials fails', async () => {
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: false,
-        json: async () => ({ detail: 'Network error' }),
-      });
-
-      await expect(getStudyMaterials()).rejects.toThrow('Network error');
-    });
-  });
-
-  describe('createStudyMaterial', () => {
-    it('should create a study material successfully', async () => {
-      const mockFile = new File(['test content'], 'new-doc.txt', { type: 'text/plain' });
-      const mockFileName = 'new-doc.txt';
-      const mockResponse: StudyMaterialResponse = {
-        id: 2,
-        user_id: 1,
-        file_name: mockFileName,
-        s3_key: 's3/new-doc.txt',
-        upload_date: new Date().toISOString(),
-        processing_status: 'pending',
+      const requestPayload = {
+        text: 'A long article about something interesting.',
+        detail_level: 'normal',
       };
+      const result = await summarizeText(requestPayload);
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
-
-      const material = await createStudyMaterial(mockFile, mockFileName);
-      expect(material).toEqual(mockResponse);
-      expect(global.fetch).toHaveBeenCalledWith(`${API_BASE_URL}/study-materials`, {
+      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(fetch).toHaveBeenCalledWith('/api/v1/study-materials/summarize', {
         method: 'POST',
-        body: expect.any(FormData), // Expect FormData
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestPayload),
       });
-
-      const callBody = (global.fetch as jest.Mock).mock.calls[0][1].body;
-      expect(callBody.get('file').name).toBe(mockFileName);
+      expect(result).toEqual(mockSummary);
     });
 
-    it('should throw an error if creating a study material fails', async () => {
-      const mockFile = new File(['test content'], 'new-doc.txt', { type: 'text/plain' });
-      const mockFileName = 'new-doc.txt';
+    it('should successfully generate a brief summary', async () => {
+      const mockSummary = { summary: 'Brief mocked summary.' };
+      (fetch as jest.Mock).mockResolvedValueOnce({
+        ok: true,
+        json: async () => mockSummary,
+      });
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+      const requestPayload = {
+        text: 'A very very long text that needs to be briefly summarized.',
+        detail_level: 'brief',
+      };
+      const result = await summarizeText(requestPayload);
+
+      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(fetch).toHaveBeenCalledWith('/api/v1/study-materials/summarize', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestPayload),
+      });
+      expect(result).toEqual(mockSummary);
+    });
+
+    it('should throw an error if API call fails', async () => {
+      const mockError = { detail: 'Summarization failed.' };
+      (fetch as jest.Mock).mockResolvedValueOnce({
         ok: false,
-        json: async () => ({ detail: 'Upload failed' }),
+        json: async () => mockError,
       });
 
-      await expect(createStudyMaterial(mockFile, mockFileName)).rejects.toThrow('Upload failed');
-    });
-  });
-
-  describe('updateStudyMaterial', () => {
-    it('should update a study material successfully', async () => {
-      const materialId = 1;
-      const updateData: StudyMaterialUpdate = { file_name: 'updated-name.pdf' };
-      const mockResponse: StudyMaterialResponse = {
-        id: materialId,
-        user_id: 1,
-        file_name: 'updated-name.pdf',
-        s3_key: 's3/old-name.pdf',
-        upload_date: new Date().toISOString(),
-        processing_status: 'completed',
+      const requestPayload = {
+        text: 'Text that will cause an error.',
       };
 
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
-        ok: true,
-        json: async () => mockResponse,
-      });
-
-      const material = await updateStudyMaterial(materialId, updateData);
-      expect(material).toEqual(mockResponse);
-      expect(global.fetch).toHaveBeenCalledWith(`${API_BASE_URL}/study-materials/${materialId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(updateData),
-      });
+      await expect(summarizeText(requestPayload)).rejects.toThrow('Summarization failed.');
+      expect(fetch).toHaveBeenCalledTimes(1);
     });
 
-    it('should throw an error if updating a study material fails', async () => {
-      const materialId = 1;
-      const updateData: StudyMaterialUpdate = { file_name: 'updated-name.pdf' };
-
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+    it('should throw a generic error if API call fails without specific detail', async () => {
+      (fetch as jest.Mock).mockResolvedValueOnce({
         ok: false,
-        json: async () => ({ detail: 'Update failed' }),
+        json: async () => ({}), // Empty error response
       });
 
-      await expect(updateStudyMaterial(materialId, updateData)).rejects.toThrow('Update failed');
+      const requestPayload = {
+        text: 'Text that will cause a generic error.',
+      };
+
+      await expect(summarizeText(requestPayload)).rejects.toThrow('Failed to generate summary');
+      expect(fetch).toHaveBeenCalledTimes(1);
     });
   });
 
-  describe('getUpdatedStudyMaterials', () => {
-    it('should fetch updated study materials successfully', async () => {
-      const sinceTimestamp = new Date().toISOString();
-      const mockUpdatedMaterials: StudyMaterialResponse[] = [
-        {
-          id: 3,
-          user_id: 1,
-          file_name: 'updated.txt',
-          s3_key: 's3/updated.txt',
-          upload_date: sinceTimestamp,
-          processing_status: 'completed',
-        },
-      ];
-
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+  describe('generateFlashcards', () => {
+    it('should successfully generate flashcards', async () => {
+      const mockFlashcards = {
+        flashcards: [
+          { question: 'Q1', answer: 'A1' },
+          { question: 'Q2', answer: 'A2' },
+        ],
+      };
+      (fetch as jest.Mock).mockResolvedValueOnce({
         ok: true,
-        json: async () => mockUpdatedMaterials,
+        json: async () => mockFlashcards,
       });
 
-      const materials = await getUpdatedStudyMaterials(sinceTimestamp);
-      expect(materials).toEqual(mockUpdatedMaterials);
-      expect(global.fetch).toHaveBeenCalledWith(`${API_BASE_URL}/study-materials/updates?since=${sinceTimestamp}`, {
-        method: 'GET',
+      const requestPayload = {
+        text: 'Text to generate flashcards from.',
+      };
+      const result = await generateFlashcards(requestPayload);
+
+      expect(fetch).toHaveBeenCalledTimes(1);
+      expect(fetch).toHaveBeenCalledWith('/api/v1/study-materials/flashcards', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(requestPayload),
       });
+      expect(result).toEqual(mockFlashcards);
     });
 
-    it('should throw an error if fetching updated study materials fails', async () => {
-      const sinceTimestamp = new Date().toISOString();
-
-      (global.fetch as jest.Mock).mockResolvedValueOnce({
+    it('should throw an error if flashcard API call fails', async () => {
+      const mockError = { detail: 'Flashcard generation failed.' };
+      (fetch as jest.Mock).mockResolvedValueOnce({
         ok: false,
-        json: async () => ({ detail: 'Polling error' }),
+        json: async () => mockError,
       });
 
-      await expect(getUpdatedStudyMaterials(sinceTimestamp)).rejects.toThrow('Polling error');
+      const requestPayload = {
+        text: 'Text that will cause a flashcard error.',
+      };
+
+      await expect(generateFlashcards(requestPayload)).rejects.toThrow('Flashcard generation failed.');
+      expect(fetch).toHaveBeenCalledTimes(1);
+    });
+
+    it('should throw a generic error if flashcard API call fails without specific detail', async () => {
+      (fetch as jest.Mock).mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({}), // Empty error response
+      });
+
+      const requestPayload = {
+        text: 'Text that will cause a generic flashcard error.',
+      };
+
+      await expect(generateFlashcards(requestPayload)).rejects.toThrow('Failed to generate flashcards');
+      expect(fetch).toHaveBeenCalledTimes(1);
     });
   });
 });

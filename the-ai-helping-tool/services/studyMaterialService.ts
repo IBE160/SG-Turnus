@@ -15,6 +15,28 @@ export interface StudyMaterialUpdate {
   processing_status?: string;
 }
 
+export interface SummarizeRequest {
+  text: string;
+  detail_level?: string;
+}
+
+export interface SummarizeResponse {
+  summary: string;
+}
+
+export interface Flashcard {
+  question: string;
+  answer: string;
+}
+
+export interface FlashcardGenerateRequest {
+  text: string;
+}
+
+export interface FlashcardGenerateResponse {
+  flashcards: Flashcard[];
+}
+
 // --- API Service Functions ---
 const API_BASE_URL = '/api/v1'; // Assuming a proxy or direct access to backend
 
@@ -131,6 +153,51 @@ export async function getUpdatedStudyMaterials(since: string): Promise<StudyMate
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(errorData.detail || 'Failed to fetch updated study materials');
+  }
+
+  return response.json();
+}
+
+/**
+ * Generates a summary for the provided text.
+ * @param data The SummarizeRequest object containing the text and optional detail level.
+ * @returns A promise that resolves to the SummarizeResponse.
+ */
+export async function summarizeText(data: SummarizeRequest): Promise<SummarizeResponse> {
+  const response = await fetch(`${API_BASE_URL}/study-materials/summarize`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      // Authorization header will be handled by an interceptor or passed from context
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || 'Failed to generate summary');
+  }
+
+  return response.json();
+}
+
+/**
+ * Generates flashcards for the provided text.
+ * @param data The FlashcardGenerateRequest object containing the text.
+ * @returns A promise that resolves to the FlashcardGenerateResponse.
+ */
+export async function generateFlashcards(data: FlashcardGenerateRequest): Promise<FlashcardGenerateResponse> {
+  const response = await fetch(`${API_BASE_URL}/study-materials/flashcards`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(data),
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.detail || 'Failed to generate flashcards');
   }
 
   return response.json();

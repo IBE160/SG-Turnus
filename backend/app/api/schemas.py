@@ -1,7 +1,8 @@
 from pydantic import BaseModel, EmailStr
 from enum import Enum
-from typing import Optional, Dict, Union
+from typing import Optional, Dict, Union, List
 import datetime
+from backend.app.core.ai.flashcard_generation_module import Flashcard
 
 class UserRegistration(BaseModel):
     email: EmailStr
@@ -93,3 +94,19 @@ class NLPSignalsResponse(BaseModel):
     lexical_signals: Dict
     structural_signals: Dict
     content_density: Dict
+
+class SummarizeRequest(BaseModel):
+    text: str
+    detail_level: Optional[str] = "normal"
+
+class SummarizeResponse(BaseModel):
+    summary: str
+
+
+
+class FlashcardGenerateRequest(BaseModel):
+    text: str
+    # Optional fields like num_flashcards or difficulty can be added later
+
+class FlashcardGenerateResponse(BaseModel):
+    flashcards: List[Flashcard]

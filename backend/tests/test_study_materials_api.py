@@ -329,3 +329,79 @@ def test_delete_study_material_s3(authenticated_client, mock_s3_service):
     db_material = db.query(StudyMaterial).filter(StudyMaterial.id == material.id).first()
     assert db_material is None
 
+@patch('backend.app.api.v1.study_materials.nlp_service.get_summary')
+def test_summarize_text_endpoint(mock_get_summary, authenticated_client):
+    """Test the /summarize endpoint."""
+    client, user = authenticated_client
+    mock_get_summary.return_value = "This is a mocked summary."
+
+    request_payload = {
+        "text": "This is a long text that needs to be summarized.",
+        "detail_level": "normal"
+    }
+    response = client.post("/api/v1/study-materials/summarize", json=request_payload)
+
+    assert response.status_code == 200
+    assert response.json() == {"summary": "This is a mocked summary."}
+    mock_get_summary.assert_called_once_with(request_payload["text"], request_payload["detail_level"])
+
+@patch('backend.app.api.v1.study_materials.nlp_service.get_summary')
+def test_summarize_text_endpoint_brief(mock_get_summary, authenticated_client):
+    """Test the /summarize endpoint with brief detail level."""
+    client, user = authenticated_client
+    mock_get_summary.return_value = "Brief mocked summary."
+
+    request_payload = {
+        "text": "Another text for brief summarization.",
+        "detail_level": "brief"
+    }
+    response = client.post("/api/v1/study-materials/summarize", json=request_payload)
+
+    assert response.status_code == 200
+    assert response.json() == {"summary": "Brief mocked summary."}
+    mock_get_summary.assert_called_once_with(request_payload["text"], request_payload["detail_level"])
+
+@patch('backend.app.api.v1.study_materials.nlp_service.get_summary')
+def test_summarize_text_endpoint_unauthenticated(mock_get_summary, client_with_db):
+    """Test that the /summarize endpoint requires authentication."""
+    request_payload = {
+        "text": "This text should not be summarized without auth.",
+        "detail_level": "normal"
+    }
+    response = client_with_db.post("/api/v1/study-materials/summarize", json=request_payload)
+    
+    assert response.status_code == 401 # Unauthorized
+    mock_get_summary.assert_not_called()
+
+@patch('backend.app.api.v1.study_materials.nlp_service.get_flashcards')
+def test_generate_flashcards_endpoint(mock_get_flashcards, authenticated_client):
+    """Test the /flashcards endpoint."""
+    client, user = authenticated_client
+    mock_flashcards_data = [
+        {"question": "What is Python?", "answer": "A programming language."},
+        {"question": "What is FastAPI?", "answer": "A web framework for building APIs with Python."}
+    ]
+    mock_get_flashcards.return_value = mock_flashcards_data
+
+    request_payload = {
+        "text": "Text about Python and FastAPI."
+    }
+    response = client.post("/api/v1/study-materials/flashcards", json=request_payload)
+
+    assert response.status_code == 200
+    assert response.json() == {"flashcards": mock_flashcards_data}
+    mock_get_flashcards.assert_called_once_with(request_payload["text"])
+
+@patch('backend.app.api.v1.study_materials.nlp_service.get_flashcards')
+def test_generate_flashcards_endpoint_unauthenticated(mock_get_flashcards, client_with_db):
+    """Test that the /flashcards endpoint requires authentication."""
+    request_payload = {
+        "text": "Text for flashcards without auth."
+    }
+    response = client_with_db.post("/api/v1/study-materials/flashcards", json=request_payload)
+    
+    assert response.status_code == 401 # Unauthorized
+    mock_get_flashcards.assert_not_called()
+
+
+

@@ -74,6 +74,41 @@ def test_nlp_service_initialization(nlp_service, patch_spacy_load):
     """Test that NLPService initializes and loads the spaCy model."""
     patch_spacy_load.assert_called_once_with("en_core_web_sm")
     assert nlp_service.nlp is not None
+    assert nlp_service.summarization_module is not None
+    assert nlp_service.flashcard_generation_module is not None # Added assertion
+
+@patch('backend.app.core.ai.summarization_module.SummarizationModule.generate_summary')
+def test_get_summary_calls_summarization_module(
+    mock_generate_summary, nlp_service
+):
+    """Test that NLPService.get_summary calls SummarizationModule.generate_summary."""
+    test_text = "This is some test text for summarization."
+    expected_summary = "This is a summary."
+    mock_generate_summary.return_value = expected_summary
+
+    summary = nlp_service.get_summary(test_text, detail_level="brief")
+
+    mock_generate_summary.assert_called_once_with(test_text, "brief")
+    assert summary == expected_summary
+
+@patch('backend.app.core.ai.flashcard_generation_module.FlashcardGenerationModule.generate_flashcards')
+def test_get_flashcards_calls_flashcard_generation_module(
+    mock_generate_flashcards, nlp_service
+):
+    """Test that NLPService.get_flashcards calls FlashcardGenerationModule.generate_flashcards."""
+    test_text = "Text for flashcards."
+    mock_flashcards_data = [
+        {"question": "Q1", "answer": "A1"},
+        {"question": "Q2", "answer": "A2"}
+    ]
+    mock_generate_flashcards.return_value = mock_flashcards_data
+
+    flashcards = nlp_service.get_flashcards(test_text)
+
+    mock_generate_flashcards.assert_called_once_with(test_text)
+    assert flashcards == mock_flashcards_data
+
+
 
 @pytest.mark.parametrize("text_input, expected_intent, expected_confidence", [
     ("summarize this text", Intent.SUMMARIZATION, 0.9),

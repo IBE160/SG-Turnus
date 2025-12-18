@@ -387,7 +387,7 @@ So that I can effectively engage the user and quickly build clarity.
 
 **Goal:** Enable users to generate high-quality study materials (summaries, flashcards, quizzes) from their uploaded content and ensure their accuracy and relevance.
 
-### Story 3.1: Automated Summary Generation
+### Story 3.1: Automated Summary Generation (Implemented)
 
 As a user,
 I want the system to automatically generate concise and accurate summaries from my uploaded study materials,
@@ -404,6 +404,11 @@ So that I can quickly grasp the main points.
 **Prerequisites:** Epic 2 (specifically, input processing and intent detection)
 
 **Technical Notes:** Covers FR7. This involves text summarization techniques, likely using abstractive or extractive methods based on an LLM or similar AI model.
+**Implementation Notes:**
+- Backend service `backend/app/core/ai/summarization_module.py` created using LangChain and OpenAI API.
+- Integrated into `backend/app/services/nlp_service.py` via `get_summary` method.
+- New API endpoint `POST /api/v1/study-materials/summarize` developed in `backend/app/api/v1/study_materials.py`.
+- Frontend integration includes a new service function `summarizeText` in `the-ai-helping-tool/services/studyMaterialService.ts` and a dedicated UI page `the-ai-helping-tool/app/summarize/page.tsx` for testing and demonstration.
 
 ### Story 3.2: Automated Flashcard Generation
 
