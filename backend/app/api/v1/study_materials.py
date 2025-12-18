@@ -1,25 +1,33 @@
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status, UploadFile, File
-from sqlalchemy.orm import Session
+from fastapi.responses import StreamingResponse
+from sqlalchemy.orm import Session, selectinload # Import selectinload
 from backend.app.database import get_db
 from backend.app.models.study_material import StudyMaterial
 from backend.app.models.user import User
+from backend.app.models.generated_summary import GeneratedSummary # Import GeneratedSummary
+from backend.app.models.generated_flashcard_set import GeneratedFlashcardSet # Import GeneratedFlashcardSet
+from backend.app.models.generated_quiz import GeneratedQuiz # Import GeneratedQuiz
 from backend.app.dependencies import get_current_user
 from backend.app.api.schemas import (
-    StudyMaterialCreate, 
-    StudyMaterialResponse, 
-    StudyMaterialUpdate, 
-    SummarizeRequest, 
-    FlashcardGenerateRequest, 
+    StudyMaterialCreate,
+    StudyMaterialResponse,
+    StudyMaterialUpdate,
+    SummarizeRequest,
+    FlashcardGenerateRequest,
     QuizGenerateRequest,
     GeneratedSummaryResponse,        # New import
     GeneratedFlashcardSetResponse,   # New import
-    GeneratedQuizResponse            # New import
+    GeneratedQuizResponse,            # New import
+    ExportRequest
 )
 from backend.app.services.nlp_service import NLPService # Import NLPService
+from backend.app.services.export_service import export_service
 import shutil
 import os
 import datetime
+
+from backend.app.core.websockets import emit_to_user # Import emit_to_user
 
 # For S3 integration, will be implemented later
 # from backend.app.services.s3_service import upload_file_to_s3, delete_file_from_s3
@@ -51,6 +59,7 @@ async def summarize_text(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Study material not found or user does not own it")
 
     summary = nlp_service.get_summary(study_material_id, request.text, request.detail_level) # Pass study_material_id
+    await emit_to_user(str(current_user.id), "summary_created", GeneratedSummaryResponse.from_orm(summary).model_dump())
     return summary
 
 @router.post("/flashcards", response_model=GeneratedFlashcardSetResponse) # Changed response_model
@@ -69,6 +78,7 @@ async def generate_flashcards_api(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Study material not found or user does not own it")
 
     flashcards_set = nlp_service.get_flashcards(study_material_id, request.text) # Pass study_material_id
+    await emit_to_user(str(current_user.id), "flashcards_created", GeneratedFlashcardSetResponse.from_orm(flashcards_set).model_dump())
     return flashcards_set
 
 @router.post("/quiz", response_model=GeneratedQuizResponse) # Changed response_model
@@ -87,6 +97,7 @@ async def generate_quiz_api(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Study material not found or user does not own it")
 
     quiz = nlp_service.get_quiz_questions(study_material_id, request.text) # Pass study_material_id
+    await emit_to_user(str(current_user.id), "quiz_created", GeneratedQuizResponse.from_orm(quiz).model_dump())
     return quiz
 
 @router.get("/", response_model=List[StudyMaterialResponse])
@@ -97,7 +108,11 @@ def read_study_materials(
     """
     Retrieve a list of all study materials for the current user.
     """
-    study_materials = db.query(StudyMaterial).filter(
+    study_materials = db.query(StudyMaterial).options(
+        selectinload(StudyMaterial.generated_summaries),
+        selectinload(StudyMaterial.generated_flashcard_sets),
+        selectinload(StudyMaterial.generated_quizzes)
+    ).filter(
         StudyMaterial.user_id == current_user.id
     ).all()
     return study_materials
@@ -156,6 +171,7 @@ async def create_study_material(
     # Clean up temp file (will be replaced by S3 cleanup)
     os.remove(temp_file_path)
 
+    await emit_to_user(str(current_user.id), "study_material_created", StudyMaterialResponse.from_orm(db_study_material).model_dump())
     return db_study_material
 
 @router.get("/{study_material_id}", response_model=StudyMaterialResponse)
@@ -173,7 +189,7 @@ def read_study_material(
     return db_study_material
 
 @router.put("/{study_material_id}", response_model=StudyMaterialResponse)
-def update_study_material(
+async def update_study_material(
     study_material_id: int,
     study_material_update: StudyMaterialUpdate,
     db: Session = Depends(get_db),
@@ -194,17 +210,18 @@ def update_study_material(
     if db_study_material is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Study material not found")
 
-    update_data = study_material_update.dict(exclude_unset=True)
+    update_data = study_material_update.model_dump(exclude_unset=True)
     for key, value in update_data.items():
         setattr(db_study_material, key, value)
     
     db.add(db_study_material)
     db.commit()
     db.refresh(db_study_material)
+    await emit_to_user(str(current_user.id), "study_material_updated", StudyMaterialResponse.from_orm(db_study_material).model_dump())
     return db_study_material
 
 @router.delete("/{study_material_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_study_material(
+async def delete_study_material(
     study_material_id: int,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
@@ -221,6 +238,7 @@ def delete_study_material(
 
     db.delete(db_study_material)
     db.commit()
+    await emit_to_user(str(current_user.id), "study_material_deleted", {"id": study_material_id})
     return
 
 @router.get("/{study_material_id}/summaries", response_model=List[GeneratedSummaryResponse])
@@ -276,6 +294,25 @@ def get_quizzes_for_study_material(
         GeneratedQuiz.study_material_id == study_material_id
     ).all()
     return quizzes
+
+
+
+@router.post("/export")
+async def export_material(
+    request: ExportRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Exports a summary in a specified format.
+    """
+    try:
+        file_buffer = export_service.export(request.content, request.format)
+        media_type = f"application/{request.format}"
+        if request.format == "docx":
+            media_type = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+        return StreamingResponse(file_buffer, media_type=media_type, headers={"Content-Disposition": f"attachment; filename=summary.{request.format}"})
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
 def get_user_study_material(db: Session, study_material_id: int, user_id: int):
     """

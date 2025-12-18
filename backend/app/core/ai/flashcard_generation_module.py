@@ -1,4 +1,5 @@
 import os
+import re # Added this line
 from typing import List
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
@@ -60,39 +61,21 @@ class FlashcardGenerationModule:
     def _parse_llm_output_to_flashcards(self, llm_output: str) -> List[Flashcard]:
         """
         Parses the LLM's raw string output into a list of Flashcard objects.
-        Assumes the format: "1. Question: ...\nAnswer: ...\n2. Question: ..."
+        Uses regex to find "Question: ... Answer: ..." blocks to handle varied formatting.
         """
         flashcards = []
-        # Split by "Question:" to handle each flashcard entry
-        entries = llm_output.split("Question:")
-        
-        for entry in entries:
-            entry = entry.strip()
-            if not entry:
-                continue
-            
-            
-            # Remove any leading numbering or "Question:" prefix
-            # Use regex to handle potential variations in numbering (e.g., "1.", "2)", "1-")
-            match_num = re.match(r"^\d+[\.\)]?\s*", entry)
-            if match_num:
-                entry = entry[match_num.end():].strip()
-            
-            # Now, ensure we only take the part after "Question:" for the question
-            question_prefix_idx = entry.lower().find("question:")
-            if question_prefix_idx != -1:
-                question_start = question_prefix_idx + len("question:")
-                remaining_entry = entry[question_start:].strip()
-            else:
-                remaining_entry = entry # Assume the entry directly starts with the question if no "Question:" prefix found
+        # Regex to find blocks starting with optional numbering, "Question:", and containing "Answer:"
+        # It's designed to be flexible with whitespace and numbering.
+        flashcard_blocks = re.findall(
+            r"(?m)^\s*\d*[\.\)]?\s*Question:\s*(.*?)\s*Answer:\s*(.*?)(?=\n^\s*\d*[\.\)]?\s*Question:|\Z)",
+            llm_output,
+            re.DOTALL
+        )
 
-            answer_start_idx = remaining_entry.lower().find("answer:")
-            if answer_start_idx == -1:
-                continue
+        for question, answer in flashcard_blocks:
+            question = question.strip()
+            answer = answer.strip()
             
-            question = remaining_entry[:answer_start_idx].strip()
-            answer = remaining_entry[answer_start_idx:].replace("Answer:", "", 1).strip() # Replace only the first occurrence
-
             if question and answer:
                 flashcards.append(Flashcard(question=question, answer=answer))
         

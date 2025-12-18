@@ -6,16 +6,26 @@ from backend.app.core.ai.flashcard_generation_module import FlashcardGenerationM
 # Mock the ChatOpenAI dependency
 @pytest.fixture
 def mock_chat_openai():
-    with patch('langchain_openai.ChatOpenAI') as mock:
-        yield mock
+    with patch('langchain_openai.ChatOpenAI') as mock_llm_class:
+        mock_instance = MagicMock()
+        mock_llm_class.return_value = mock_instance
+        # Mock the invoke method directly
+        mock_instance.invoke.return_value = """
+1. Question: Mock Flashcard Question 1?
+Answer: Mock Flashcard Answer 1.
+2. Question: Mock Flashcard Question 2?
+Answer: Mock Flashcard Answer 2.
+"""
+        yield mock_llm_class # Yield the mock class, not the instance
 
 @pytest.fixture
 def flashcard_generator(mock_chat_openai):
     # Ensure OPENAI_API_KEY is set for the test, as the module checks it
     os.environ["OPENAI_API_KEY"] = "sk-test-key"
     generator = FlashcardGenerationModule()
-    # Reset llm to None so it gets initialized with the mock
-    generator.llm = None
+    # Set the llm attribute of the generator to the mocked instance provided by mock_chat_openai
+    # mock_chat_openai is the class mock, mock_chat_openai.return_value is the instance mock
+    generator.llm = mock_chat_openai.return_value 
     yield generator
     del os.environ["OPENAI_API_KEY"]
 
@@ -68,27 +78,22 @@ Answer: Second A.
     """
     flashcards = flashcard_generator._parse_llm_output_to_flashcards(llm_output)
     assert len(flashcards) == 2
-    assert flashcards[0].question == "Question: First Q?" # The parsing currently keeps "Question:" if the numbering is not "1. "
+    assert flashcards[0].question == "First Q?"
     assert flashcards[0].answer == "First A."
     assert flashcards[1].question == "Second Q?"
     assert flashcards[1].answer == "Second A."
 
 @pytest.mark.asyncio
 async def test_generate_flashcards_with_llm(flashcard_generator, mock_chat_openai):
-    mock_llm_instance = MagicMock()
-    mock_chat_openai.return_value = mock_llm_instance
-    mock_llm_instance.invoke.return_value = """
-1. Question: Test Question 1?
-Answer: Test Answer 1.
-2. Question: Test Question 2?
-Answer: Test Answer 2.
-    """
-    
+    # The mock_chat_openai fixture already sets the return_value for invoke on the mocked instance
+    # We can directly use flashcard_generator.llm which should be the mocked instance
     text = "Sample text for flashcards"
     flashcards = flashcard_generator.generate_flashcards(text)
 
+    # Ensure ChatOpenAI was called with correct parameters
     mock_chat_openai.assert_called_once_with(model_name="gpt-4o", temperature=0.5)
-    mock_llm_instance.invoke.assert_called_once()
+    # Ensure the invoke method of the mocked instance was called
+    flashcard_generator.llm.invoke.assert_called_once()
     assert len(flashcards) == 2
-    assert flashcards[0].question == "Test Question 1?"
-    assert flashcards[0].answer == "Test Answer 1."
+    assert flashcards[0].question == "Mock Flashcard Question 1?" # Use the value from the fixture's mock
+    assert flashcards[0].answer == "Mock Flashcard Answer 1."

@@ -2,7 +2,7 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
-from backend.app.main import app
+from backend.main import app
 from backend.app.database import Base, get_db
 from backend.app.dependencies import get_current_user
 from backend.app.models.user import User
@@ -35,7 +35,7 @@ def session():
 # Override the get_current_user dependency for testing
 @pytest.fixture()
 def mock_current_user(session):
-    user = User(email="test@example.com", hashed_password="fakehashedpassword", is_verified=True)
+    user = User(email="test@example.com", auth_provider_id="test_auth_id", is_verified=True)
     session.add(user)
     session.commit()
     session.refresh(user)
