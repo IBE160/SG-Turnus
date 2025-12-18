@@ -48,6 +48,10 @@ def mock_spacy_nlp():
     # Mock specific calls for num_alphanumeric_tokens in sentences
     mock_sent_doc1 = MagicMock()
     mock_sent_doc1.__iter__.return_value = [mock_token1, mock_token2, mock_token3, mock_token4]
+    
+    mock_sent_doc2 = MagicMock()
+    mock_sent_doc2.__iter__.return_value = [mock_token5, mock_token6, mock_token7, mock_token8]
+
     mock_nlp.return_value.sents.__iter__.return_value = [
         MagicMock(text="Hello, world.", doc=mock_sent_doc1),
         MagicMock(text="How are you?", doc=mock_sent_doc2)

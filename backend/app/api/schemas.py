@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from enum import Enum
-from typing import Optional, Dict
+from typing import Optional, Dict, Union
 import datetime
 
 class UserRegistration(BaseModel):
@@ -42,14 +42,29 @@ class NextStep(BaseModel): # Renamed from NextStepContent
     type: str
     data: Dict
 
+class CalibrationQuestionResponse(BaseModel):
+    """
+    Structured response for a calibration question.
+    """
+    type: str = "calibration_question"
+    question: str
+
+class ExploratoryPhrasingResponse(BaseModel):
+    """
+    Structured response for an exploratory phrasing.
+    """
+    type: str = "exploratory_phrasing"
+    phrasing: str
+
 class ClarityResponse(BaseModel):
     """
     Represents the AI's response after processing a user's query,
     including the action to be taken and the content of the response.
+    The 'content' field can be a direct string or a structured object
+    like CalibrationQuestionResponse or ExploratoryPhrasingResponse.
     """
     action: str # e.g., "direct_response", "uncertainty_handling", "generate_materials"
-    content: str # This will hold the direct string response for now,
-                 # but could be a more complex object (e.g., NextStep)
+    content: Union[str, CalibrationQuestionResponse, ExploratoryPhrasingResponse]
 
 class StudyMaterialCreate(BaseModel):
     file_name: str

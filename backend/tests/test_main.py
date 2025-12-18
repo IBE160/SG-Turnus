@@ -115,7 +115,8 @@ def mock_external_services_and_singletons():
 
     with patch('backend.app.core.auth_service.auth_service', new=mock_auth_service_instance), \
          patch('backend.app.services.email_service.email_service', new=mock_email_service_instance), \
-         patch('backend.app.services.storage_service.storage_service', new=mock_storage_service_instance), \
+         patch('backend.app.services.storage_service.upload_file_to_s3', new=mock_storage_service_instance.upload_file_to_s3), \
+         patch('backend.app.services.storage_service.delete_file_from_s3', new=mock_storage_service_instance.delete_file_from_s3), \
          patch('backend.app.dependencies.validate_token', new_callable=AsyncMock) as mock_validate_token, \
          patch('backend.app.core.jwt_utils.get_jwks', new_callable=AsyncMock) as mock_get_jwks:
 
@@ -143,9 +144,9 @@ def mock_external_services_and_singletons():
         }
         
         # Configure mock_storage_service_instance methods
-        mock_storage_service_instance.upload_file.return_value = True
-        mock_storage_service_instance.download_file.return_value = b"mock file content"
-        mock_storage_service_instance.delete_file.return_value = True
+        mock_storage_service_instance.upload_file_to_s3.return_value = True
+        mock_storage_service_instance.download_file_from_s3.return_value = b"mock file content"
+        mock_storage_service_instance.delete_file_from_s3.return_value = True
         mock_storage_service_instance.s3_client = MagicMock() # Ensure s3_client is set up
 
         # Yield the mocks needed by tests
@@ -405,7 +406,7 @@ async def test_download_file_success(mock_external_services_and_singletons, test
 
     assert response.status_code == 200
     assert response.content == b"Downloaded content from S3"
-    mock_storage_service.download_file.assert_called_once_with(s3_object_name)
+    mock_storage_service.download_file_from_s3.assert_called_once_with(s3_object_name)
 
 @pytest.mark.asyncio
 async def test_download_file_not_found_db(mock_external_services_and_singletons, test_client, mongo_client: AsyncIOMotorClient):
@@ -473,7 +474,7 @@ async def test_download_file_not_found_s3(mock_external_services_and_singletons,
 
     assert response.status_code == 404
     assert response.json()["detail"] == "File content not found in storage"
-    mock_storage_service.download_file.assert_called_once_with(s3_object_name)
+    mock_storage_service.download_file_from_s3.assert_called_once_with(s3_object_name)
 
 @pytest.mark.asyncio
 async def test_download_file_unauthorized(mock_external_services_and_singletons, test_client, mongo_client: AsyncIOMotorClient):

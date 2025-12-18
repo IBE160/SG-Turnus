@@ -95,8 +95,8 @@ def mock_s3_service():
 
     with patch('backend.app.api.v1.study_materials.shutil.copyfileobj'), \
          patch('backend.app.api.v1.study_materials.os.remove'), \
-         patch('backend.app.services.storage_service.storage_service.upload_file', new=mock_upload_file), \
-         patch('backend.app.services.storage_service.storage_service.delete_file', new=mock_delete_file):
+         patch('backend.app.services.storage_service.upload_file_to_s3', new=mock_upload_file), \
+         patch('backend.app.services.storage_service.delete_file_from_s3', new=mock_delete_file):
         yield mock_upload_file, mock_delete_file
 
 # --- Tests ---

@@ -1,7 +1,10 @@
 # backend/app/core/planner_service.py
 
+import random
 from .config import CONFIDENCE_THRESHOLD
-from .ai.calibration_module import CalibrationModule
+from .ai.uncertainty_resolution_module import UncertaintyResolutionModule
+from .ai.exploratory_module import ExploratoryModule
+from .ai.micro_explanation_module import MicroExplanationModule
 
 class PlannerService:
     """
@@ -18,7 +21,9 @@ class PlannerService:
             confidence_threshold: The threshold to use for confidence evaluation.
         """
         self.confidence_threshold = confidence_threshold
-        self.calibration_module = CalibrationModule()
+        self.calibration_module = UncertaintyResolutionModule()
+        self.exploratory_module = ExploratoryModule()
+        self.micro_explanation_module = MicroExplanationModule()
 
     def is_confidence_below_threshold(self, confidence_score: float) -> bool:
         """
@@ -48,8 +53,19 @@ class PlannerService:
         """
         if self.is_confidence_below_threshold(intent_confidence) or \
            self.is_confidence_below_threshold(state_confidence):
-            calibration_question = self.calibration_module.generate_question(user_input, inferred_context)
-            return {"action": "uncertainty_handling", "content": calibration_question}
+            # Choose among calibration question, exploratory phrasing, or micro-explanation
+            choice = random.choice(["calibration_question", "exploratory_phrasing", "micro_explanation"])
+
+            if choice == "calibration_question":
+                generated_content = self.calibration_module.generate_question(user_input, inferred_context)
+                response_content = {"type": "calibration_question", "question": generated_content}
+            elif choice == "exploratory_phrasing":
+                generated_content = self.exploratory_module.generate_phrasing(user_input, inferred_context)
+                response_content = {"type": "exploratory_phrasing", "phrasing": generated_content}
+            else: # choice == "micro_explanation"
+                generated_content = self.micro_explanation_module.generate_micro_explanation(user_input, inferred_context)
+                response_content = {"type": "micro_explanation", "explanation": generated_content}
+            return {"action": "uncertainty_handling", "content": response_content}
         else:
             return {"action": "direct_response", "content": "Proceeding with direct response."}
 
@@ -72,13 +88,13 @@ if __name__ == '__main__':
 
     # Scenario 2: Low intent confidence
     low_intent_confidence_plan = planner.plan_next_step(user_query_low_intent, context_low_intent, intent_confidence=0.6, state_confidence=0.9)
-    print(f"Low intent confidence plan: {low_intent_confidence_plan}") # Expected: uncertainty_handling with a calibration question
+    print(f"Low intent confidence plan: {low_intent_confidence_plan}") # Expected: uncertainty_handling with a calibration question or exploratory phrasing
 
     # Scenario 3: Low state confidence
     low_state_confidence_plan = planner.plan_next_step(user_query_low_state, context_low_state, intent_confidence=0.95, state_confidence=0.5)
-    print(f"Low state confidence plan: {low_state_confidence_plan}") # Expected: uncertainty_handling with a calibration question
+    print(f"Low state confidence plan: {low_state_confidence_plan}") # Expected: uncertainty_handling with a calibration question or exploratory phrasing
 
     # Scenario 4: Custom threshold
     custom_planner = PlannerService(confidence_threshold=0.8)
     custom_plan = custom_planner.plan_next_step(user_query_custom, context_custom, intent_confidence=0.75, state_confidence=0.9)
-    print(f"Custom threshold plan: {custom_plan}") # Expected: uncertainty_handling with a calibration question
+    print(f"Custom threshold plan: {custom_plan}") # Expected: uncertainty_handling with a calibration question or exploratory phrasing

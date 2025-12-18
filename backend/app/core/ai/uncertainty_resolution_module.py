@@ -5,7 +5,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
 from langchain_core.messages import SystemMessage, AIMessage
 
-class CalibrationModule:
+class UncertaintyResolutionModule:
     """
     Module responsible for generating calibration questions when the AI's
     confidence is low, utilizing LangChain and an LLM.
@@ -64,12 +64,12 @@ class CalibrationModule:
             return "Could you please provide more context or clarify your question?"
 
         chain = self.prompt | self.llm
-        response = chain.invoke({
+        response_content = chain.invoke({
             "user_input": user_input,
             "key_term": key_term,
             "topic": topic
-        })
-        return response.content
+        }).content
+        return response_content
 
 # Example of how this might be used (requires OpenAI API key to be set up)
 if __name__ == '__main__':
@@ -85,7 +85,9 @@ if __name__ == '__main__':
         print("Generating calibration question...")
         question = calibration_module.generate_question(user_query, context)
         print(f"Generated Question: {question}")
+        print(f"Type of response: {type(question)}")
 
         # Example with missing context
         no_context_question = calibration_module.generate_question("What is it?", {})
         print(f"\nNo context scenario: {no_context_question}")
+        print(f"Type of response: {type(no_context_question)}")
