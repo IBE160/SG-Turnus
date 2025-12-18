@@ -1,6 +1,43 @@
 // the-ai-helping-tool/services/studyMaterialService.ts
 
+import axios from 'axios'; // Import axios for consistent request handling
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_BACKEND_URL || 'http://localhost:8000'; // Use environment variable
+
 // --- TypeScript Interfaces (Mirroring Backend Pydantic Schemas) ---
+export interface GeneratedSummaryResponse {
+  id: number;
+  study_material_id: number;
+  content: string;
+  detail_level?: string;
+  generated_at: string;
+}
+
+export interface GeneratedFlashcardResponse {
+  question: string;
+  answer: string;
+}
+
+export interface GeneratedFlashcardSetResponse {
+  id: number;
+  study_material_id: number;
+  content: GeneratedFlashcardResponse[];
+  generated_at: string;
+}
+
+export interface GeneratedQuizQuestionResponse {
+  question: string;
+  options: string[];
+  correct_answer: string;
+}
+
+export interface GeneratedQuizResponse {
+  id: number;
+  study_material_id: number;
+  content: GeneratedQuizQuestionResponse[];
+  generated_at: string;
+}
+
 export interface StudyMaterialResponse {
   id: number;
   user_id: number;
@@ -8,6 +45,9 @@ export interface StudyMaterialResponse {
   s3_key: string;
   upload_date: string; // ISO 8601 string
   processing_status: string;
+  generated_summaries: GeneratedSummaryResponse[]; // Added for eager loading
+  generated_flashcard_sets: GeneratedFlashcardSetResponse[]; // Added for eager loading
+  generated_quizzes: GeneratedQuizResponse[]; // Added for eager loading
 }
 
 export interface StudyMaterialUpdate {
@@ -51,283 +91,299 @@ export interface QuizGenerateResponse {
   questions: QuizQuestion[];
 }
 
-export interface GeneratedSummaryResponse {
-  id: number;
-  study_material_id: number;
-  content: string;
-  detail_level?: string;
-  generated_at: string;
-}
-
-export interface GeneratedFlashcardResponse {
-  question: string;
-  answer: string;
-}
-
-export interface GeneratedFlashcardSetResponse {
-  id: number;
-  study_material_id: number;
-  content: GeneratedFlashcardResponse[];
-  generated_at: string;
-}
-
-export interface GeneratedQuizQuestionResponse {
-  question: string;
-  options: string[];
-  correct_answer: string;
-}
-
-export interface GeneratedQuizResponse {
-  id: number;
-  study_material_id: number;
-  content: GeneratedQuizQuestionResponse[];
-  generated_at: string;
-}
-
 
 // --- API Service Functions ---
-const API_BASE_URL = '/api/v1'; // Assuming a proxy or direct access to backend
 
 /**
  * Creates a new study material by uploading a file.
  * @param file The file to upload.
- * @param fileName The name of the file.
+ * @param token The authentication token.
  * @returns A promise that resolves to the created StudyMaterialResponse.
  */
-export async function createStudyMaterial(file: File, fileName: string): Promise<StudyMaterialResponse> {
+export async function createStudyMaterial(file: File, token: string): Promise<StudyMaterialResponse> {
   const formData = new FormData();
-  formData.append('file', file, fileName);
+  formData.append('file', file); // No need for fileName parameter, as it's part of File object
 
-  const response = await fetch(`${API_BASE_URL}/study-materials`, {
-    method: 'POST',
-    body: formData,
-    // Headers like Authorization will be handled by an interceptor or passed from context
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || 'Failed to create study material');
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/api/v1/study-materials`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error creating study material:', error);
+    throw error;
   }
-
-  return response.json();
 }
 
 /**
  * Retrieves a list of all study materials for the current user.
+ * @param token The authentication token.
  * @returns A promise that resolves to an array of StudyMaterialResponse.
  */
-export async function getStudyMaterials(): Promise<StudyMaterialResponse[]> {
-  const response = await fetch(`${API_BASE_URL}/study-materials`, {
-    method: 'GET',
-    // Headers like Authorization will be handled by an interceptor or passed from context
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || 'Failed to fetch study materials');
+export async function getStudyMaterials(token: string): Promise<StudyMaterialResponse[]> {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/api/v1/study-materials`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching study materials:', error);
+    throw error;
   }
-
-  return response.json();
 }
 
 /**
  * Retrieves a single study material by its ID.
  * @param id The ID of the study material.
+ * @param token The authentication token.
  * @returns A promise that resolves to the StudyMaterialResponse.
  */
-export async function getStudyMaterial(id: number): Promise<StudyMaterialResponse> {
-  const response = await fetch(`${API_BASE_URL}/study-materials/${id}`, {
-    method: 'GET',
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || `Failed to fetch study material with ID ${id}`);
+export async function getStudyMaterial(id: number, token: string): Promise<StudyMaterialResponse> {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/api/v1/study-materials/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching study material with ID ${id}:`, error);
+    throw error;
   }
-
-  return response.json();
 }
 
 /**
  * Updates the metadata of an existing study material.
  * @param id The ID of the study material to update.
  * @param data The partial data to update.
+ * @param token The authentication token.
  * @returns A promise that resolves to the updated StudyMaterialResponse.
  */
-export async function updateStudyMaterial(id: number, data: StudyMaterialUpdate): Promise<StudyMaterialResponse> {
-  const response = await fetch(`${API_BASE_URL}/study-materials/${id}`, {
-    method: 'PUT',
-    headers: {
-      'Content-Type': 'application/json',
-      // Headers like Authorization will be handled by an interceptor or passed from context
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || `Failed to update study material with ID ${id}`);
+export async function updateStudyMaterial(id: number, data: StudyMaterialUpdate, token: string): Promise<StudyMaterialResponse> {
+  try {
+    const response = await axios.put(`${API_BASE_URL}/api/v1/study-materials/${id}`, data, {
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error updating study material with ID ${id}:`, error);
+    throw error;
   }
-
-  return response.json();
 }
 
 /**
  * Deletes a study material by its ID.
  * @param id The ID of the study material to delete.
+ * @param token The authentication token.
  * @returns A promise that resolves when the deletion is successful.
  */
-export async function deleteStudyMaterial(id: number): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/study-materials/${id}`, {
-    method: 'DELETE',
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || `Failed to delete study material with ID ${id}`);
+export async function deleteStudyMaterial(id: number, token: string): Promise<void> {
+  try {
+    await axios.delete(`${API_BASE_URL}/api/v1/study-materials/${id}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+  } catch (error) {
+    console.error(`Error deleting study material with ID ${id}:`, error);
+    throw error;
   }
 }
 
 /**
  * Retrieves study materials that have been updated since a given timestamp.
  * @param since A timestamp (ISO 8601 string) to fetch updates from.
+ * @param token The authentication token.
  * @returns A promise that resolves to an array of StudyMaterialResponse.
  */
-export async function getUpdatedStudyMaterials(since: string): Promise<StudyMaterialResponse[]> {
-  const response = await fetch(`${API_BASE_URL}/study-materials/updates?since=${since}`, {
-    method: 'GET',
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || 'Failed to fetch updated study materials');
+export async function getUpdatedStudyMaterials(since: string, token: string): Promise<StudyMaterialResponse[]> {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/api/v1/study-materials/updates?since=${since}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching updated study materials:', error);
+    throw error;
   }
-
-  return response.json();
 }
 
 /**
  * Generates a summary for the provided text.
  * @param studyMaterialId The ID of the study material to associate the summary with.
  * @param data The SummarizeRequest object containing the text and optional detail level.
+ * @param token The authentication token.
  * @returns A promise that resolves to the GeneratedSummaryResponse.
  */
-export async function summarizeText(studyMaterialId: number, data: SummarizeRequest): Promise<GeneratedSummaryResponse> {
-  const response = await fetch(`${API_BASE_URL}/study-materials/${studyMaterialId}/summarize`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      // Authorization header will be handled by an interceptor or passed from context
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || 'Failed to generate summary');
+export async function summarizeText(studyMaterialId: number, data: SummarizeRequest, token: string): Promise<GeneratedSummaryResponse> {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/api/v1/study-materials/summarize`,
+      data,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error generating summary:', error);
+    throw error;
   }
-
-  return response.json();
 }
 
 /**
  * Generates flashcards for the provided text.
  * @param studyMaterialId The ID of the study material to associate the flashcards with.
  * @param data The FlashcardGenerateRequest object containing the text.
+ * @param token The authentication token.
  * @returns A promise that resolves to the GeneratedFlashcardSetResponse.
  */
-export async function generateFlashcards(studyMaterialId: number, data: FlashcardGenerateRequest): Promise<GeneratedFlashcardSetResponse> {
-  const response = await fetch(`${API_BASE_URL}/study-materials/${studyMaterialId}/flashcards`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || 'Failed to generate flashcards');
+export async function generateFlashcards(studyMaterialId: number, data: FlashcardGenerateRequest, token: string): Promise<GeneratedFlashcardSetResponse> {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/api/v1/study-materials/${studyMaterialId}/flashcards`,
+      data,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error generating flashcards:', error);
+    throw error;
   }
-
-  return response.json();
 }
 
 /**
  * Generates a quiz for the provided text.
  * @param studyMaterialId The ID of the study material to associate the quiz with.
  * @param data The QuizGenerateRequest object containing the text.
+ * @param token The authentication token.
  * @returns A promise that resolves to the GeneratedQuizResponse.
  */
-export async function generateQuiz(studyMaterialId: number, data: QuizGenerateRequest): Promise<GeneratedQuizResponse> {
-  const response = await fetch(`${API_BASE_URL}/study-materials/${studyMaterialId}/quiz`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || 'Failed to generate quiz');
+export async function generateQuiz(studyMaterialId: number, data: QuizGenerateRequest, token: string): Promise<GeneratedQuizResponse> {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/api/v1/study-materials/${studyMaterialId}/quiz`,
+      data,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error generating quiz:', error);
+    throw error;
   }
+}
 
-  return response.json();
+export interface ExportRequest {
+  content: string;
+  format: string;
+}
+
+/**
+ * Exports a summary in a specified format.
+ * @param data The ExportRequest object containing the content and format.
+ * @returns A promise that resolves to a Blob.
+ */
+export async function exportSummary(data: ExportRequest): Promise<Blob> {
+  try {
+    const response = await axios.post(
+      `${API_BASE_URL}/api/v1/study-materials/export`,
+      data,
+      {
+        responseType: 'blob',
+      }
+    );
+    return response.data;
+  } catch (error) {
+    console.error('Error exporting summary:', error);
+    throw error;
+  }
 }
 
 /**
  * Retrieves a list of generated summaries for a specific study material.
  * @param studyMaterialId The ID of the study material.
+ * @param token The authentication token.
  * @returns A promise that resolves to an array of GeneratedSummaryResponse.
  */
-export async function getSummariesForStudyMaterial(studyMaterialId: number): Promise<GeneratedSummaryResponse[]> {
-  const response = await fetch(`${API_BASE_URL}/study-materials/${studyMaterialId}/summaries`, {
-    method: 'GET',
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || `Failed to fetch summaries for study material ${studyMaterialId}`);
+export async function getSummariesForStudyMaterial(studyMaterialId: number, token: string): Promise<GeneratedSummaryResponse[]> {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/api/v1/study-materials/${studyMaterialId}/summaries`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching summaries for study material ${studyMaterialId}:`, error);
+    throw error;
   }
-
-  return response.json();
 }
 
 /**
  * Retrieves a list of generated flashcard sets for a specific study material.
  * @param studyMaterialId The ID of the study material.
+ * @param token The authentication token.
  * @returns A promise that resolves to an array of GeneratedFlashcardSetResponse.
  */
-export async function getFlashcardSetsForStudyMaterial(studyMaterialId: number): Promise<GeneratedFlashcardSetResponse[]> {
-  const response = await fetch(`${API_BASE_URL}/study-materials/${studyMaterialId}/flashcard-sets`, {
-    method: 'GET',
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || `Failed to fetch flashcard sets for study material ${studyMaterialId}`);
+export async function getFlashcardSetsForStudyMaterial(studyMaterialId: number, token: string): Promise<GeneratedFlashcardSetResponse[]> {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/api/v1/study-materials/${studyMaterialId}/flashcard-sets`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching flashcard sets for study material ${studyMaterialId}:`, error);
+    throw error;
   }
-
-  return response.json();
 }
 
 /**
  * Retrieves a list of generated quizzes for a specific study material.
  * @param studyMaterialId The ID of the study material.
+ * @param token The authentication token.
  * @returns A promise that resolves to an array of GeneratedQuizResponse.
  */
-export async function getQuizzesForStudyMaterial(studyMaterialId: number): Promise<GeneratedQuizResponse[]> {
-  const response = await fetch(`${API_BASE_URL}/study-materials/${studyMaterialId}/quizzes`, {
-    method: 'GET',
-  });
-
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || `Failed to fetch quizzes for study material ${studyMaterialId}`);
+export async function getQuizzesForStudyMaterial(studyMaterialId: number, token: string): Promise<GeneratedQuizResponse[]> {
+  try {
+    const response = await axios.get(`${API_BASE_URL}/api/v1/study-materials/${studyMaterialId}/quizzes`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error(`Error fetching quizzes for study material ${studyMaterialId}:`, error);
+    throw error;
   }
-
-  return response.json();
 }
 
 /**
@@ -335,41 +391,45 @@ export async function getQuizzesForStudyMaterial(studyMaterialId: number): Promi
  * @param materialType The type of material to export (e.g., "summary", "flashcard_set", "quiz").
  * @param materialId The ID of the generated material.
  * @param format The desired export format (e.g., "pdf", "docx", "csv").
+ * @param token The authentication token.
  * @returns A promise that resolves when the file is downloaded.
  */
 export async function exportGeneratedMaterial(
   materialType: string,
   materialId: number,
-  format: string
+  format: string,
+  token: string
 ): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/export/${materialType}/${materialId}?format=${format}`, {
-    method: 'GET',
-    // Authorization header will be handled by an interceptor or passed from context
-  });
+  try {
+    const response = await axios.get(`${API_BASE_URL}/api/v1/export/${materialType}/${materialId}?format=${format}`, {
+      method: 'GET',
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+      responseType: 'blob', // Important for downloading files
+    });
 
-  if (!response.ok) {
-    const errorData = await response.json();
-    throw new Error(errorData.detail || `Failed to export ${materialType} with ID ${materialId}`);
-  }
-
-  // Get the filename from the Content-Disposition header
-  const contentDisposition = response.headers.get('Content-Disposition');
-  let filename = `exported_material.${format}`;
-  if (contentDisposition) {
-    const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
-    if (filenameMatch && filenameMatch[1]) {
-      filename = filenameMatch[1];
+    // Get the filename from the Content-Disposition header
+    const contentDisposition = response.headers['content-disposition'];
+    let filename = `exported_material.${format}`;
+    if (contentDisposition) {
+      const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
+      if (filenameMatch && filenameMatch[1]) {
+        filename = filenameMatch[1];
+      }
     }
-  }
 
-  // Create a blob from the response and trigger download
-  const blob = await response.blob();
-  const url = window.URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  window.URL.revokeObjectURL(url);
+    // Create a blob from the response and trigger download
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error(`Error exporting ${materialType} with ID ${materialId}:`, error);
+    throw error;
+  }
 }
