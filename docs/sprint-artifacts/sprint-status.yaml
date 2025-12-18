@@ -61,14 +61,14 @@ development_status:
   3-3-automated-quiz-question-generation: done
   3-4-quality-assurance-for-generated-materials: done
   epic-3-retrospective: optional
-  epic-4: backlog
-  4-1-intuitive-display-of-generated-materials: backlog
-  4-2-material-editing-functionality: backlog
-  4-3-material-tagging-and-categorization: backlog
-  4-4-responsive-ui-for-all-devices: backlog
-  4-5-visual-feedback-for-processing-stages: backlog
-  4-6-accessibility-compliance-wcag-aa: backlog
-  4-7-user-data-isolation-in-ui: backlog
+  epic-4: done
+  4-1-intuitive-display-of-generated-materials: done
+  4-2-material-editing-functionality: done
+  4-3-material-tagging-and-categorization: done
+  4-4-responsive-ui-for-all-devices: done
+  4-5-visual-feedback-for-processing-stages: done
+  4-6-accessibility-compliance-wcag-aa: done
+  4-7-user-data-isolation-in-ui: done
   epic-4-retrospective: optional
   epic-5: backlog
   5-1-material-sharing-with-classmates: backlog
