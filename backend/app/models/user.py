@@ -17,3 +17,4 @@ class User(Base):
 
     # Relationship to StudyMaterial
     study_materials = relationship("StudyMaterial", back_populates="owner")
+    feedback = relationship("Feedback", back_populates="owner")

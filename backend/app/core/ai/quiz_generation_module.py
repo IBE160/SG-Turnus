@@ -6,14 +6,15 @@ from langchain_openai import ChatOpenAI
 from typing import List
 from pydantic import BaseModel
 
-class Flashcard(BaseModel):
+class QuizQuestion(BaseModel):
     question: str
-    answer: str
+    options: List[str]
+    correct_answer: str
 
-class FlashcardGenerationModule:
+class QuizGenerationModule:
     def __init__(self, model_name: str = "gpt-4o", temperature: float = 0.5):
         """
-        Initializes the FlashcardGenerationModule with an LLM and prompt templates.
+        Initializes the QuizGenerationModule with an LLM and prompt templates.
         Args:
             model_name: The name of the OpenAI model to use.
             temperature: The sampling temperature for the LLM.
@@ -23,28 +24,28 @@ class FlashcardGenerationModule:
         self.temperature = temperature
         self.output_parser = JsonOutputParser()
 
-        self.flashcard_prompt_template = ChatPromptTemplate.from_messages(
+        self.quiz_prompt_template = ChatPromptTemplate.from_messages(
             [
-                ("system", "You are an expert in creating educational content. Your task is to generate flashcards from a given text. Each flashcard should be a dictionary with 'question' and 'answer' keys. Return a JSON list of these flashcards."),
-                ("user", "Generate flashcards for the following text:\n\n{text}\n\nFlashcards:")
+                ("system", "You are an expert in creating educational content. Your task is to generate a multiple-choice quiz from a given text. Each question should be a dictionary with 'question', 'options' (a list of 4 strings), and 'correct_answer' keys. Return a JSON list of these questions."),
+                ("user", "Generate a quiz for the following text:\n\n{text}\n\nQuiz:")
             ]
         )
 
-    def generate_flashcards(self, text: str) -> List[Flashcard]:
+    def generate_quiz(self, text: str) -> List[QuizQuestion]:
         """
-        Generates flashcards from the provided text using an LLM.
+        Generates a quiz from the provided text using an LLM.
         Args:
-            text: The input text to generate flashcards from.
+            text: The input text to generate a quiz from.
         Returns:
-            A list of Flashcard objects.
+            A list of QuizQuestion objects.
         """
         if "OPENAI_API_KEY" not in os.environ:
             raise ValueError("OPENAI_API_KEY environment variable is not set.")
-        
+
         if self.llm is None:
             self.llm = ChatOpenAI(model_name=self.model_name, temperature=self.temperature)
 
-        chain = self.flashcard_prompt_template | self.llm | self.output_parser
+        chain = self.quiz_prompt_template | self.llm | self.output_parser
         result = chain.invoke({"text": text})
         
         if isinstance(result, str):
@@ -53,14 +54,14 @@ class FlashcardGenerationModule:
             except json.JSONDecodeError:
                 return []
         
-        flashcards = [Flashcard(**item) for item in result]
-        return flashcards
+        questions = [QuizQuestion(**item) for item in result]
+        return questions
 
 if __name__ == "__main__":
     if "OPENAI_API_KEY" not in os.environ:
         print("Please set the OPENAI_API_KEY environment variable.")
     else:
-        flashcard_generator = FlashcardGenerationModule()
+        quiz_generator = QuizGenerationModule()
         sample_text = """
         The Roman Empire was a vast and powerful civilization that ruled much of Europe and North Africa for over 1000 years.
         It was founded in 27 BC when Octavian became the first Roman Emperor, Augustus. The Empire was characterized by its
@@ -70,10 +71,11 @@ if __name__ == "__main__":
         and external pressures from barbarian tribes eventually led to the decline and fall of the Western Roman Empire in 476 AD.
         The Eastern Roman Empire, also known as the Byzantine Empire, continued for another thousand years.
         """
-        print("--- Generated Flashcards ---")
-        flashcards = flashcard_generator.generate_flashcards(sample_text)
-        for i, flashcard in enumerate(flashcards):
-            print(f"Flashcard {i+1}:")
-            print(f"  Question: {flashcard.question}")
-            print(f"  Answer: {flashcard.answer}")
+        print("--- Generated Quiz ---")
+        questions = quiz_generator.generate_quiz(sample_text)
+        for i, question in enumerate(questions):
+            print(f"Question {i+1}: {question.question}")
+            for j, option in enumerate(question.options):
+                print(f"  {chr(97+j)}) {option}")
+            print(f"Correct Answer: {question.correct_answer}")
             print()

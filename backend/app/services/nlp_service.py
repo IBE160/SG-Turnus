@@ -1,7 +1,8 @@
 import spacy
 from enum import Enum
 from backend.app.core.ai.summarization_module import SummarizationModule
-from backend.app.core.ai.flashcard_generation_module import FlashcardGenerationModule, Flashcard # Import Flashcard and FlashcardGenerationModule
+from backend.app.core.ai.flashcard_generation_module import FlashcardGenerationModule, Flashcard
+from backend.app.core.ai.quiz_generation_module import QuizGenerationModule, QuizQuestion
 from typing import List
 
 # Define Intent categories
@@ -29,6 +30,7 @@ class NLPService:
         self.nlp = spacy.load("en_core_web_sm")
         self.summarization_module = SummarizationModule()
         self.flashcard_generation_module = FlashcardGenerationModule() # Initialize FlashcardGenerationModule
+        self.quiz_generation_module = QuizGenerationModule()
 
     def detect_intent(self, text: str, tokens: list[str], found_question_words: list[str]) -> tuple[Intent, float]:
         """
@@ -168,8 +170,14 @@ class NLPService:
         """
         return self.summarization_module.generate_summary(text, detail_level)
 
-    def get_flashcards(self, text: str) -> List[Flashcard]: # New method
+    def get_flashcards(self, text: str) -> List[Flashcard]:
         """
         Generates flashcards from the given text using the FlashcardGenerationModule.
         """
         return self.flashcard_generation_module.generate_flashcards(text)
+
+    def get_quiz_questions(self, text: str) -> List[QuizQuestion]:
+        """
+        Generates quiz questions from the given text using the QuizGenerationModule.
+        """
+        return self.quiz_generation_module.generate_quiz(text)

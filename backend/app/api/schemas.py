@@ -3,6 +3,8 @@ from enum import Enum
 from typing import Optional, Dict, Union, List
 import datetime
 from backend.app.core.ai.flashcard_generation_module import Flashcard
+from backend.app.core.ai.quiz_generation_module import QuizQuestion
+from backend.app.models.planner import NextStep
 
 class UserRegistration(BaseModel):
     email: EmailStr
@@ -23,25 +25,6 @@ class LoginRequest(BaseModel):
 class TokenResponse(BaseModel):
     access_token: str
     token_type: str = "bearer"
-
-class InteractionPatternType(str, Enum):
-    """
-    Defines the types of first interaction patterns the AI can use.
-    """
-    ANCHOR_QUESTION = "anchor_question"
-    MICRO_EXPLANATION = "micro_explanation"
-    CALIBRATION_QUESTION = "calibration_question"
-    PROBLEM_DECOMPOSITION = "problem_decomposition"
-    CONCEPT_SNAPSHOT = "concept_snapshot"
-    # Add other patterns as they are defined
-
-class NextStep(BaseModel): # Renamed from NextStepContent
-    """
-    Base model for the content of a next step, allowing for different types
-    of responses (e.g., text, structured data for a question).
-    """
-    type: str
-    data: Dict
 
 class CalibrationQuestionResponse(BaseModel):
     """
@@ -65,7 +48,7 @@ class ClarityResponse(BaseModel):
     like CalibrationQuestionResponse or ExploratoryPhrasingResponse.
     """
     action: str # e.g., "direct_response", "uncertainty_handling", "generate_materials"
-    content: Union[str, CalibrationQuestionResponse, ExploratoryPhrasingResponse]
+    content: Union[str, CalibrationQuestionResponse, ExploratoryPhrasingResponse, NextStep]
 
 class StudyMaterialCreate(BaseModel):
     file_name: str
@@ -110,3 +93,27 @@ class FlashcardGenerateRequest(BaseModel):
 
 class FlashcardGenerateResponse(BaseModel):
     flashcards: List[Flashcard]
+
+class QuizGenerateRequest(BaseModel):
+    text: str
+
+class QuizGenerateResponse(BaseModel):
+    questions: List[QuizQuestion]
+
+class FeedbackCreate(BaseModel):
+    material_id: int
+    material_type: str
+    rating: int
+    comments: Optional[str] = None
+
+class FeedbackResponse(BaseModel):
+    id: int
+    user_id: int
+    material_id: int
+    material_type: str
+    rating: int
+    comments: Optional[str] = None
+    created_at: datetime.datetime
+
+    class Config:
+        orm_mode = True

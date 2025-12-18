@@ -11,7 +11,9 @@ class SummarizationModule:
             model_name: The name of the OpenAI model to use.
             temperature: The sampling temperature for the LLM (lower for more factual/less creative).
         """
-        self.llm = ChatOpenAI(model_name=model_name, temperature=temperature)
+        self.llm = None
+        self.model_name = model_name
+        self.temperature = temperature
         self.output_parser = StrOutputParser()
 
         self.summary_prompt_template = ChatPromptTemplate.from_messages(
@@ -39,6 +41,9 @@ class SummarizationModule:
         """
         if "OPENAI_API_KEY" not in os.environ:
             raise ValueError("OPENAI_API_KEY environment variable is not set.")
+
+        if self.llm is None:
+            self.llm = ChatOpenAI(model_name=self.model_name, temperature=self.temperature)
 
         if detail_level == "brief":
             prompt = self.brief_summary_prompt_template
