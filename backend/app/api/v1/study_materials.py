@@ -5,7 +5,17 @@ from backend.app.database import get_db
 from backend.app.models.study_material import StudyMaterial
 from backend.app.models.user import User
 from backend.app.dependencies import get_current_user
-from backend.app.api.schemas import StudyMaterialCreate, StudyMaterialResponse, StudyMaterialUpdate, SummarizeRequest, SummarizeResponse, FlashcardGenerateRequest, FlashcardGenerateResponse
+from backend.app.api.schemas import (
+    StudyMaterialCreate, 
+    StudyMaterialResponse, 
+    StudyMaterialUpdate, 
+    SummarizeRequest, 
+    FlashcardGenerateRequest, 
+    QuizGenerateRequest,
+    GeneratedSummaryResponse,        # New import
+    GeneratedFlashcardSetResponse,   # New import
+    GeneratedQuizResponse            # New import
+)
 from backend.app.services.nlp_service import NLPService # Import NLPService
 import shutil
 import os
@@ -22,32 +32,62 @@ router = APIRouter(
 )
 
 # Initialize NLPService as a dependency
-def get_nlp_service():
-    return NLPService()
+def get_nlp_service(db: Session = Depends(get_db)): # Pass db session to NLPService
+    return NLPService(db)
 
-@router.post("/summarize", response_model=SummarizeResponse)
+@router.post("/summarize", response_model=GeneratedSummaryResponse) # Changed response_model
 async def summarize_text(
+    study_material_id: int, # Added study_material_id
     request: SummarizeRequest,
     current_user: User = Depends(get_current_user),
     nlp_service: NLPService = Depends(get_nlp_service)
 ):
     """
-    Generates a summary of the provided text using the NLPService.
+    Generates a summary of the provided text using the NLPService and stores it persistently.
     """
-    summary = nlp_service.get_summary(request.text, request.detail_level)
-    return SummarizeResponse(summary=summary)
+    # Ensure the user owns the study material
+    db_study_material = get_user_study_material(nlp_service.db, study_material_id, current_user.id)
+    if not db_study_material:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Study material not found or user does not own it")
 
-@router.post("/flashcards", response_model=FlashcardGenerateResponse)
+    summary = nlp_service.get_summary(study_material_id, request.text, request.detail_level) # Pass study_material_id
+    return summary
+
+@router.post("/flashcards", response_model=GeneratedFlashcardSetResponse) # Changed response_model
 async def generate_flashcards_api(
+    study_material_id: int, # Added study_material_id
     request: FlashcardGenerateRequest,
     current_user: User = Depends(get_current_user),
     nlp_service: NLPService = Depends(get_nlp_service)
 ):
     """
-    Generates flashcards from the provided text using the NLPService.
+    Generates flashcards from the provided text using the NLPService and stores them persistently.
     """
-    flashcards = nlp_service.get_flashcards(request.text)
-    return FlashcardGenerateResponse(flashcards=flashcards)
+    # Ensure the user owns the study material
+    db_study_material = get_user_study_material(nlp_service.db, study_material_id, current_user.id)
+    if not db_study_material:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Study material not found or user does not own it")
+
+    flashcards_set = nlp_service.get_flashcards(study_material_id, request.text) # Pass study_material_id
+    return flashcards_set
+
+@router.post("/quiz", response_model=GeneratedQuizResponse) # Changed response_model
+async def generate_quiz_api(
+    study_material_id: int, # Added study_material_id
+    request: QuizGenerateRequest,
+    current_user: User = Depends(get_current_user),
+    nlp_service: NLPService = Depends(get_nlp_service)
+):
+    """
+    Generates a quiz from the provided text using the NLPService and stores it persistently.
+    """
+    # Ensure the user owns the study material
+    db_study_material = get_user_study_material(nlp_service.db, study_material_id, current_user.id)
+    if not db_study_material:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Study material not found or user does not own it")
+
+    quiz = nlp_service.get_quiz_questions(study_material_id, request.text) # Pass study_material_id
+    return quiz
 
 @router.get("/", response_model=List[StudyMaterialResponse])
 def read_study_materials(
@@ -183,5 +223,66 @@ def delete_study_material(
     db.commit()
     return
 
+@router.get("/{study_material_id}/summaries", response_model=List[GeneratedSummaryResponse])
+def get_summaries_for_study_material(
+    study_material_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Retrieves a list of generated summaries for a specific study material.
+    """
+    db_study_material = get_user_study_material(db, study_material_id, current_user.id)
+    if db_study_material is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Study material not found or user does not own it")
 
+    summaries = db.query(GeneratedSummary).filter(
+        GeneratedSummary.study_material_id == study_material_id
+    ).all()
+    return summaries
 
+@router.get("/{study_material_id}/flashcard-sets", response_model=List[GeneratedFlashcardSetResponse])
+def get_flashcard_sets_for_study_material(
+    study_material_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Retrieves a list of generated flashcard sets for a specific study material.
+    """
+    db_study_material = get_user_study_material(db, study_material_id, current_user.id)
+    if db_study_material is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Study material not found or user does not own it")
+
+    flashcard_sets = db.query(GeneratedFlashcardSet).filter(
+        GeneratedFlashcardSet.study_material_id == study_material_id
+    ).all()
+    return flashcard_sets
+
+@router.get("/{study_material_id}/quizzes", response_model=List[GeneratedQuizResponse])
+def get_quizzes_for_study_material(
+    study_material_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Retrieves a list of generated quizzes for a specific study material.
+    """
+    db_study_material = get_user_study_material(db, study_material_id, current_user.id)
+    if db_study_material is None:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Study material not found or user does not own it")
+
+    quizzes = db.query(GeneratedQuiz).filter(
+        GeneratedQuiz.study_material_id == study_material_id
+    ).all()
+    return quizzes
+
+def get_user_study_material(db: Session, study_material_id: int, user_id: int):
+    """
+    Retrieves a single study material by its ID, ensuring it belongs to the specified user.
+    """
+    db_study_material = db.query(StudyMaterial).filter(
+        StudyMaterial.id == study_material_id,
+        StudyMaterial.user_id == user_id
+    ).first()
+    return db_study_material

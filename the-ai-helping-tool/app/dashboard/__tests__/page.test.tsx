@@ -8,7 +8,7 @@ import * as studyMaterialService from '@/services/studyMaterialService';
 import * as authService from '@/services/authService';
 import * as clarityService from '@/services/clarityService'; // Import clarityService
 import { useRouter } from 'next/navigation';
-import { NextStep } from '@/services/clarityService'; // Import NextStep enum
+import { NextStep, AIModule, InteractionPatternType } from '@/services/clarityService'; // Import NextStep interface
 
 // Mock the useRouter hook
 jest.mock('next/navigation', () => ({
@@ -186,9 +186,10 @@ describe('DashboardPage', () => {
   // New tests for Next Step Suggestion functionality
   it('displays next step suggestion after query', async () => {
     (studyMaterialService.getStudyMaterials as jest.Mock).mockResolvedValueOnce([]);
-    const mockNextStepResponse: ClarityResponse = {
-      next_step: NextStep.ASK_FOR_CLARIFICATION_QUESTION,
-      explanation: 'Based on your query, asking for clarification is the next step.',
+    const mockNextStepResponse: NextStep = {
+      ai_module: AIModule.QA,
+      interaction_pattern: InteractionPatternType.ANCHOR_QUESTION,
+      parameters: {},
     };
     (clarityService.getNextStepSuggestion as jest.Mock).mockResolvedValueOnce(mockNextStepResponse);
 
@@ -204,8 +205,8 @@ describe('DashboardPage', () => {
     await waitFor(() => {
       expect(clarityService.getNextStepSuggestion).toHaveBeenCalledWith({ text: 'What is photosynthesis?' });
       expect(screen.getByText('Suggested Next Step:')).toBeInTheDocument();
-      expect(screen.getByText('Action: Ask a clarifying question')).toBeInTheDocument();
-      expect(screen.getByText('Explanation: Based on your query, asking for clarification is the next step.')).toBeInTheDocument();
+      expect(screen.getByText('AI Module: QAModule')).toBeInTheDocument();
+      expect(screen.getByText('Interaction Pattern: anchor_question')).toBeInTheDocument();
     });
   });
 

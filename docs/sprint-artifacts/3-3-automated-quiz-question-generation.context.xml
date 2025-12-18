@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<context>
+    <title>Story 3.3: Automated Quiz Question Generation</title>
+    <description>
+        As a user,
+        I want the system to automatically generate quiz questions (e.g., multiple choice, true/false) from my study materials,
+        So that I can assess my understanding.
+    </description>
+    <acceptance_criteria>
+        <criterion>
+            <given>an uploaded study material (text) and a request for quiz generation</given>
+            <when>the system processes the material</when>
+            <then>it generates a set of diverse quiz questions based on the content.</then>
+        </criterion>
+        <criterion>
+            <given>the system processes the material</given>
+            <when>it generates a set of diverse quiz questions based on the content</when>
+            <then>the questions include correct answers and plausible distractors (for multiple choice).</then>
+        </criterion>
+        <criterion>
+            <given>the system processes the material</given>
+            <when>it generates a set of diverse quiz questions based on the content</when>
+            <then>the quiz is presented in an interactive format.</then>
+        </criterion>
+    </acceptance_criteria>
+    <prerequisites>
+        <prerequisite>Epic 2</prerequisite>
+    </prerequisites>
+    <technical_notes>
+        <note>Covers FR7. Similar to flashcard generation, but with a focus on creating assessment-style questions.</note>
+    </technical_notes>
+</context>

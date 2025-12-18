@@ -18,3 +18,7 @@ class User(Base):
     # Relationship to StudyMaterial
     study_materials = relationship("StudyMaterial", back_populates="owner")
     feedback = relationship("Feedback", back_populates="owner")
+
+    # Relationships for SharedStudyMaterial
+    owned_shares = relationship("SharedStudyMaterial", foreign_keys="[SharedStudyMaterial.owner_user_id]", back_populates="owner")
+    received_shares = relationship("SharedStudyMaterial", foreign_keys="[SharedStudyMaterial.shared_with_user_id]", back_populates="shared_with")

@@ -100,6 +100,75 @@ class QuizGenerateRequest(BaseModel):
 class QuizGenerateResponse(BaseModel):
     questions: List[QuizQuestion]
 
+# New schemas for persistent generated materials
+class GeneratedSummaryResponse(BaseModel):
+    id: int
+    study_material_id: int
+    content: str
+    detail_level: Optional[str]
+    generated_at: datetime.datetime
+
+    class Config:
+        orm_mode = True
+
+class GeneratedFlashcardResponse(BaseModel):
+    question: str
+    answer: str
+
+class GeneratedFlashcardSetResponse(BaseModel):
+    id: int
+    study_material_id: int
+    content: List[GeneratedFlashcardResponse]
+    generated_at: datetime.datetime
+
+    class Config:
+        orm_mode = True
+
+class GeneratedQuizQuestionResponse(BaseModel):
+    question: str
+    options: List[str]
+    correct_answer: str
+
+class GeneratedQuizResponse(BaseModel):
+    id: int
+    study_material_id: int
+    content: List[GeneratedQuizQuestionResponse]
+    generated_at: datetime.datetime
+
+    class Config:
+        orm_mode = True
+
+class Permissions(str, Enum):
+    view_only = "view_only"
+    edit = "edit"
+
+class ShareLinkCreateRequest(BaseModel):
+    permissions: Permissions = Permissions.view_only
+
+class ShareLinkGenerateResponse(BaseModel):
+    share_token: str
+
+class ShareWithUserRequest(BaseModel):
+    target_user_email: EmailStr
+    permissions: Permissions = Permissions.view_only
+
+class ShareWithUserResponse(BaseModel):
+    shared_id: int
+    study_material_id: int
+    shared_with_user_id: int
+    permissions: Permissions
+
+    class Config:
+        orm_mode = True
+
+class SharedStudyMaterialResponse(BaseModel):
+    study_material_id: int
+    file_name: str
+    s3_key: str
+    permissions: Permissions
+    owner_id: int
+
+
 class FeedbackCreate(BaseModel):
     material_id: int
     material_type: str

@@ -1,39 +1,24 @@
 from fastapi import APIRouter, Depends
-from backend.app.services.nlp_service import NLPService, Intent, UserState
+from sqlalchemy.orm import Session # Import Session
+from backend.app.database import get_db # Import get_db
 from backend.app.services.clarity_service import ClarityService
-from backend.app.api.schemas import NLPRequest, ClarityResponse
+from backend.app.api.schemas import NLPRequest, NextStep
 
 router = APIRouter()
 
-# Initialize services
-clarity_service = ClarityService()
+# Dependency to get ClarityService
+def get_clarity_service(db: Session = Depends(get_db)):
+    return ClarityService(db)
 
-# Dependency for NLPService
-def get_nlp_service_clarity():
-    return NLPService()
-
-@router.post("/next-step", response_model=ClarityResponse)
+@router.post("/next-step", response_model=NextStep)
 async def get_next_step(
     request: NLPRequest,
-    nlp_service: NLPService = Depends(get_nlp_service_clarity)
+    clarity_service: ClarityService = Depends(get_clarity_service) # Use dependency injection
 ):
     """
     Analyzes user input and determines the most helpful next step.
     """
-    # Process text using NLP service to get intent and user state
-    nlp_signals = nlp_service.process_text(request.text)
-
-    detected_intent = Intent(nlp_signals["detected_intent"])
-    intent_confidence = nlp_signals["intent_confidence"]
-    inferred_user_state = UserState(nlp_signals["inferred_user_state"])
-    user_state_confidence = nlp_signals["user_state_confidence"]
-
     # Select the next step using the Clarity service
-    next_step, explanation = clarity_service.select_next_step(
-        detected_intent=detected_intent,
-        intent_confidence=intent_confidence,
-        inferred_user_state=inferred_user_state,
-        user_state_confidence=user_state_confidence,
-    )
+    next_step = clarity_service.get_next_step(request.text)
 
-    return ClarityResponse(next_step=next_step, explanation=explanation)
+    return next_step

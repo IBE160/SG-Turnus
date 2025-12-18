@@ -1,9 +1,14 @@
 import spacy
 from enum import Enum
+from typing import List
+from sqlalchemy.orm import Session # Import Session
+
 from backend.app.core.ai.summarization_module import SummarizationModule
 from backend.app.core.ai.flashcard_generation_module import FlashcardGenerationModule, Flashcard
 from backend.app.core.ai.quiz_generation_module import QuizGenerationModule, QuizQuestion
-from typing import List
+from backend.app.models.generated_summary import GeneratedSummary # Import GeneratedSummary
+from backend.app.models.generated_flashcard_set import GeneratedFlashcardSet # Import GeneratedFlashcardSet
+from backend.app.models.generated_quiz import GeneratedQuiz # Import GeneratedQuiz
 
 # Define Intent categories
 class Intent(str, Enum):
@@ -25,12 +30,13 @@ class UserState(str, Enum):
     NEUTRAL = "Neutral" # Default state if no specific state is inferred
 
 class NLPService:
-    def __init__(self):
+    def __init__(self, db: Session): # Accept db session
         # Load the English spaCy model
         self.nlp = spacy.load("en_core_web_sm")
         self.summarization_module = SummarizationModule()
-        self.flashcard_generation_module = FlashcardGenerationModule() # Initialize FlashcardGenerationModule
+        self.flashcard_generation_module = FlashcardGenerationModule()
         self.quiz_generation_module = QuizGenerationModule()
+        self.db = db # Store db session
 
     def detect_intent(self, text: str, tokens: list[str], found_question_words: list[str]) -> tuple[Intent, float]:
         """
@@ -164,20 +170,48 @@ class NLPService:
         }
         return signals
 
-    def get_summary(self, text: str, detail_level: str = "normal") -> str:
+    def get_summary(self, study_material_id: int, text: str, detail_level: str = "normal") -> GeneratedSummary:
         """
-        Generates a summary of the given text using the SummarizationModule.
+        Generates a summary of the given text using the SummarizationModule and saves it to the database.
         """
-        return self.summarization_module.generate_summary(text, detail_level)
+        summary_content = self.summarization_module.generate_summary(text, detail_level)
+        
+        db_summary = GeneratedSummary(
+            study_material_id=study_material_id,
+            content=summary_content,
+            detail_level=detail_level
+        )
+        self.db.add(db_summary)
+        self.db.commit()
+        self.db.refresh(db_summary)
+        return db_summary
 
-    def get_flashcards(self, text: str) -> List[Flashcard]:
+    def get_flashcards(self, study_material_id: int, text: str) -> GeneratedFlashcardSet:
         """
-        Generates flashcards from the given text using the FlashcardGenerationModule.
+        Generates flashcards from the given text using the FlashcardGenerationModule and saves them to the database.
         """
-        return self.flashcard_generation_module.generate_flashcards(text)
+        flashcards_list = self.flashcard_generation_module.generate_flashcards(text)
+        
+        db_flashcard_set = GeneratedFlashcardSet(
+            study_material_id=study_material_id,
+            content=[fc.dict() for fc in flashcards_list] # Convert Pydantic models to dicts for JSON storage
+        )
+        self.db.add(db_flashcard_set)
+        self.db.commit()
+        self.db.refresh(db_flashcard_set)
+        return db_flashcard_set
 
-    def get_quiz_questions(self, text: str) -> List[QuizQuestion]:
+    def get_quiz_questions(self, study_material_id: int, text: str) -> GeneratedQuiz:
         """
-        Generates quiz questions from the given text using the QuizGenerationModule.
+        Generates quiz questions from the given text using the QuizGenerationModule and saves them to the database.
         """
-        return self.quiz_generation_module.generate_quiz(text)
+        quiz_questions_list = self.quiz_generation_module.generate_quiz(text)
+        
+        db_quiz = GeneratedQuiz(
+            study_material_id=study_material_id,
+            content=[qq.dict() for qq in quiz_questions_list] # Convert Pydantic models to dicts for JSON storage
+        )
+        self.db.add(db_quiz)
+        self.db.commit()
+        self.db.refresh(db_quiz)
+        return db_quiz

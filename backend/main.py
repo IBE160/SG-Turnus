@@ -5,6 +5,8 @@ from backend.app.api.v1.study_materials import router as study_materials_router
 from backend.app.api.v1.nlp import router as nlp_router
 from backend.app.api.v1.clarity import router as clarity_router
 from backend.app.api.v1.feedback import router as feedback_router
+from backend.app.api.v1.sharing import router as sharing_router # Import sharing router
+from backend.app.api.v1.export import router as export_router # Import export router
 from backend.app.dependencies import get_current_user
 from backend.app.database import init_db, get_db, Base # Import init_db, get_db, and Base
 from backend.app.models.user import User # Import SQLAlchemy User model
@@ -37,3 +39,5 @@ app.include_router(study_materials_router, prefix="/api/v1")
 app.include_router(nlp_router, prefix="/api/v1")
 app.include_router(clarity_router, prefix="/api/v1")
 app.include_router(feedback_router, prefix="/api/v1")
+app.include_router(sharing_router, prefix="/api/v1") # Include sharing router
+app.include_router(export_router, prefix="/api/v1") # Include export router

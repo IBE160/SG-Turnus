@@ -16,3 +16,11 @@ class StudyMaterial(Base):
 
     # Relationship to User
     owner = relationship("User", back_populates="study_materials")
+
+    # Relationship to SharedStudyMaterial
+    shares = relationship("SharedStudyMaterial", back_populates="study_material")
+
+    # Relationships to generated materials
+    generated_summaries = relationship("GeneratedSummary", back_populates="study_material")
+    generated_flashcard_sets = relationship("GeneratedFlashcardSet", back_populates="study_material")
+    generated_quizzes = relationship("GeneratedQuiz", back_populates="study_material")
