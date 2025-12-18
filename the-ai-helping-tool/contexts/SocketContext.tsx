@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { useAuth } from './AuthContext';
 
 interface SocketContextType {
   socket: Socket | null;
@@ -12,10 +13,10 @@ const SocketContext = createContext<SocketContextType | undefined>(undefined);
 
 interface SocketProviderProps {
   children: ReactNode;
-  token: string | null; // Authentication token for WebSocket connection
 }
 
-export const SocketProvider: React.FC<SocketProviderProps> = ({ children, token }) => {
+export const SocketProvider: React.FC<SocketProviderProps> = ({ children }) => {
+  const { token } = useAuth();
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
 

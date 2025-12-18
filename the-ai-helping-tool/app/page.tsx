@@ -6,11 +6,6 @@ import WebSocketTester from '../components/WebSocketTester';
 import ShareDialog from '../components/ShareDialog'; // Import the ShareDialog component
 import { Button, Box } from '@mui/material'; // Import MUI components
 
-export const metadata = {
-  title: 'The AI Helping Tool - Your Smart Companion for Learning and Productivity',
-  description: 'Empower your learning with AI-powered study assistance. Get instant clarity, generate study materials, and boost your productivity.',
-};
-
 export default function Home() {
   const { isConnected } = useSocket();
   const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);

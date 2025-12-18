@@ -1,37 +1,45 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { Container, Typography, Box, CircularProgress, Alert } from '@mui/material';
-import sharingService, { SharedMaterialResponse } from '../../../services/sharingService';
+import { useParams } from 'next/navigation';
+import {
+  Container,
+  Typography,
+  Box,
+  CircularProgress,
+  Alert,
+  Paper,
+  Button,
+} from '@mui/material';
+import { getSharedMaterial } from '../../../services/sharingService';
+import { useAuth } from '../../../contexts/AuthContext';
 
-interface SharePageProps {
-  params: { token: string };
-}
+const SharedMaterialPage: React.FC = () => {
+  const { token } = useAuth();
+  const params = useParams();
+  const shareToken = params.token as string;
 
-const SharePage: React.FC<SharePageProps> = ({ params }) => {
-  const { token } = params;
-  const [sharedMaterial, setSharedMaterial] = useState<SharedMaterialResponse | null>(null);
+  const [material, setMaterial] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (token) {
-      const fetchSharedMaterial = async () => {
+    if (shareToken) {
+      const fetchMaterial = async () => {
         try {
           setLoading(true);
-          const material = await sharingService.getSharedMaterialByToken(token);
-          setSharedMaterial(material);
+          const sharedMaterial = await getSharedMaterial(shareToken, token || undefined);
+          setMaterial(sharedMaterial);
         } catch (err) {
-          setError('Failed to load shared material or link is invalid/expired.');
+          setError('Failed to retrieve shared material. The link may be invalid, expired, or you might not have permission to view it.');
           console.error(err);
         } finally {
           setLoading(false);
         }
       };
-      fetchSharedMaterial();
+      fetchMaterial();
     }
-  }, [token]);
+  }, [shareToken, token]);
 
   if (loading) {
     return (
@@ -51,45 +59,39 @@ const SharePage: React.FC<SharePageProps> = ({ params }) => {
     );
   }
 
-  if (!sharedMaterial) {
+  if (!material) {
     return (
       <Container>
-        <Alert severity="warning">No shared material found.</Alert>
+        <Alert severity="info">No material to display.</Alert>
       </Container>
     );
   }
 
   return (
     <Container>
-      <Box sx={{ my: 4 }}>
+      <Paper sx={{ p: 3, mt: 4 }}>
         <Typography variant="h4" component="h1" gutterBottom>
-          Shared Study Material: {sharedMaterial.file_name}
+          {material.file_name}
         </Typography>
-        <Typography variant="body1" paragraph>
-          This material has been shared with you with '{sharedMaterial.permissions}' permissions.
+        <Typography variant="body1" gutterBottom>
+          This material has been shared with you.
         </Typography>
-        <Typography variant="body2" color="textSecondary">
-          Uploaded by User ID: {sharedMaterial.shared_by_user_id}
+        <Typography variant="caption" color="textSecondary" display="block" gutterBottom>
+          Permissions: {material.permissions}
         </Typography>
-        {sharedMaterial.expires_at && (
-            <Typography variant="body2" color="textSecondary">
-                Expires on: {new Date(sharedMaterial.expires_at).toLocaleString()}
-            </Typography>
-        )}
-        {/* Here you would typically display the actual content of the study material.
-            For now, we're just displaying its metadata. */}
-        <Box sx={{ mt: 3, p: 2, border: '1px solid #e0e0e0', borderRadius: '8px' }}>
-            <Typography variant="h6">Material Details (Placeholder)</Typography>
-            <Typography>File Name: {sharedMaterial.file_name}</Typography>
-            <Typography>S3 Key: {sharedMaterial.s3_key}</Typography>
-            {/* Implement logic to fetch and display actual content based on s3_key and permissions */}
-            <Typography sx={{ mt: 2, fontStyle: 'italic', color: 'gray' }}>
-                (Content display for "{sharedMaterial.file_name}" to be implemented based on S3 integration and material type.)
-            </Typography>
+        
+        {/* Here you would render the actual content of the study material */}
+        {/* This is a placeholder for where the material's content would be displayed */}
+        <Box sx={{ my: 3, p: 2, border: '1px dashed grey', minHeight: 200 }}>
+          <Typography variant="body2" color="textSecondary">
+            (Content of the study material would be rendered here based on its type and S3 key: {material.s3_key})
+          </Typography>
         </Box>
-      </Box>
+
+        <Button variant="contained">Download Material</Button>
+      </Paper>
     </Container>
   );
 };
 
-export default SharePage;
+export default SharedMaterialPage;

@@ -23,23 +23,31 @@ import {
   GeneratedFlashcardSetResponse,
   GeneratedQuizResponse,
 } from '../../services/studyMaterialService';
-import { useSocket } from '../../contexts/SocketContext'; // Assuming this provides the token
+import { useSocket } from '../../contexts/SocketContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { useSync } from '../../contexts/SyncContext';
 import Link from 'next/link';
+import ShareDialog from '../../components/ShareDialog';
 
 const DashboardPage: React.FC = () => {
   const { socket } = useSocket();
+  const { token } = useAuth();
+  const { updatedMaterials } = useSync();
   const [studyMaterials, setStudyMaterials] = useState<StudyMaterialResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [token, setToken] = useState<string | null>(null); // State to hold the auth token
+  const [openShareDialog, setOpenShareDialog] = useState(false);
+  const [selectedMaterial, setSelectedMaterial] = useState<StudyMaterialResponse | null>(null);
 
-  useEffect(() => {
-    // In a real application, fetch the actual token from your authentication context or local storage.
-    // For this demonstration, we'll use the dummy token from layout.tsx.
-    const dummyToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxIn0.Pz13-hE2o27zWlD201b1Q3o43-F4f4f4f4f4f4f4f4f";
-    setToken(dummyToken);
-  }, []);
+  const handleOpenShareDialog = (material: StudyMaterialResponse) => {
+    setSelectedMaterial(material);
+    setOpenShareDialog(true);
+  };
 
+  const handleCloseShareDialog = () => {
+    setSelectedMaterial(null);
+    setOpenShareDialog(false);
+  };
 
   useEffect(() => {
     if (token) {
@@ -107,6 +115,23 @@ const DashboardPage: React.FC = () => {
     }
   }, [token, socket]);
 
+  useEffect(() => {
+    if (updatedMaterials.length > 0) {
+      setStudyMaterials((prev) => {
+        const updated = [...prev];
+        updatedMaterials.forEach((material) => {
+          const index = updated.findIndex((m) => m.id === material.id);
+          if (index !== -1) {
+            updated[index] = material;
+          } else {
+            updated.push(material);
+          }
+        });
+        return updated;
+      });
+    }
+  }, [updatedMaterials]);
+
 
   if (loading) {
     return (
@@ -152,6 +177,9 @@ const DashboardPage: React.FC = () => {
                   </Typography>
                   <Button variant="outlined" size="small" sx={{ mt: 1, mr: 1 }}>
                     View Material
+                  </Button>
+                  <Button variant="outlined" size="small" sx={{ mt: 1, mr: 1 }} onClick={() => handleOpenShareDialog(material)}>
+                    Share
                   </Button>
                   {/* Link to generate new content from this material */}
                   <Link href={`/generate/${material.id}`} passHref>
@@ -216,6 +244,12 @@ const DashboardPage: React.FC = () => {
           ))}
         </List>
       )}
+
+      <ShareDialog
+        open={openShareDialog}
+        onClose={handleCloseShareDialog}
+        material={selectedMaterial}
+      />
     </Container>
   );
 };

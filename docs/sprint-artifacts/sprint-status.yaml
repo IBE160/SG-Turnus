@@ -43,7 +43,7 @@ development_status:
   1-4-secure-user-login-and-session-management: done
   1-5-cloud-storage-setup-for-user-content: done
   1-6-database-setup-for-processed-data: done
-  1-7-cross-device-synchronization: in-progress
+  1-7-cross-device-synchronization: done
   1-8-basic-seo-for-public-pages: done
   1-9-browser-compatibility: in-progress
   epic-1-retrospective: optional

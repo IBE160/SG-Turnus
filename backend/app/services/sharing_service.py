@@ -6,7 +6,7 @@ from sqlalchemy import or_
 
 from backend.app.models.study_material import StudyMaterial
 from backend.app.models.user import User
-from backend.app.models.shared_study_material import SharedStudyMaterial # Will create this model next
+from backend.app.models.shared_study_material import SharedStudyMaterial
 from backend.app.api.schemas import Permissions
 
 class SharingService:
@@ -36,7 +36,7 @@ class SharingService:
 
         # Create a new shared entry for the link
         db_shared_material = SharedStudyMaterial(
-            owner_user_id=user_id,
+            shared_by_user_id=user_id,
             study_material_id=study_material_id,
             share_token=share_token,
             permissions=permissions.value,
@@ -49,17 +49,17 @@ class SharingService:
         return share_token
 
     def share_with_user(
-        self, owner_user_id: int, study_material_id: int, target_user_email: str, permissions: Permissions
+        self, shared_by_user_id: int, study_material_id: int, target_user_email: str, permissions: Permissions
     ) -> SharedStudyMaterial:
         """
         Shares a study material with another user within the system by their email.
         """
-        # Ensure the owner_user_id owns the study material
+        # Ensure the shared_by_user_id owns the study material
         study_material = (
             self.db.query(StudyMaterial)
             .filter(
                 StudyMaterial.id == study_material_id,
-                StudyMaterial.user_id == owner_user_id
+                StudyMaterial.user_id == shared_by_user_id
             )
             .first()
         )
@@ -89,7 +89,7 @@ class SharingService:
             return existing_share
 
         db_shared_material = SharedStudyMaterial(
-            owner_user_id=owner_user_id,
+            shared_by_user_id=shared_by_user_id,
             study_material_id=study_material_id,
             shared_with_user_id=target_user.id,
             permissions=permissions.value,
@@ -124,7 +124,7 @@ class SharingService:
         if (
             shared_entry.shared_with_user_id is not None
             and shared_entry.shared_with_user_id != current_user_id
-            and shared_entry.owner_user_id != current_user_id
+            and shared_entry.shared_by_user_id != current_user_id
         ):
             return None # Not authorized to access this specific share
 
