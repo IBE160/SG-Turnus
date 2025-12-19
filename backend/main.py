@@ -20,9 +20,9 @@ app = FastAPI()
 app.mount("/ws", socket_app)
 
 # Initialize the database and create tables
-@app.on_event("startup")
-def startup_event():
-    init_db() # Call init_db to create tables
+# @app.on_event("startup")
+# def startup_event():
+#     init_db() # Call init_db to create tables
 
 @app.get("/api/v1/health")
 def read_root():

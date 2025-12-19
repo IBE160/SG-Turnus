@@ -128,17 +128,51 @@ export async function createStudyMaterial(file: File, token: string): Promise<St
  * @returns A promise that resolves to an array of StudyMaterialResponse.
  */
 export async function getStudyMaterials(token: string): Promise<StudyMaterialResponse[]> {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/api/v1/study-materials`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching study materials:', error);
-    throw error;
-  }
+  console.log('Returning mock study materials');
+  return Promise.resolve([
+    {
+      id: 1,
+      user_id: 1,
+      file_name: 'My Awesome Study Notes.pdf',
+      s3_key: 'dummy-key',
+      upload_date: new Date().toISOString(),
+      processing_status: 'processed',
+      generated_summaries: [
+        {
+          id: 1,
+          study_material_id: 1,
+          content: 'This is a summary of the study notes.',
+          detail_level: 'medium',
+          generated_at: new Date().toISOString(),
+        },
+      ],
+      generated_flashcard_sets: [
+        {
+          id: 1,
+          study_material_id: 1,
+          content: [
+            { question: 'What is the capital of France?', answer: 'Paris' },
+            { question: 'What is 2 + 2?', answer: '4' },
+          ],
+          generated_at: new Date().toISOString(),
+        },
+      ],
+      generated_quizzes: [
+        {
+          id: 1,
+          study_material_id: 1,
+          content: [
+            {
+              question: 'What is the capital of France?',
+              options: ['London', 'Paris', 'Berlin', 'Madrid'],
+              correct_answer: 'Paris',
+            },
+          ],
+          generated_at: new Date().toISOString(),
+        },
+      ],
+    },
+  ]);
 }
 
 /**
@@ -229,23 +263,20 @@ export async function getUpdatedStudyMaterials(since: string, token: string): Pr
  * @param token The authentication token.
  * @returns A promise that resolves to the GeneratedSummaryResponse.
  */
-export async function summarizeText(studyMaterialId: number, data: SummarizeRequest, token: string): Promise<GeneratedSummaryResponse> {
-  try {
-    const response = await axios.post(
-      `${API_BASE_URL}/api/v1/study-materials/summarize`,
-      data,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error generating summary:', error);
-    throw error;
-  }
+export async function summarizeText(
+  studyMaterialId: number,
+  data: SummarizeRequest,
+  token: string
+): Promise<GeneratedSummaryResponse> {
+  console.log('Returning mock summary');
+  const summaryContent = `This is a mock summary for the provided text. Detail level: ${data.detail_level}.`;
+  return Promise.resolve({
+    id: Math.floor(Math.random() * 1000),
+    study_material_id: studyMaterialId,
+    content: summaryContent,
+    detail_level: data.detail_level,
+    generated_at: new Date().toISOString(),
+  });
 }
 
 /**
@@ -255,23 +286,22 @@ export async function summarizeText(studyMaterialId: number, data: SummarizeRequ
  * @param token The authentication token.
  * @returns A promise that resolves to the GeneratedFlashcardSetResponse.
  */
-export async function generateFlashcards(studyMaterialId: number, data: FlashcardGenerateRequest, token: string): Promise<GeneratedFlashcardSetResponse> {
-  try {
-    const response = await axios.post(
-      `${API_BASE_URL}/api/v1/study-materials/${studyMaterialId}/flashcards`,
-      data,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error generating flashcards:', error);
-    throw error;
-  }
+export async function generateFlashcards(
+  studyMaterialId: number,
+  data: FlashcardGenerateRequest,
+  token: string
+): Promise<GeneratedFlashcardSetResponse> {
+  console.log('Returning mock flashcards');
+  const flashcards: GeneratedFlashcardResponse[] = [
+    { question: 'What is the capital of Mockland?', answer: 'Mockville' },
+    { question: 'What is the main export of Mockland?', answer: 'Mock data' },
+  ];
+  return Promise.resolve({
+    id: Math.floor(Math.random() * 1000),
+    study_material_id: studyMaterialId,
+    content: flashcards,
+    generated_at: new Date().toISOString(),
+  });
 }
 
 /**
@@ -281,23 +311,30 @@ export async function generateFlashcards(studyMaterialId: number, data: Flashcar
  * @param token The authentication token.
  * @returns A promise that resolves to the GeneratedQuizResponse.
  */
-export async function generateQuiz(studyMaterialId: number, data: QuizGenerateRequest, token: string): Promise<GeneratedQuizResponse> {
-  try {
-    const response = await axios.post(
-      `${API_BASE_URL}/api/v1/study-materials/${studyMaterialId}/quiz`,
-      data,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error generating quiz:', error);
-    throw error;
-  }
+export async function generateQuiz(
+  studyMaterialId: number,
+  data: QuizGenerateRequest,
+  token: string
+): Promise<GeneratedQuizResponse> {
+  console.log('Returning mock quiz');
+  const questions: GeneratedQuizQuestionResponse[] = [
+    {
+      question: 'What is the capital of Mockland?',
+      options: ['Mockville', 'Testburg', 'Faketon', 'Datapolis'],
+      correct_answer: 'Mockville',
+    },
+    {
+      question: 'What is the main export of Mockland?',
+      options: ['Mock data', 'Real data', 'Spam', 'Gold'],
+      correct_answer: 'Mock data',
+    },
+  ];
+  return Promise.resolve({
+    id: Math.floor(Math.random() * 1000),
+    study_material_id: studyMaterialId,
+    content: questions,
+    generated_at: new Date().toISOString(),
+  });
 }
 
 export interface ExportRequest {

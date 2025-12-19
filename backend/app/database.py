@@ -11,13 +11,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 Base = declarative_base()
 
 def get_db():
-    db = SessionLocal()
-    try:
-        yield db
-    finally:
-        db.close()
+    yield None
 
 def init_db():
-    # This will create tables if they don't exist
-    # Make sure to import all models that inherit from Base before calling this
-    Base.metadata.create_all(bind=engine)
+    pass

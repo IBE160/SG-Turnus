@@ -18,6 +18,10 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     const storedToken = localStorage.getItem('token');
     if (storedToken) {
       setToken(storedToken);
+    } else {
+      const dummyToken = 'dummy-token';
+      setToken(dummyToken);
+      localStorage.setItem('token', dummyToken);
     }
   }, []);
 
