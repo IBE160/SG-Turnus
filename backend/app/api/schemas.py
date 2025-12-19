@@ -65,7 +65,8 @@ class StudyMaterialResponse(BaseModel):
     generated_flashcard_sets: List['GeneratedFlashcardSetResponse'] = []
     generated_quizzes: List['GeneratedQuizResponse'] = []
 
-    model_config = ConfigDict(from_attributes=True) # Updated Pydantic V2 syntax
+    class Config:
+        orm_mode = True # Updated Pydantic V2 syntax
 
 class StudyMaterialUpdate(BaseModel):
     file_name: Optional[str] = None
@@ -112,7 +113,8 @@ class GeneratedSummaryResponse(BaseModel):
     detail_level: Optional[str]
     generated_at: datetime.datetime
 
-    model_config = ConfigDict(from_attributes=True) # Updated Pydantic V2 syntax
+    class Config:
+        orm_mode = True # Updated Pydantic V2 syntax
 
 class GeneratedFlashcardResponse(BaseModel):
     question: str
@@ -124,7 +126,8 @@ class GeneratedFlashcardSetResponse(BaseModel):
     content: List[GeneratedFlashcardResponse]
     generated_at: datetime.datetime
 
-    model_config = ConfigDict(from_attributes=True) # Updated Pydantic V2 syntax
+    class Config:
+        orm_mode = True # Updated Pydantic V2 syntax
 
 class GeneratedQuizQuestionResponse(BaseModel):
     question: str
@@ -137,7 +140,8 @@ class GeneratedQuizResponse(BaseModel):
     content: List[GeneratedQuizQuestionResponse]
     generated_at: datetime.datetime
 
-    model_config = ConfigDict(from_attributes=True) # Updated Pydantic V2 syntax
+    class Config:
+        orm_mode = True # Updated Pydantic V2 syntax
 
 class Permissions(str, Enum):
     view_only = "view_only"
@@ -161,7 +165,8 @@ class SharedMaterialResponse(BaseModel):
     created_at: datetime.datetime
     expires_at: Optional[datetime.datetime] = None
 
-    model_config = ConfigDict(from_attributes=True) # Updated Pydantic V2 syntax
+    class Config:
+        orm_mode = True # Updated Pydantic V2 syntax
 
 class SharedLinkResponse(BaseModel):
     share_token: str
@@ -184,7 +189,8 @@ class FeedbackResponse(BaseModel):
     comments: Optional[str] = None
     created_at: datetime.datetime
 
-    model_config = ConfigDict(from_attributes=True) # Updated Pydantic V2 syntax
+    class Config:
+        orm_mode = True # Updated Pydantic V2 syntax
 
 # Add update_forward_refs() to handle forward references after all classes are defined
-StudyMaterialResponse.model_rebuild() # Updated Pydantic V2 syntax
+StudyMaterialResponse.update_forward_refs()

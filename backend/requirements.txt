@@ -22,3 +22,5 @@ botocore==1.42.11
 pydantic<2
 reportlab
 python-docx
+spacy==3.5.0
+langchain-openai
