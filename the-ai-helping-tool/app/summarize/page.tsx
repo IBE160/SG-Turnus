@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from 'react';
-import { summarizeText } from '../../../services/studyMaterialService'; // Adjust path as needed
+import { summarizeText, exportSummary } from '../../services/studyMaterialService'; // Adjust path as needed
 
 export default function SummarizePage() {
   const [textToSummarize, setTextToSummarize] = useState('');
@@ -13,6 +13,9 @@ export default function SummarizePage() {
   const [editedSummary, setEditedSummary] = useState('');
   const [tags, setTags] = useState<string[]>([]);
   const [isMobile, setIsMobile] = useState(false);
+  const [exportFormat, setExportFormat] = useState('pdf');
+  const [exporting, setExporting] = useState(false);
+  const [exportError, setExportError] = useState('');
 
   useEffect(() => {
     const checkIsMobile = () => {
@@ -70,6 +73,26 @@ export default function SummarizePage() {
       setTags([...tags, newTag]);
       event.currentTarget.value = '';
       // Here you would typically also make an API call to save the new tag to the backend
+    }
+  };
+
+  const handleExport = async () => {
+    setExporting(true);
+    setExportError('');
+    try {
+      const blob = await exportSummary({ content: summary, format: exportFormat });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `summary.${exportFormat}`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err: any) {
+      setExportError(err.message || 'An unexpected error occurred during export.');
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -135,21 +158,52 @@ export default function SummarizePage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
                 <h2 style={{fontSize: '1.5rem', color: '#333'}}>Summary</h2>
                 {summary && !loading && (
-                  <button
-                    onClick={handleEditButtonClick}
-                    style={{
-                      padding: '0.5rem 1rem',
-                      fontSize: '0.9rem',
-                      backgroundColor: isEditing ? '#ccc' : '#0070f3',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                    }}
-                    aria-label={isEditing ? 'Cancel editing' : 'Edit summary'}
-                  >
-                    {isEditing ? 'Cancel' : 'Edit'}
-                  </button>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button
+                      onClick={handleEditButtonClick}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        fontSize: '0.9rem',
+                        backgroundColor: isEditing ? '#ccc' : '#0070f3',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                      }}
+                      aria-label={isEditing ? 'Cancel editing' : 'Edit summary'}
+                    >
+                      {isEditing ? 'Cancel' : 'Edit'}
+                    </button>
+                                         <select
+                                          value={exportFormat}
+                                          onChange={(e) => setExportFormat(e.target.value)}
+                                          aria-label="Export format"
+                                          style={{
+                                            padding: '0.5rem',
+                                            borderRadius: '4px',
+                                            border: '1px solid #ccc',
+                                          }}
+                                        >                      <option value="pdf">PDF</option>
+                      <option value="docx">DOCX</option>
+                      <option value="csv">CSV</option>
+                    </select>
+                    <button
+                      onClick={handleExport}
+                      disabled={exporting}
+                      style={{
+                        padding: '0.5rem 1rem',
+                        fontSize: '0.9rem',
+                        backgroundColor: '#17a2b8',
+                        color: 'white',
+                        border: 'none',
+                        borderRadius: '4px',
+                        cursor: exporting ? 'not-allowed' : 'pointer',
+                      }}
+                      aria-label="Export summary"
+                    >
+                      {exporting ? 'Exporting...' : 'Export'}
+                    </button>
+                  </div>
                 )}
               </div>
               <div 
@@ -167,6 +221,7 @@ export default function SummarizePage() {
               >
                 {loading && <p role="status">Generating summary...</p>}
                 {error && <p role="alert" style={{ color: 'red' }}>Error: {error}</p>}
+                {exportError && <p role="alert" style={{ color: 'red' }}>Export Error: {exportError}</p>}
                 {summary && !loading && (
                   isEditing ? (
                     <div>

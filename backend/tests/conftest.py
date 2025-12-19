@@ -6,6 +6,38 @@ from backend.app.core.ai.uncertainty_resolution_module import UncertaintyResolut
 from backend.app.core.ai.exploratory_module import ExploratoryModule
 from langchain_core.messages import AIMessage
 import os
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
+from backend.app.database import Base, get_db
+from fastapi.testclient import TestClient
+from backend.main import app
+
+SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
+
+engine = create_engine(
+    SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+)
+TestingSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+
+
+Base.metadata.create_all(bind=engine)
+
+
+def override_get_db():
+    try:
+        db = TestingSessionLocal()
+        yield db
+    finally:
+        db.close()
+
+
+app.dependency_overrides[get_db] = override_get_db
+
+
+@pytest.fixture(scope="module")
+def test_client():
+    with TestClient(app) as client:
+        yield client
 
 @pytest.fixture(autouse=True)
 def mock_openai_chat_completion_global(mocker, monkeypatch):

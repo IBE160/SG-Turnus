@@ -3,8 +3,7 @@ from fastapi.testclient import TestClient
 from unittest.mock import patch, MagicMock
 from backend.main import app
 
-# Import fixtures from test_main for client setup
-from backend.tests.test_main import test_client, mock_external_services_and_singletons
+
 
 @pytest.fixture(autouse=True)
 def mock_spacy_load_for_api_tests():

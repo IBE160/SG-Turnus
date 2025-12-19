@@ -7,6 +7,7 @@ import DashboardPage from '../page';
 import * as studyMaterialService from '@/services/studyMaterialService';
 import * as authService from '@/services/authService';
 import * as clarityService from '@/services/clarityService'; // Import clarityService
+import { SocketProvider } from '@/contexts/SocketContext';
 import { useRouter } from 'next/navigation';
 import { NextStep, AIModule, InteractionPatternType } from '@/services/clarityService'; // Import NextStep interface
 
@@ -51,7 +52,11 @@ describe('DashboardPage', () => {
 
   it('renders loading state initially', () => {
     (studyMaterialService.getStudyMaterials as jest.Mock).mockReturnValueOnce(new Promise(() => {})); // Never resolve
-    render(<DashboardPage />);
+    render(
+      <SocketProvider>
+        <DashboardPage />
+      </SocketProvider>
+    );
     expect(screen.getByRole('progressbar')).toBeInTheDocument();
   });
 
@@ -62,7 +67,11 @@ describe('DashboardPage', () => {
     ];
     (studyMaterialService.getStudyMaterials as jest.Mock).mockResolvedValueOnce(mockMaterials);
 
-    render(<DashboardPage />);
+    render(
+      <SocketProvider>
+        <DashboardPage />
+      </SocketProvider>
+    );
 
     await waitFor(() => {
       expect(screen.getByText('Doc1.pdf')).toBeInTheDocument();
@@ -73,7 +82,11 @@ describe('DashboardPage', () => {
   it('renders error message if fetching study materials fails', async () => {
     (studyMaterialService.getStudyMaterials as jest.Mock).mockRejectedValueOnce(new Error('Failed to fetch'));
 
-    render(<DashboardPage />);
+    render(
+      <SocketProvider>
+        <DashboardPage />
+      </SocketProvider>
+    );
 
     await waitFor(() => {
       expect(screen.getByRole('alert')).toHaveTextContent('Failed to fetch');
@@ -88,7 +101,11 @@ describe('DashboardPage', () => {
     const mockResponse = { id: 3, file_name: 'upload.pdf', upload_date: new Date().toISOString(), processing_status: 'pending' };
     (studyMaterialService.createStudyMaterial as jest.Mock).mockResolvedValueOnce(mockResponse);
 
-    render(<DashboardPage />);
+    render(
+      <SocketProvider>
+        <DashboardPage />
+      </SocketProvider>
+    );
 
     // Wait for initial fetch to complete
     await waitFor(() => expect(screen.getByText('No study materials found. Upload one to get started!')).toBeInTheDocument());
@@ -112,7 +129,11 @@ describe('DashboardPage', () => {
     const mockFile = new File(['test content'], 'bad-upload.pdf', { type: 'application/pdf' });
     (studyMaterialService.createStudyMaterial as jest.Mock).mockRejectedValueOnce(new Error('Upload failed'));
 
-    render(<DashboardPage />);
+    render(
+      <SocketProvider>
+        <DashboardPage />
+      </SocketProvider>
+    );
     await waitFor(() => expect(screen.getByText('No study materials found. Upload one to get started!')).toBeInTheDocument());
 
 
@@ -135,7 +156,11 @@ describe('DashboardPage', () => {
     const mockUpdatedMaterial = { ...mockMaterials[0], file_name: 'NewName.pdf' };
     (studyMaterialService.updateStudyMaterial as jest.Mock).mockResolvedValueOnce(mockUpdatedMaterial);
 
-    render(<DashboardPage />);
+    render(
+      <SocketProvider>
+        <DashboardPage />
+      </SocketProvider>
+    );
     await waitFor(() => expect(screen.getByText('OldName.pdf')).toBeInTheDocument());
 
     fireEvent.click(screen.getByLabelText('edit')); // Click edit icon
@@ -161,7 +186,11 @@ describe('DashboardPage', () => {
     (studyMaterialService.getStudyMaterials as jest.Mock).mockResolvedValueOnce(initialMaterials);
     (studyMaterialService.getUpdatedStudyMaterials as jest.Mock).mockResolvedValueOnce(updatedMaterials);
 
-    render(<DashboardPage />);
+    render(
+      <SocketProvider>
+        <DashboardPage />
+      </SocketProvider>
+    );
     await waitFor(() => expect(screen.getByText('Initial.pdf')).toBeInTheDocument());
 
     jest.advanceTimersByTime(5000); // Advance timers by POLLING_INTERVAL
@@ -174,7 +203,11 @@ describe('DashboardPage', () => {
 
   it('calls logoutUser and redirects to login on logout button click', async () => {
     (studyMaterialService.getStudyMaterials as jest.Mock).mockResolvedValueOnce([]); // Resolve immediately for setup
-    render(<DashboardPage />);
+    render(
+      <SocketProvider>
+        <DashboardPage />
+      </SocketProvider>
+    );
     await waitFor(() => expect(screen.getByText('No study materials found. Upload one to get started!')).toBeInTheDocument());
 
     fireEvent.click(screen.getByRole('button', { name: /logout/i }));
@@ -193,7 +226,11 @@ describe('DashboardPage', () => {
     };
     (clarityService.getNextStepSuggestion as jest.Mock).mockResolvedValueOnce(mockNextStepResponse);
 
-    render(<DashboardPage />);
+    render(
+      <SocketProvider>
+        <DashboardPage />
+      </SocketProvider>
+    );
     await waitFor(() => expect(screen.getByText('No study materials found. Upload one to get started!')).toBeInTheDocument());
 
     const queryInput = screen.getByLabelText('Your Query');
@@ -214,7 +251,11 @@ describe('DashboardPage', () => {
     (studyMaterialService.getStudyMaterials as jest.Mock).mockResolvedValueOnce([]);
     (clarityService.getNextStepSuggestion as jest.Mock).mockReturnValueOnce(new Promise(() => {})); // Never resolve
 
-    render(<DashboardPage />);
+    render(
+      <SocketProvider>
+        <DashboardPage />
+      </SocketProvider>
+    );
     await waitFor(() => expect(screen.getByText('No study materials found. Upload one to get started!')).toBeInTheDocument());
 
     const queryInput = screen.getByLabelText('Your Query');
@@ -234,7 +275,11 @@ describe('DashboardPage', () => {
     (studyMaterialService.getStudyMaterials as jest.Mock).mockResolvedValueOnce([]);
     (clarityService.getNextStepSuggestion as jest.Mock).mockRejectedValueOnce(new Error('Failed to get suggestion'));
 
-    render(<DashboardPage />);
+    render(
+      <SocketProvider>
+        <DashboardPage />
+      </SocketProvider>
+    );
     await waitFor(() => expect(screen.getByText('No study materials found. Upload one to get started!')).toBeInTheDocument());
 
     const queryInput = screen.getByLabelText('Your Query');

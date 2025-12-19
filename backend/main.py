@@ -12,13 +12,17 @@ from backend.app.database import init_db, get_db, Base # Import init_db, get_db,
 from backend.app.models.user import User # Import SQLAlchemy User model
 from backend.app.models.study_material import StudyMaterial # Import SQLAlchemy StudyMaterial model
 from backend.app.models.feedback import Feedback # Import SQLAlchemy Feedback model
+from backend.app.core.websockets import socket_app # Import the Socket.IO app
 
 app = FastAPI()
 
+# Mount the Socket.IO app
+app.mount("/ws", socket_app)
+
 # Initialize the database and create tables
-@app.on_event("startup")
-def startup_event():
-    init_db() # Call init_db to create tables
+# @app.on_event("startup")
+# def startup_event():
+#     init_db() # Call init_db to create tables
 
 @app.get("/api/v1/health")
 def read_root():

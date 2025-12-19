@@ -1,308 +1,257 @@
-// the-ai-helping-tool/app/dashboard/page.tsx
-'use client';
+"use client";
 
-import { 
-  Typography, Box, Button, TextField, CircularProgress, Alert, Table, TableBody, TableCell, TableHead, TableRow, Paper, TableContainer,
-  Menu, MenuItem, IconButton // New imports
+import React, { useEffect, useState } from 'react';
+import {
+  Container,
+  Typography,
+  Box,
+  CircularProgress,
+  List,
+  ListItem,
+  ListItemText,
+  Alert,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
+  Button,
 } from '@mui/material';
-import MoreVertIcon from '@mui/icons-material/MoreVert'; // New import
-import { useRouter } from 'next/navigation';
-import { logoutUser } from '@/services/authService';
-import { getNextStepSuggestion, NextStep } from '@/services/clarityService';
-import { useState, useEffect } from 'react';
-import { 
-  StudyMaterialResponse, 
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import {
   getStudyMaterials,
-  getSummariesForStudyMaterial, // New import
-  getFlashcardSetsForStudyMaterial, // New import
-  getQuizzesForStudyMaterial, // New import
-  exportGeneratedMaterial, // New import
-  GeneratedSummaryResponse, // New import
-  GeneratedFlashcardSetResponse, // New import
-  GeneratedQuizResponse // New import
-} from '@/services/studyMaterialService';
+  StudyMaterialResponse,
+  GeneratedSummaryResponse,
+  GeneratedFlashcardSetResponse,
+  GeneratedQuizResponse,
+} from '../../services/studyMaterialService';
+import { useSocket } from '../../contexts/SocketContext';
+import { useAuth } from '../../contexts/AuthContext';
+import { useSync } from '../../contexts/SyncContext';
+import Link from 'next/link';
+import ShareDialog from '../../components/ShareDialog';
 
-export default function DashboardPage() {
-  const router = useRouter();
-  const [query, setQuery] = useState('');
-  const [nextStep, setNextStep] = useState<NextStep | null>(null);
-  const [loadingSuggestion, setLoadingSuggestion] = useState(false);
-  const [errorSuggestion, setErrorSuggestion] = useState('');
-
+const DashboardPage: React.FC = () => {
+  const { socket } = useSocket();
+  const { token } = useAuth();
+  const { updatedMaterials } = useSync();
   const [studyMaterials, setStudyMaterials] = useState<StudyMaterialResponse[]>([]);
-  const [loadingMaterials, setLoadingMaterials] = useState(true);
-  const [errorMaterials, setErrorMaterials] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [openShareDialog, setOpenShareDialog] = useState(false);
+  const [selectedMaterial, setSelectedMaterial] = useState<StudyMaterialResponse | null>(null);
 
-  // State for export menu
-  const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
-  const [currentMaterialId, setCurrentMaterialId] = useState<number | null>(null);
-  const [generatedSummaries, setGeneratedSummaries] = useState<GeneratedSummaryResponse[]>([]);
-  const [generatedFlashcards, setGeneratedFlashcards] = useState<GeneratedFlashcardSetResponse[]>([]);
-  const [generatedQuizzes, setGeneratedQuizzes] = useState<GeneratedQuizResponse[]>([]);
-  const [loadingGenerated, setLoadingGenerated] = useState(false);
-  const [errorGenerated, setErrorGenerated] = useState('');
+  const handleOpenShareDialog = (material: StudyMaterialResponse) => {
+    setSelectedMaterial(material);
+    setOpenShareDialog(true);
+  };
+
+  const handleCloseShareDialog = () => {
+    setSelectedMaterial(null);
+    setOpenShareDialog(false);
+  };
 
   useEffect(() => {
-    const fetchStudyMaterials = async () => {
-      try {
-        const materials = await getStudyMaterials();
-        setStudyMaterials(materials);
-      } catch (err: any) {
-        setErrorMaterials(err.message || 'Failed to fetch study materials.');
-      } finally {
-        setLoadingMaterials(false);
+    if (token) {
+      const fetchStudyMaterials = async () => {
+        try {
+          setLoading(true);
+          const materials = await getStudyMaterials(token);
+          setStudyMaterials(materials);
+        } catch (err) {
+          setError('Failed to fetch study materials.');
+          console.error(err);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchStudyMaterials();
+
+      if (socket) {
+        socket.on('study_material_created', (data: StudyMaterialResponse) => {
+          setStudyMaterials((prev) => [...prev, data]);
+        });
+        socket.on('study_material_updated', (data: StudyMaterialResponse) => {
+          setStudyMaterials((prev) => prev.map((sm) => (sm.id === data.id ? data : sm)));
+        });
+        socket.on('study_material_deleted', (data: { id: number }) => {
+          setStudyMaterials((prev) => prev.filter((sm) => sm.id !== data.id));
+        });
+        socket.on('summary_created', (data: GeneratedSummaryResponse) => {
+          setStudyMaterials((prev) =>
+            prev.map((sm) =>
+              sm.id === data.study_material_id
+                ? { ...sm, generated_summaries: [...(sm.generated_summaries || []), data] }
+                : sm
+            )
+          );
+        });
+        socket.on('flashcards_created', (data: GeneratedFlashcardSetResponse) => {
+          setStudyMaterials((prev) =>
+            prev.map((sm) =>
+              sm.id === data.study_material_id
+                ? { ...sm, generated_flashcard_sets: [...(sm.generated_flashcard_sets || []), data] }
+                : sm
+            )
+          );
+        });
+        socket.on('quiz_created', (data: GeneratedQuizResponse) => {
+          setStudyMaterials((prev) =>
+            prev.map((sm) =>
+              sm.id === data.study_material_id
+                ? { ...sm, generated_quizzes: [...(sm.generated_quizzes || []), data] }
+                : sm
+            )
+          );
+        });
+
+        return () => {
+          socket.off('study_material_created');
+          socket.off('study_material_updated');
+          socket.off('study_material_deleted');
+          socket.off('summary_created');
+          socket.off('flashcards_created');
+          socket.off('quiz_created');
+        };
       }
-    };
-
-    fetchStudyMaterials();
-  }, []);
-
-  const handleLogout = () => {
-    logoutUser();
-    router.push('/login'); // Redirect to login page after logout
-  };
-
-  const handleGetSuggestion = async () => {
-    setLoadingSuggestion(true);
-    setErrorSuggestion('');
-    setNextStep(null);
-    try {
-      // Assuming 'query' here is raw text, not linked to a specific study material for clarity generation
-      const response = await getNextStepSuggestion({ text: query });
-      setNextStep(response);
-    } catch (err: any) {
-      setErrorSuggestion(err.message || 'An unexpected error occurred.');
-    } finally {
-      setLoadingSuggestion(false);
     }
-  };
+  }, [token, socket]);
 
-  const handleOpenExportMenu = async (event: React.MouseEvent<HTMLElement>, materialId: number) => {
-    setAnchorEl(event.currentTarget);
-    setCurrentMaterialId(materialId);
-    setLoadingGenerated(true);
-    setErrorGenerated('');
-    setGeneratedSummaries([]);
-    setGeneratedFlashcards([]);
-    setGeneratedQuizzes([]);
-
-    try {
-      const summaries = await getSummariesForStudyMaterial(materialId);
-      const flashcards = await getFlashcardSetsForStudyMaterial(materialId);
-      const quizzes = await getQuizzesForStudyMaterial(materialId);
-      setGeneratedSummaries(summaries);
-      setGeneratedFlashcards(flashcards);
-      setGeneratedQuizzes(quizzes);
-    } catch (err: any) {
-      setErrorGenerated(err.message || 'Failed to fetch generated materials.');
-    } finally {
-      setLoadingGenerated(false);
+  useEffect(() => {
+    if (updatedMaterials.length > 0) {
+      setStudyMaterials((prev) => {
+        const updated = [...prev];
+        updatedMaterials.forEach((material) => {
+          const index = updated.findIndex((m) => m.id === material.id);
+          if (index !== -1) {
+            updated[index] = material;
+          } else {
+            updated.push(material);
+          }
+        });
+        return updated;
+      });
     }
-  };
+  }, [updatedMaterials]);
 
-  const handleCloseExportMenu = () => {
-    setAnchorEl(null);
-    setCurrentMaterialId(null);
-    setGeneratedSummaries([]);
-    setGeneratedFlashcards([]);
-    setGeneratedQuizzes([]);
-    setLoadingGenerated(false);
-    setErrorGenerated('');
-  };
 
-  const handleExport = async (materialType: string, materialId: number, format: string) => {
-    try {
-      await exportGeneratedMaterial(materialType, materialId, format);
-      handleCloseExportMenu();
-    } catch (err: any) {
-      setErrorGenerated(err.message || 'Export failed.');
-    }
-  };
+  if (loading) {
+    return (
+      <Container>
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="80vh">
+          <CircularProgress />
+        </Box>
+      </Container>
+    );
+  }
 
+  if (error) {
+    return (
+      <Container>
+        <Alert severity="error">{error}</Alert>
+      </Container>
+    );
+  }
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <Box
-        sx={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: 2,
-          width: '100%',
-          maxWidth: '1200px', // Increased width for better table display
-          padding: 3,
-          boxShadow: 3,
-          borderRadius: 2,
-          bgcolor: 'background.paper',
-          textAlign: 'center',
-        }}
-      >
-        <Typography variant="h4" component="h1" gutterBottom>
-          Welcome to your Dashboard!
-        </Typography>
+    <Container>
+      <Typography variant="h4" component="h1" gutterBottom>
+        My Study Materials Dashboard
+      </Typography>
 
-        {/* Next Step Suggestion Section */}
-        <Box sx={{ mt: 4 }}>
-          <Typography variant="h6" component="h2" gutterBottom>
-            Next Step Suggestion
-          </Typography>
-          <TextField
-            label="Your Query"
-            fullWidth
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            disabled={loadingSuggestion}
-          />
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleGetSuggestion}
-            disabled={loadingSuggestion || !query.trim()}
-            sx={{ mt: 2 }}
-          >
-            {loadingSuggestion ? <CircularProgress size={24} /> : 'Get Suggestion'}
-          </Button>
+      {studyMaterials.length === 0 ? (
+        <Typography>You have not uploaded any study materials yet.</Typography>
+      ) : (
+        <List>
+          {studyMaterials.map((material) => (
+            <Box key={material.id} sx={{ mb: 2 }}>
+              <Accordion>
+                <AccordionSummary
+                  expandIcon={<ExpandMoreIcon />}
+                  aria-controls={`panel-${material.id}-content`}
+                  id={`panel-${material.id}-header`}
+                >
+                  <Typography variant="h6">{material.file_name}</Typography>
+                </AccordionSummary>
+                <AccordionDetails>
+                  <Typography variant="body2" color="textSecondary">
+                    Upload Date: {new Date(material.upload_date).toLocaleDateString()} | Status: {material.processing_status}
+                  </Typography>
+                  <Button variant="outlined" size="small" sx={{ mt: 1, mr: 1 }}>
+                    View Material
+                  </Button>
+                  <Button variant="outlined" size="small" sx={{ mt: 1, mr: 1 }} onClick={() => handleOpenShareDialog(material)}>
+                    Share
+                  </Button>
+                  {/* Link to generate new content from this material */}
+                  <Link href={`/generate/${material.id}`} passHref>
+                    <Button variant="outlined" size="small" sx={{ mt: 1 }}>
+                      Generate New Content
+                    </Button>
+                  </Link>
 
-          {errorSuggestion && (
-            <Alert severity="error" sx={{ mt: 2 }}>
-              {errorSuggestion}
-            </Alert>
-          )}
+                  {material.generated_summaries && material.generated_summaries.length > 0 && (
+                    <Box mt={2}>
+                      <Typography variant="subtitle1">Summaries:</Typography>
+                      <List disablePadding>
+                        {material.generated_summaries.map((summary) => (
+                          <ListItem key={summary.id} dense>
+                            <ListItemText
+                              primary={`Summary (Detail: ${summary.detail_level})`}
+                              secondary={summary.content.substring(0, 100) + '...'} // Show snippet
+                            />
+                            <Button size="small">View</Button>
+                          </ListItem>
+                        ))}
+                      </List>
+                    </Box>
+                  )}
 
-          {nextStep && (
-            <Box sx={{ mt: 2, p: 2, border: '1px solid #ccc', borderRadius: 1, textAlign: 'left' }}>
-              <Typography variant="h6">Suggested Next Step:</Typography>
-              <Typography>AI Module: {nextStep.ai_module}</Typography>
-              <Typography>Interaction Pattern: {nextStep.interaction_pattern}</Typography>
-              {/* Render other NextStep details as needed */}
+                  {material.generated_flashcard_sets && material.generated_flashcard_sets.length > 0 && (
+                    <Box mt={2}>
+                      <Typography variant="subtitle1">Flashcard Sets:</Typography>
+                      <List disablePadding>
+                        {material.generated_flashcard_sets.map((flashcardSet) => (
+                          <ListItem key={flashcardSet.id} dense>
+                            <ListItemText
+                              primary={`Flashcard Set (${flashcardSet.content.length} cards)`}
+                              secondary={`Generated: ${new Date(flashcardSet.generated_at).toLocaleDateString()}`}
+                            />
+                            <Button size="small">View</Button>
+                          </ListItem>
+                        ))}
+                      </List>
+                    </Box>
+                  )}
+
+                  {material.generated_quizzes && material.generated_quizzes.length > 0 && (
+                    <Box mt={2}>
+                      <Typography variant="subtitle1">Quizzes:</Typography>
+                      <List disablePadding>
+                        {material.generated_quizzes.map((quiz) => (
+                          <ListItem key={quiz.id} dense>
+                            <ListItemText
+                              primary={`Quiz (${quiz.content.length} questions)`}
+                              secondary={`Generated: ${new Date(quiz.generated_at).toLocaleDateString()}`}
+                            />
+                            <Button size="small">View</Button>
+                          </ListItem>
+                        ))}
+                      </List>
+                    </Box>
+                  )}
+                </AccordionDetails>
+              </Accordion>
             </Box>
-          )}
-        </Box>
+          ))}
+        </List>
+      )}
 
-        {/* Study Materials Overview Section */}
-        <Box sx={{ mt: 4, width: '100%' }}>
-          <Typography variant="h6" component="h2" gutterBottom>
-            Your Study Materials
-          </Typography>
-          {loadingMaterials ? (
-            <CircularProgress />
-          ) : errorMaterials ? (
-            <Alert severity="error">{errorMaterials}</Alert>
-          ) : studyMaterials.length === 0 ? (
-            <Typography>You haven't uploaded any study materials yet.</Typography>
-          ) : (
-            <TableContainer component={Paper}>
-              <Table sx={{ minWidth: 650 }} aria-label="study materials table">
-                <TableHead>
-                  <TableRow>
-                    <TableCell>File Name</TableCell>
-                    <TableCell align="right">Upload Date</TableCell>
-                    <TableCell align="right">Processing Status</TableCell>
-                    <TableCell align="center">Actions</TableCell> {/* New column */}
-                  </TableRow>
-                </TableHead>
-                <TableBody>
-                  {studyMaterials.map((material) => (
-                    <TableRow
-                      key={material.id}
-                      sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
-                    >
-                      <TableCell component="th" scope="row">
-                        {material.file_name}
-                      </TableCell>
-                      <TableCell align="right">
-                        {new Date(material.upload_date).toLocaleDateString()}
-                      </TableCell>
-                      <TableCell align="right">{material.processing_status}</TableCell>
-                      <TableCell align="center">
-                        <IconButton
-                          aria-label="more"
-                          aria-controls={`long-menu-${material.id}`}
-                          aria-haspopup="true"
-                          onClick={(event) => handleOpenExportMenu(event, material.id)}
-                          disabled={loadingGenerated && currentMaterialId === material.id}
-                        >
-                          {loadingGenerated && currentMaterialId === material.id ? <CircularProgress size={20} /> : <MoreVertIcon />}
-                        </IconButton>
-                        <Menu
-                          id={`long-menu-${material.id}`}
-                          MenuListProps={{
-                            'aria-labelledby': 'long-button',
-                          }}
-                          anchorEl={anchorEl}
-                          open={Boolean(anchorEl) && currentMaterialId === material.id}
-                          onClose={handleCloseExportMenu}
-                          PaperProps={{
-                            style: {
-                              maxHeight: 48 * 4.5,
-                              width: '20ch',
-                            },
-                          }}
-                        >
-                          {errorGenerated && currentMaterialId === material.id && (
-                            <MenuItem disabled sx={{ color: 'error.main' }}>
-                              {errorGenerated}
-                            </MenuItem>
-                          )}
-                          {!loadingGenerated && currentMaterialId === material.id && (
-                            <>
-                              {generatedSummaries.length > 0 && generatedSummaries.map((summary) => (
-                                <Box key={`summary-${summary.id}`}>
-                                  <MenuItem onClick={() => handleExport('summary', summary.id, 'pdf')}>
-                                    Summary ({summary.id}) - PDF
-                                  </MenuItem>
-                                  <MenuItem onClick={() => handleExport('summary', summary.id, 'docx')}>
-                                    Summary ({summary.id}) - DOCX
-                                  </MenuItem>
-                                </Box>
-                              ))}
-                              {generatedFlashcards.length > 0 && generatedFlashcards.map((flashcardSet) => (
-                                <Box key={`flashcard-${flashcardSet.id}`}>
-                                  <MenuItem onClick={() => handleExport('flashcard_set', flashcardSet.id, 'pdf')}>
-                                    Flashcards ({flashcardSet.id}) - PDF
-                                  </MenuItem>
-                                  <MenuItem onClick={() => handleExport('flashcard_set', flashcardSet.id, 'docx')}>
-                                    Flashcards ({flashcardSet.id}) - DOCX
-                                  </MenuItem>
-                                  <MenuItem onClick={() => handleExport('flashcard_set', flashcardSet.id, 'csv')}>
-                                    Flashcards ({flashcardSet.id}) - CSV
-                                  </MenuItem>
-                                </Box>
-                              ))}
-                              {generatedQuizzes.length > 0 && generatedQuizzes.map((quiz) => (
-                                <Box key={`quiz-${quiz.id}`}>
-                                  <MenuItem onClick={() => handleExport('quiz', quiz.id, 'pdf')}>
-                                    Quiz ({quiz.id}) - PDF
-                                  </MenuItem>
-                                  <MenuItem onClick={() => handleExport('quiz', quiz.id, 'docx')}>
-                                    Quiz ({quiz.id}) - DOCX
-                                  </MenuItem>
-                                  <MenuItem onClick={() => handleExport('quiz', quiz.id, 'csv')}>
-                                    Quiz ({quiz.id}) - CSV
-                                  </MenuItem>
-                                </Box>
-                              ))}
-                              {generatedSummaries.length === 0 && generatedFlashcards.length === 0 && generatedQuizzes.length === 0 && (
-                                <MenuItem disabled>No generated materials</MenuItem>
-                              )}
-                            </>
-                          )}
-                        </Menu>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </TableContainer>
-          )}
-        </Box>
-
-        <Button variant="contained" color="primary" onClick={() => router.push('/')} sx={{ mt: 4 }}>
-          Go to Home
-        </Button>
-        <Button variant="outlined" color="secondary" onClick={handleLogout}>
-          Logout
-        </Button>
-      </Box>
-    </main>
+      <ShareDialog
+        open={openShareDialog}
+        onClose={handleCloseShareDialog}
+        material={selectedMaterial}
+      />
+    </Container>
   );
-}
+};
+
+export default DashboardPage;

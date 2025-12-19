@@ -43,9 +43,9 @@ development_status:
   1-4-secure-user-login-and-session-management: done
   1-5-cloud-storage-setup-for-user-content: done
   1-6-database-setup-for-processed-data: done
-  1-7-cross-device-synchronization: ready-for-dev
+  1-7-cross-device-synchronization: done
   1-8-basic-seo-for-public-pages: done
-  1-9-browser-compatibility: backlog
+  1-9-browser-compatibility: in-progress
   epic-1-retrospective: optional
   epic-2: done
   2-1-input-processing-and-signal-extraction: done
@@ -70,8 +70,8 @@ development_status:
   4-6-accessibility-compliance-wcag-aa: done
   4-7-user-data-isolation-in-ui: done
   epic-4-retrospective: optional
-  epic-5: backlog
-  5-1-material-sharing-with-classmates: backlog
-  5-2-document-overview-dashboard: backlog
-  5-3-export-generated-materials: backlog
+  epic-5: contexted
+  5-1-material-sharing-with-classmates: drafted
+  5-2-document-overview-dashboard: drafted
+  5-3-export-generated-materials: drafted
   epic-5-retrospective: optional
