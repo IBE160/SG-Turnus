@@ -27,7 +27,6 @@ import { useSocket } from '../../contexts/SocketContext';
 import { useAuth } from '../../contexts/AuthContext';
 import { useSync } from '../../contexts/SyncContext';
 import Link from 'next/link';
-import ShareDialog from '../../components/ShareDialog';
 
 const DashboardPage: React.FC = () => {
   const { socket } = useSocket();
@@ -36,18 +35,6 @@ const DashboardPage: React.FC = () => {
   const [studyMaterials, setStudyMaterials] = useState<StudyMaterialResponse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [openShareDialog, setOpenShareDialog] = useState(false);
-  const [selectedMaterial, setSelectedMaterial] = useState<StudyMaterialResponse | null>(null);
-
-  const handleOpenShareDialog = (material: StudyMaterialResponse) => {
-    setSelectedMaterial(material);
-    setOpenShareDialog(true);
-  };
-
-  const handleCloseShareDialog = () => {
-    setSelectedMaterial(null);
-    setOpenShareDialog(false);
-  };
 
   useEffect(() => {
     if (token) {
@@ -153,6 +140,9 @@ const DashboardPage: React.FC = () => {
 
   return (
     <Container>
+      <Alert severity="info" sx={{ mb: 2 }}>
+        This is an MVP demo. Some functionality is mocked.
+      </Alert>
       <Typography variant="h4" component="h1" gutterBottom>
         My Study Materials Dashboard
       </Typography>
@@ -177,9 +167,6 @@ const DashboardPage: React.FC = () => {
                   </Typography>
                   <Button variant="outlined" size="small" sx={{ mt: 1, mr: 1 }}>
                     View Material
-                  </Button>
-                  <Button variant="outlined" size="small" sx={{ mt: 1, mr: 1 }} onClick={() => handleOpenShareDialog(material)}>
-                    Share
                   </Button>
                   {/* Link to generate new content from this material */}
                   <Link href={`/generate/${material.id}`} passHref>
@@ -244,12 +231,6 @@ const DashboardPage: React.FC = () => {
           ))}
         </List>
       )}
-
-      <ShareDialog
-        open={openShareDialog}
-        onClose={handleCloseShareDialog}
-        material={selectedMaterial}
-      />
     </Container>
   );
 };

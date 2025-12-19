@@ -15,11 +15,13 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   useEffect(() => {
     // In a real application, you would fetch the token from local storage,
     // a cookie, or an authentication context.
+    // For this exam demo, we are using a hardcoded dummy token
+    // to simulate an authenticated user.
     const storedToken = localStorage.getItem('token');
     if (storedToken) {
       setToken(storedToken);
     } else {
-      const dummyToken = 'dummy-token';
+      const dummyToken = 'dummy-token-for-exam-demo';
       setToken(dummyToken);
       localStorage.setItem('token', dummyToken);
     }

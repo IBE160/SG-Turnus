@@ -124,6 +124,7 @@ export async function createStudyMaterial(file: File, token: string): Promise<St
 
 /**
  * Retrieves a list of all study materials for the current user.
+ * NOTE: This is a mock implementation for the exam demo.
  * @param token The authentication token.
  * @returns A promise that resolves to an array of StudyMaterialResponse.
  */
@@ -258,6 +259,7 @@ export async function getUpdatedStudyMaterials(since: string, token: string): Pr
 
 /**
  * Generates a summary for the provided text.
+ * NOTE: This is a mock implementation for the exam demo.
  * @param studyMaterialId The ID of the study material to associate the summary with.
  * @param data The SummarizeRequest object containing the text and optional detail level.
  * @param token The authentication token.
@@ -281,6 +283,7 @@ export async function summarizeText(
 
 /**
  * Generates flashcards for the provided text.
+ * NOTE: This is a mock implementation for the exam demo.
  * @param studyMaterialId The ID of the study material to associate the flashcards with.
  * @param data The FlashcardGenerateRequest object containing the text.
  * @param token The authentication token.
@@ -306,6 +309,7 @@ export async function generateFlashcards(
 
 /**
  * Generates a quiz for the provided text.
+ * NOTE: This is a mock implementation for the exam demo.
  * @param studyMaterialId The ID of the study material to associate the quiz with.
  * @param data The QuizGenerateRequest object containing the text.
  * @param token The authentication token.
@@ -335,138 +339,4 @@ export async function generateQuiz(
     content: questions,
     generated_at: new Date().toISOString(),
   });
-}
-
-export interface ExportRequest {
-  content: string;
-  format: string;
-}
-
-/**
- * Exports a summary in a specified format.
- * @param data The ExportRequest object containing the content and format.
- * @returns A promise that resolves to a Blob.
- */
-export async function exportSummary(data: ExportRequest): Promise<Blob> {
-  try {
-    const response = await axios.post(
-      `${API_BASE_URL}/api/v1/study-materials/export`,
-      data,
-      {
-        responseType: 'blob',
-      }
-    );
-    return response.data;
-  } catch (error) {
-    console.error('Error exporting summary:', error);
-    throw error;
-  }
-}
-
-/**
- * Retrieves a list of generated summaries for a specific study material.
- * @param studyMaterialId The ID of the study material.
- * @param token The authentication token.
- * @returns A promise that resolves to an array of GeneratedSummaryResponse.
- */
-export async function getSummariesForStudyMaterial(studyMaterialId: number, token: string): Promise<GeneratedSummaryResponse[]> {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/api/v1/study-materials/${studyMaterialId}/summaries`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching summaries for study material ${studyMaterialId}:`, error);
-    throw error;
-  }
-}
-
-/**
- * Retrieves a list of generated flashcard sets for a specific study material.
- * @param studyMaterialId The ID of the study material.
- * @param token The authentication token.
- * @returns A promise that resolves to an array of GeneratedFlashcardSetResponse.
- */
-export async function getFlashcardSetsForStudyMaterial(studyMaterialId: number, token: string): Promise<GeneratedFlashcardSetResponse[]> {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/api/v1/study-materials/${studyMaterialId}/flashcard-sets`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching flashcard sets for study material ${studyMaterialId}:`, error);
-    throw error;
-  }
-}
-
-/**
- * Retrieves a list of generated quizzes for a specific study material.
- * @param studyMaterialId The ID of the study material.
- * @param token The authentication token.
- * @returns A promise that resolves to an array of GeneratedQuizResponse.
- */
-export async function getQuizzesForStudyMaterial(studyMaterialId: number, token: string): Promise<GeneratedQuizResponse[]> {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/api/v1/study-materials/${studyMaterialId}/quizzes`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return response.data;
-  } catch (error) {
-    console.error(`Error fetching quizzes for study material ${studyMaterialId}:`, error);
-    throw error;
-  }
-}
-
-/**
- * Exports a generated study material in a specified format.
- * @param materialType The type of material to export (e.g., "summary", "flashcard_set", "quiz").
- * @param materialId The ID of the generated material.
- * @param format The desired export format (e.g., "pdf", "docx", "csv").
- * @param token The authentication token.
- * @returns A promise that resolves when the file is downloaded.
- */
-export async function exportGeneratedMaterial(
-  materialType: string,
-  materialId: number,
-  format: string,
-  token: string
-): Promise<void> {
-  try {
-    const response = await axios.get(`${API_BASE_URL}/api/v1/export/${materialType}/${materialId}?format=${format}`, {
-      method: 'GET',
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-      responseType: 'blob', // Important for downloading files
-    });
-
-    // Get the filename from the Content-Disposition header
-    const contentDisposition = response.headers['content-disposition'];
-    let filename = `exported_material.${format}`;
-    if (contentDisposition) {
-      const filenameMatch = contentDisposition.match(/filename="([^"]+)"/);
-      if (filenameMatch && filenameMatch[1]) {
-        filename = filenameMatch[1];
-      }
-    }
-
-    // Create a blob from the response and trigger download
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    window.URL.revokeObjectURL(url);
-  } catch (error) {
-    console.error(`Error exporting ${materialType} with ID ${materialId}:`, error);
-    throw error;
-  }
 }

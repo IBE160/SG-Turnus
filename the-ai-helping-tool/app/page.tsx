@@ -1,47 +1,38 @@
 "use client";
 
-import { useEffect, useState } from 'react'; // Import useState
+import { useEffect } from 'react';
 import { useSocket } from '../contexts/SocketContext';
-import WebSocketTester from '../components/WebSocketTester';
-import ShareDialog from '../components/ShareDialog'; // Import the ShareDialog component
-import { Button, Box } from '@mui/material'; // Import MUI components
+import { Button, Box, Typography, Container } from '@mui/material'; // Import MUI components
+import Link from 'next/link';
 
 export default function Home() {
   const { isConnected } = useSocket();
-  const [isShareDialogOpen, setIsShareDialogOpen] = useState(false);
 
   useEffect(() => {
     console.log("Home component: WebSocket Connected Status:", isConnected);
   }, [isConnected]);
 
-  const handleOpenShareDialog = () => {
-    setIsShareDialogOpen(true);
-  };
-
-  const handleCloseShareDialog = () => {
-    setIsShareDialogOpen(false);
-  };
-
   return (
-    <div>
-      <h1>Welcome to The AI Helping Tool</h1>
-      <h2>Your Smart Companion for Learning and Productivity</h2>
-      <p>The project is successfully initialized and running. Start your journey towards enhanced learning and productivity with AI-powered assistance.</p>
-      
-      <Box mt={4}>
-        <Button variant="contained" color="primary" onClick={handleOpenShareDialog}>
-          Share Dummy Study Material
-        </Button>
+    <Container maxWidth="md">
+      <Box sx={{ my: 4, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <Typography variant="h2" component="h1" gutterBottom>
+          Welcome to The AI Helping Tool
+        </Typography>
+        <Typography variant="h5" component="h2" color="text.secondary" align="center" sx={{ mb: 4 }}>
+          Your Smart Companion for Learning and Productivity
+        </Typography>
+        <Typography variant="body1" align="center" sx={{ mb: 2 }}>
+          This is an MVP demo for a student exam project. Some functionality is mocked or simplified.
+        </Typography>
+        <Typography variant="body1" align="center" sx={{ mb: 4 }}>
+          Get started by viewing your study materials on the dashboard.
+        </Typography>
+        <Link href="/dashboard" passHref>
+          <Button variant="contained" color="primary" size="large">
+            Go to Dashboard
+          </Button>
+        </Link>
       </Box>
-
-      <WebSocketTester />
-
-      <ShareDialog
-        open={isShareDialogOpen}
-        onClose={handleCloseShareDialog}
-        studyMaterialId={1} // Dummy ID for demonstration
-        studyMaterialFileName="My Awesome Study Notes.pdf" // Dummy name
-      />
-    </div>
+    </Container>
   );
 }
